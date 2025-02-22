@@ -20,7 +20,8 @@ class _MapPageState extends State<MapPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Map Page'),
+        title: const Text('Map'),
+        backgroundColor: const Color.fromARGB(255, 248, 120, 81),
       ),
       body: GoogleMap(
         onMapCreated: _onMapCreated,
