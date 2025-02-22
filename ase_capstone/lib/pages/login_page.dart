@@ -1,31 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:ase_capstone/components/textfield.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class LoginPage extends StatelessWidget {
+  LoginPage({super.key});
 
-  @override
-  State<LoginPage> createState() => _LoginPageState();
-}
+  // text controllers
+  final usernameController = TextEditingController();
+  final passwordController = TextEditingController();
 
-class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[300],
+      // page background color
+      backgroundColor: const Color.fromARGB(255, 245, 184, 165),
+
       appBar: AppBar(
         title: const Text('Campus Compass'),
+        // appbar background color
+        backgroundColor: const Color.fromARGB(255, 248, 120, 81),
       ),
+
       // Safe area to avoid notches and status bar
       body: SafeArea(
         child: Center(
           child: Column(
             children: <Widget>[
               SizedBox(height: 100),
+
               // Campus Compass Logo
               Icon(
                 Icons.account_circle,
                 size: 100,
               ),
+
               // Welcome Text
               const Text(
                 'Welcome to the Login Page!',
@@ -34,40 +41,23 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                // Username Text Field
-                child: TextField(
-                  decoration: InputDecoration(
-                    labelText: 'Username',
-                    // border colors
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.black),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey),
-                    ),
-                  ),
-                ),
+
+              // Username Text Field
+              MyTextField(
+                controller: usernameController,
+                hintText: 'Username',
+                obscureText: false,
               ),
+
               SizedBox(height: 10),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                // Password Text Field
-                child: TextField(
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    // border colors
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.black),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey),
-                    ),
-                  ),
-                ),
+
+              // Password Text Field
+              MyTextField(
+                controller: passwordController,
+                hintText: 'Password',
+                obscureText: true,
               ),
+
               // sign in button
               SizedBox(height: 20),
               ElevatedButton(
