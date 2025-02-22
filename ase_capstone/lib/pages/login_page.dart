@@ -1,4 +1,5 @@
 import 'package:ase_capstone/components/my_button.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ase_capstone/components/textfield.dart';
 
@@ -8,6 +9,31 @@ class LoginPage extends StatelessWidget {
   // text controllers
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
+
+  void signUserIn({required context}) async {
+    // loading indicator
+    showDialog(
+      context: context,
+      builder: (context) {
+        return const Center(
+          child: CircularProgressIndicator(),
+        );
+      },
+    );
+
+    // sign user in
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: usernameController.text,
+        password: passwordController.text,
+      );
+    } on FirebaseAuthException catch (e) {
+      print("LOOK HERE::::::::::: " + e.code);
+    }
+
+    // Navigate to the map page when the button is pressed
+    Navigator.pushNamed(context, '/map');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,8 +106,7 @@ class LoginPage extends StatelessWidget {
                 SizedBox(height: 20),
                 MyButton(
                   buttonText: 'Sign In',
-                  emailController: usernameController,
-                  passwordController: passwordController,
+                  onTap: () => signUserIn(context: context),
                 ),
 
                 SizedBox(height: 20),

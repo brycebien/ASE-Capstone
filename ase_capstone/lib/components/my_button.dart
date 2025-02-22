@@ -1,59 +1,38 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-class MyButton extends StatefulWidget {
+class MyButton extends StatelessWidget {
+  final Function()? onTap;
   final String buttonText;
-  final TextEditingController emailController;
-  final TextEditingController passwordController;
 
   const MyButton({
     super.key,
     required this.buttonText,
-    required this.emailController,
-    required this.passwordController,
+    required this.onTap,
   });
 
   @override
-  State<MyButton> createState() => _MyButtonState();
-}
-
-class _MyButtonState extends State<MyButton> {
-  void signUserIn({required context}) async {
-    // loading indicator
-    showDialog(
-      context: context,
-      builder: (context) {
-        return const Center(
-          child: CircularProgressIndicator(),
-        );
-      },
-    );
-
-    // sign in user
-    await FirebaseAuth.instance.signInWithEmailAndPassword(
-      email: widget.emailController.text,
-      password: widget.passwordController.text,
-    );
-
-    // Navigate to the map page when the button is pressed
-    Navigator.pushNamed(context, '/map');
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color.fromARGB(255, 248, 120, 81),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+    return GestureDetector(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 100.0),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color.fromARGB(255, 248, 120, 81),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Center(
+            child: Text(
+              buttonText,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+          ),
         ),
-      ),
-      onPressed: () {
-        signUserIn(context: context);
-      },
-      child: Text(
-        widget.buttonText,
-        style: TextStyle(color: Colors.black),
       ),
     );
   }
