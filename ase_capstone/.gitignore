@@ -54,7 +54,7 @@ windows/
 .metadata
 
 # firebase
-firebase.jason
+firebase.json
 .firebase
 .firebaserc
 firebase_options.dart
