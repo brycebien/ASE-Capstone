@@ -52,3 +52,9 @@ linux/
 macos/
 windows/
 .metadata
+
+# firebase
+firebase.jason
+.firebase
+.firebaserc
+firebase_options.dart
