@@ -78,7 +78,11 @@ class LoginPage extends StatelessWidget {
 
                 // sign in button
                 SizedBox(height: 20),
-                MyButton(buttonText: 'Sign In'),
+                MyButton(
+                  buttonText: 'Sign In',
+                  emailController: usernameController,
+                  passwordController: passwordController,
+                ),
 
                 SizedBox(height: 20),
                 Divider(thickness: 1, color: Colors.black),
