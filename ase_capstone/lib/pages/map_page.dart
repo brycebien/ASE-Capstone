@@ -11,12 +11,13 @@ class MapPage extends StatefulWidget {
 
 class _MapPageState extends State<MapPage> {
   final user = FirebaseAuth.instance.currentUser!;
-  late String username;
+  late String username; // get username from email
   static const LatLng _center = LatLng(39.033, -84.4631);
   late GoogleMapController mapController;
 
   @override
   void initState() {
+    // get username from email
     super.initState();
     username = user.email!.substring(0, user.email!.indexOf('@'));
   }
