@@ -21,6 +21,18 @@ class LoginPage extends StatelessWidget {
       },
     );
 
+    // check to ensure email and password are not empty
+    if (usernameController.text.isEmpty || passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content:
+              Text('Please enter the username and password for your account'),
+        ),
+      );
+      Navigator.pop(context);
+      return;
+    }
+
     // sign user in
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
@@ -28,9 +40,28 @@ class LoginPage extends StatelessWidget {
         password: passwordController.text,
       );
     } on FirebaseAuthException catch (e) {
-      print("LOOK HERE::::::::::: " + e.code);
+      if (e.code == 'user-not-found') {
+        // no user found with that email
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('User not found with that email address')),
+        );
+      } else if (e.code == 'invalid-credential' || e.code == 'invalid-email') {
+        // invalid email
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Invalid username or password')),
+        );
+      } else {
+        // other errors
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('An unexpected error occurred')),
+        );
+      }
+      Navigator.pop(context);
+      return;
     }
 
+    // close loading indicator
+    Navigator.pop(context);
     // Navigate to the map page when the button is pressed
     Navigator.pushNamed(context, '/map');
   }
