@@ -1,3 +1,4 @@
+import 'package:ase_capstone/components/my_button.dart';
 import 'package:flutter/material.dart';
 import 'package:ase_capstone/components/textfield.dart';
 
@@ -58,15 +59,24 @@ class LoginPage extends StatelessWidget {
                 obscureText: true,
               ),
 
+              // forgot password
+              SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text(
+                      'Forgot Password?',
+                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                    ),
+                  ],
+                ),
+              ),
+
               // sign in button
               SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  // Navigate to the map page when the button is pressed
-                  Navigator.pushNamed(context, '/map');
-                },
-                child: const Text('Sign In'),
-              ),
+              MyButton(),
             ],
           ),
         ),

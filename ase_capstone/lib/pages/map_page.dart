@@ -21,6 +21,7 @@ class _MapPageState extends State<MapPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Map Page'),
+        backgroundColor: const Color.fromARGB(255, 248, 120, 81),
       ),
       body: GoogleMap(
         onMapCreated: _onMapCreated,
