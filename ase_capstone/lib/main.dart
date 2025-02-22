@@ -1,3 +1,4 @@
+import 'package:ase_capstone/pages/login_page.dart';
 import 'package:ase_capstone/pages/map_page.dart';
 import 'package:flutter/material.dart';
 
@@ -17,7 +18,10 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: MapPage(),
+      home: LoginPage(),
+      routes: {
+        '/map': (context) => MapPage(),
+      },
     );
   }
 }
