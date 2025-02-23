@@ -51,12 +51,28 @@ class _MapPageState extends State<MapPage> {
         title: Text('Campus Compass'),
         backgroundColor: const Color.fromARGB(255, 248, 120, 81),
       ),
-      body: GoogleMap(
-        onMapCreated: _onMapCreated,
-        initialCameraPosition: CameraPosition(
-          target: _center,
-          zoom: 15.5,
-        ),
+      body: Stack(
+        children: [
+          GoogleMap(
+            onMapCreated: _onMapCreated,
+            initialCameraPosition: CameraPosition(
+              target: _center,
+              zoom: 15.5,
+            ),
+            zoomControlsEnabled: false, // Disable zoom controls
+          ),
+          Positioned(
+            bottom: 16,
+            right: 16,
+            child: FloatingActionButton(
+              onPressed: () {
+                // Add your onPressed code here!
+              },
+              backgroundColor: Colors.orange,
+              child: Icon(Icons.add_location_alt),
+            ),
+          ),
+        ],
       ),
     );
   }
