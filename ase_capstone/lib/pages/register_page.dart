@@ -3,15 +3,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ase_capstone/components/textfield.dart';
 
-class LoginPage extends StatelessWidget {
+class RegisterPage extends StatelessWidget {
   final Function()? onTap;
-  LoginPage({super.key, required this.onTap});
+  RegisterPage({super.key, required this.onTap});
 
   // text controllers
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
 
-  void signUserIn({required context}) async {
+  void signUserUp({required context}) async {
     // loading indicator
     showDialog(
       context: context,
@@ -34,7 +35,7 @@ class LoginPage extends StatelessWidget {
       return;
     }
 
-    // sign user in
+    // create the user
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: usernameController.text,
@@ -89,7 +90,7 @@ class LoginPage extends StatelessWidget {
       backgroundColor: const Color.fromARGB(255, 245, 184, 165),
 
       appBar: AppBar(
-        title: const Text('Login'),
+        title: const Text('Create an Account'),
         // appbar background color
         backgroundColor: const Color.fromARGB(255, 248, 120, 81),
       ),
@@ -135,6 +136,13 @@ class LoginPage extends StatelessWidget {
                   obscureText: true,
                 ),
 
+                // Password Text Field
+                MyTextField(
+                  controller: confirmPasswordController,
+                  hintText: 'Confirm Password',
+                  obscureText: true,
+                ),
+
                 // forgot password
                 SizedBox(height: 10),
                 Padding(
@@ -154,7 +162,7 @@ class LoginPage extends StatelessWidget {
                 SizedBox(height: 20),
                 MyButton(
                   buttonText: 'Sign In',
-                  onTap: () => signUserIn(context: context),
+                  onTap: () => signUserUp(context: context),
                 ),
 
                 SizedBox(height: 20),

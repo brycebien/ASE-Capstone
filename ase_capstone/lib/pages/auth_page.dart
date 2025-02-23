@@ -1,4 +1,4 @@
-import 'package:ase_capstone/pages/login_page.dart';
+import 'package:ase_capstone/pages/login_or_register_page.dart';
 import 'package:ase_capstone/pages/map_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -23,7 +23,7 @@ class AuthPage extends StatelessWidget {
             return const MapPage();
           } else {
             // if user is not signed in, navigate to login page
-            return LoginPage();
+            return LoginOrRegisterPage();
           }
         },
       ),
