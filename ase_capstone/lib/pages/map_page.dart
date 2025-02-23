@@ -11,7 +11,6 @@ class MapPage extends StatefulWidget {
 
 class _MapPageState extends State<MapPage> {
   final user = FirebaseAuth.instance.currentUser!;
-  late String username; // get username from email
   static const LatLng _center = LatLng(39.033, -84.4631);
   late GoogleMapController mapController;
 
@@ -19,7 +18,6 @@ class _MapPageState extends State<MapPage> {
   void initState() {
     // get username from email
     super.initState();
-    username = user.email!.substring(0, user.email!.indexOf('@'));
   }
 
   void _onMapCreated(GoogleMapController controller) {
@@ -50,7 +48,7 @@ class _MapPageState extends State<MapPage> {
           ),
         ],
         automaticallyImplyLeading: false, // remove back button
-        title: Text('Hello, $username'),
+        title: Text('Campus Compass'),
         backgroundColor: const Color.fromARGB(255, 248, 120, 81),
       ),
       body: GoogleMap(
