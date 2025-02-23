@@ -3,15 +3,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ase_capstone/components/textfield.dart';
 
-class LoginPage extends StatelessWidget {
+class RegisterPage extends StatelessWidget {
   final Function()? onTap;
-  LoginPage({super.key, required this.onTap});
+  RegisterPage({super.key, required this.onTap});
 
   // text controllers
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
 
-  void signUserIn({required context}) async {
+  void signUserUp({required context}) async {
     // loading indicator
     showDialog(
       context: context,
@@ -22,24 +23,38 @@ class LoginPage extends StatelessWidget {
       },
     );
 
-    // check to ensure email and password are not empty
-    if (usernameController.text.isEmpty || passwordController.text.isEmpty) {
-      displayErrorMessage(
-        context: context,
-        message: 'Please enter the username and password for your account',
-      );
-
-      // close loading indicator
-      Navigator.pop(context);
-      return;
-    }
-
-    // sign user in
+    // create the user
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: usernameController.text,
-        password: passwordController.text,
-      );
+      // check to ensure email and password are not empty
+      if (usernameController.text.isEmpty ||
+          passwordController.text.isEmpty ||
+          confirmPasswordController.text.isEmpty) {
+        displayErrorMessage(
+          context: context,
+          message: 'Please fill out all of the fields to continue',
+        );
+
+        // close loading indicator
+        Navigator.pop(context);
+        return;
+      }
+
+      // check to ensure password and confirm password match
+      if (passwordController.text != confirmPasswordController.text) {
+        displayErrorMessage(
+          context: context,
+          message: 'Passwords do not match',
+        );
+
+        // close loading indicator
+        Navigator.pop(context);
+        return;
+      } else {
+        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: usernameController.text,
+          password: passwordController.text,
+        );
+      }
       // close loading indicator
       Navigator.pop(context);
     } on FirebaseAuthException catch (e) {
@@ -89,7 +104,7 @@ class LoginPage extends StatelessWidget {
       backgroundColor: const Color.fromARGB(255, 245, 184, 165),
 
       appBar: AppBar(
-        title: const Text('Login'),
+        title: const Text('Create an Account'),
         // appbar background color
         backgroundColor: const Color.fromARGB(255, 248, 120, 81),
       ),
@@ -117,6 +132,12 @@ class LoginPage extends StatelessWidget {
                     fontSize: 24,
                   ),
                 ),
+                const Text(
+                  'Let\'s create an account!',
+                  style: TextStyle(
+                    fontSize: 20,
+                  ),
+                ),
                 SizedBox(height: 20),
 
                 // Username Text Field
@@ -135,6 +156,15 @@ class LoginPage extends StatelessWidget {
                   obscureText: true,
                 ),
 
+                SizedBox(height: 10),
+
+                // Password Text Field
+                MyTextField(
+                  controller: confirmPasswordController,
+                  hintText: 'Confirm Password',
+                  obscureText: true,
+                ),
+
                 // forgot password
                 SizedBox(height: 10),
                 Padding(
@@ -150,11 +180,11 @@ class LoginPage extends StatelessWidget {
                   ),
                 ),
 
-                // sign in button
+                // sign up button
                 SizedBox(height: 20),
                 MyButton(
-                  buttonText: 'Sign In',
-                  onTap: () => signUserIn(context: context),
+                  buttonText: 'Sign Up',
+                  onTap: () => signUserUp(context: context),
                 ),
 
                 SizedBox(height: 20),
@@ -165,14 +195,14 @@ class LoginPage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Not a member?',
+                      'Already a member?',
                       style: TextStyle(color: Colors.grey[600], fontSize: 14),
                     ),
                     SizedBox(width: 4),
                     GestureDetector(
                       onTap: onTap,
                       child: Text(
-                        'Register now',
+                        'Log In',
                         style: TextStyle(
                           color: Color.fromARGB(255, 248, 120, 81),
                           fontWeight: FontWeight.bold,
