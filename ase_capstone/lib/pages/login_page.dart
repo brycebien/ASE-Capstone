@@ -23,12 +23,12 @@ class LoginPage extends StatelessWidget {
 
     // check to ensure email and password are not empty
     if (usernameController.text.isEmpty || passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content:
-              Text('Please enter the username and password for your account'),
-        ),
+      displayErrorMessage(
+        context: context,
+        message: 'Please enter the username and password for your account',
       );
+
+      // close loading indicator
       Navigator.pop(context);
       return;
     }
@@ -39,21 +39,26 @@ class LoginPage extends StatelessWidget {
         email: usernameController.text,
         password: passwordController.text,
       );
+      // close loading indicator
+      Navigator.pop(context);
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
         // no user found with that email
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('User not found with that email address')),
+        displayErrorMessage(
+          context: context,
+          message: 'User not found with that email address',
         );
       } else if (e.code == 'invalid-credential' || e.code == 'invalid-email') {
         // invalid email
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Invalid username or password')),
+        displayErrorMessage(
+          context: context,
+          message: 'Invalid username or password',
         );
       } else {
         // other errors
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('An unexpected error occurred')),
+        displayErrorMessage(
+          context: context,
+          message: 'An unexpected error occurred',
         );
       }
       Navigator.pop(context);
@@ -62,8 +67,18 @@ class LoginPage extends StatelessWidget {
 
     // close loading indicator
     Navigator.pop(context);
+
     // Navigate to the map page when the button is pressed
     Navigator.pushNamed(context, '/map');
+  }
+
+  void displayErrorMessage({required context, required String message}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      // displays error message at bottom of screen
+      SnackBar(
+        content: Text(message),
+      ),
+    );
   }
 
   @override
