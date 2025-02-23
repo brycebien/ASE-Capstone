@@ -13,6 +13,7 @@ class _MapPageState extends State<MapPage> {
   final user = FirebaseAuth.instance.currentUser!;
   static const LatLng _center = LatLng(39.033, -84.4631);
   late GoogleMapController mapController;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
@@ -39,7 +40,14 @@ class _MapPageState extends State<MapPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.menu),
+          onPressed: () {
+            _scaffoldKey.currentState?.openEndDrawer();
+          },
+        ),
         actions: [
           // sign out button
           IconButton(
@@ -50,6 +58,48 @@ class _MapPageState extends State<MapPage> {
         automaticallyImplyLeading: false, // remove back button
         title: Text('Campus Compass'),
         backgroundColor: const Color.fromARGB(255, 248, 120, 81),
+      ),
+      endDrawer: SafeArea(
+        child: Drawer(
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: <Widget>[
+              DrawerHeader(
+                decoration: BoxDecoration(
+                  color: Colors.orange,
+                ),
+                child: Text(
+                  'Settings',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                  ),
+                ),
+              ),
+              ListTile(
+                leading: Icon(Icons.account_circle),
+                title: Text('Profile'),
+                onTap: () {
+                  // Handle profile tap
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.settings),
+                title: Text('Settings'),
+                onTap: () {
+                  Navigator.pushNamed(context, '/settings');
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.help),
+                title: Text('Help'),
+                onTap: () {
+                  // Handle help tap
+                },
+              ),
+            ],
+          ),
+        ),
       ),
       body: Stack(
         children: [
