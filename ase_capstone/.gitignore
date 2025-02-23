@@ -58,3 +58,5 @@ firebase.json
 .firebase
 .firebaserc
 firebase_options.dart
+
+pubspec.lock
