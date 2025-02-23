@@ -59,4 +59,5 @@ firebase.json
 .firebaserc
 firebase_options.dart
 
+# added pubspec lock to avoid client sided keys
 pubspec.lock
