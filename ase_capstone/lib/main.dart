@@ -16,7 +16,6 @@ void main() async {
 class MyApp extends StatelessWidget {
   MyApp({super.key});
 
-  // Create a ValueNotifier to manage the theme state
   final ValueNotifier<ThemeMode> _themeModeNotifier =
       ValueNotifier(ThemeMode.light);
 
@@ -34,7 +33,7 @@ class MyApp extends StatelessWidget {
           home: AuthPage(),
           routes: {
             '/map': (context) => MapPage(),
-            '/settings': (context) => SettingsPage(), // Add the settings route
+            '/settings': (context) => SettingsPage(),
           },
         );
       },

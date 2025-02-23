@@ -34,29 +34,24 @@ class LoginPage extends StatelessWidget {
       return;
     }
 
-    // sign user in
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: usernameController.text,
         password: passwordController.text,
       );
-      // close loading indicator
       Navigator.pop(context);
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
-        // no user found with that email
         displayErrorMessage(
           context: context,
           message: 'User not found with that email address',
         );
       } else if (e.code == 'invalid-credential' || e.code == 'invalid-email') {
-        // invalid email
         displayErrorMessage(
           context: context,
           message: 'Invalid username or password',
         );
       } else {
-        // other errors
         displayErrorMessage(
           context: context,
           message: 'An unexpected error occurred',
@@ -65,17 +60,12 @@ class LoginPage extends StatelessWidget {
       Navigator.pop(context);
       return;
     }
-
-    // close loading indicator
     Navigator.pop(context);
-
-    // Navigate to the map page when the button is pressed
     Navigator.pushNamed(context, '/map');
   }
 
   void displayErrorMessage({required context, required String message}) {
     ScaffoldMessenger.of(context).showSnackBar(
-      // displays error message at bottom of screen
       SnackBar(
         content: Text(message),
       ),
@@ -85,7 +75,6 @@ class LoginPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // page background color
       backgroundColor: const Color.fromARGB(255, 245, 184, 165),
 
       appBar: AppBar(

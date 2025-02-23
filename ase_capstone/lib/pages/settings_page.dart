@@ -15,7 +15,6 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() {
       isDarkMode = value;
     });
-    // Add logic to apply dark mode theme
   }
 
   void changePassword() {
@@ -110,13 +109,9 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  void changeUserIcon() {
-    // Add logic to change user icon
-  }
+  void changeUserIcon() {}
 
-  void manageNotifications() {
-    // Add logic to manage notifications
-  }
+  void manageNotifications() {}
 
   @override
   Widget build(BuildContext context) {
