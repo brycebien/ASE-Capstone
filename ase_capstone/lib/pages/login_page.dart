@@ -112,7 +112,7 @@ class LoginPage extends StatelessWidget {
 
                 // Welcome Text
                 const Text(
-                  'Welcome to the Campus Compass!',
+                  'Welcome to Campus Compass!',
                   style: TextStyle(
                     fontSize: 24,
                   ),
@@ -170,6 +170,7 @@ class LoginPage extends StatelessWidget {
                     ),
                     SizedBox(width: 4),
                     GestureDetector(
+                      onTap: onTap,
                       child: Text(
                         'Register now',
                         style: TextStyle(

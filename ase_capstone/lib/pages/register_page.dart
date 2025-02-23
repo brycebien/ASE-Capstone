@@ -23,24 +23,38 @@ class RegisterPage extends StatelessWidget {
       },
     );
 
-    // check to ensure email and password are not empty
-    if (usernameController.text.isEmpty || passwordController.text.isEmpty) {
-      displayErrorMessage(
-        context: context,
-        message: 'Please enter the username and password for your account',
-      );
-
-      // close loading indicator
-      Navigator.pop(context);
-      return;
-    }
-
     // create the user
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: usernameController.text,
-        password: passwordController.text,
-      );
+      // check to ensure email and password are not empty
+      if (usernameController.text.isEmpty ||
+          passwordController.text.isEmpty ||
+          confirmPasswordController.text.isEmpty) {
+        displayErrorMessage(
+          context: context,
+          message: 'Please fill out all of the fields to continue',
+        );
+
+        // close loading indicator
+        Navigator.pop(context);
+        return;
+      }
+
+      // check to ensure password and confirm password match
+      if (passwordController.text != confirmPasswordController.text) {
+        displayErrorMessage(
+          context: context,
+          message: 'Passwords do not match',
+        );
+
+        // close loading indicator
+        Navigator.pop(context);
+        return;
+      } else {
+        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: usernameController.text,
+          password: passwordController.text,
+        );
+      }
       // close loading indicator
       Navigator.pop(context);
     } on FirebaseAuthException catch (e) {
@@ -113,9 +127,15 @@ class RegisterPage extends StatelessWidget {
 
                 // Welcome Text
                 const Text(
-                  'Welcome to the Campus Compass!',
+                  'Welcome to Campus Compass!',
                   style: TextStyle(
                     fontSize: 24,
+                  ),
+                ),
+                const Text(
+                  'Let\'s create an account!',
+                  style: TextStyle(
+                    fontSize: 20,
                   ),
                 ),
                 SizedBox(height: 20),
@@ -135,6 +155,8 @@ class RegisterPage extends StatelessWidget {
                   hintText: 'Password',
                   obscureText: true,
                 ),
+
+                SizedBox(height: 10),
 
                 // Password Text Field
                 MyTextField(
@@ -158,10 +180,10 @@ class RegisterPage extends StatelessWidget {
                   ),
                 ),
 
-                // sign in button
+                // sign up button
                 SizedBox(height: 20),
                 MyButton(
-                  buttonText: 'Sign In',
+                  buttonText: 'Sign Up',
                   onTap: () => signUserUp(context: context),
                 ),
 
@@ -173,13 +195,14 @@ class RegisterPage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Not a member?',
+                      'Already a member?',
                       style: TextStyle(color: Colors.grey[600], fontSize: 14),
                     ),
                     SizedBox(width: 4),
                     GestureDetector(
+                      onTap: onTap,
                       child: Text(
-                        'Register now',
+                        'Log In',
                         style: TextStyle(
                           color: Color.fromARGB(255, 248, 120, 81),
                           fontWeight: FontWeight.bold,
