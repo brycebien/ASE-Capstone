@@ -165,21 +165,6 @@ class RegisterPage extends StatelessWidget {
                   obscureText: true,
                 ),
 
-                // forgot password
-                SizedBox(height: 10),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Text(
-                        'Forgot Password?',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                      ),
-                    ],
-                  ),
-                ),
-
                 // sign up button
                 SizedBox(height: 20),
                 MyButton(
