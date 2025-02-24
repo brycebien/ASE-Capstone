@@ -14,29 +14,17 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-  MyApp({super.key});
-
-  // Create a ValueNotifier to manage the theme state
-  final ValueNotifier<ThemeMode> _themeModeNotifier =
-      ValueNotifier(ThemeMode.light);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: _themeModeNotifier,
-      builder: (context, themeMode, child) {
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          title: 'Campus Compass',
-          theme: ThemeData.light(),
-          darkTheme: ThemeData.dark(),
-          themeMode: themeMode,
-          home: AuthPage(),
-          routes: {
-            '/map': (context) => MapPage(),
-            '/settings': (context) => SettingsPage(),
-          },
-        );
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Campus Compass',
+      home: AuthPage(),
+      routes: {
+        '/map': (context) => MapPage(),
+        '/settings': (context) => SettingsPage(),
       },
     );
   }
