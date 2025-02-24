@@ -1,4 +1,5 @@
 import 'package:ase_capstone/components/my_button.dart';
+import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ase_capstone/components/textfield.dart';
@@ -29,7 +30,7 @@ class RegisterPage extends StatelessWidget {
       if (usernameController.text.isEmpty ||
           passwordController.text.isEmpty ||
           confirmPasswordController.text.isEmpty) {
-        displayErrorMessage(
+        Utils.displayMessage(
           context: context,
           message: 'Please fill out all of the fields to continue',
         );
@@ -41,7 +42,7 @@ class RegisterPage extends StatelessWidget {
 
       // check to ensure password and confirm password match
       if (passwordController.text != confirmPasswordController.text) {
-        displayErrorMessage(
+        Utils.displayMessage(
           context: context,
           message: 'Passwords do not match',
         );
@@ -60,41 +61,32 @@ class RegisterPage extends StatelessWidget {
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
         // no user found with that email
-        displayErrorMessage(
+        Utils.displayMessage(
           context: context,
           message: 'User not found with that email address',
         );
       } else if (e.code == 'invalid-credential' || e.code == 'invalid-email') {
         // invalid email
-        displayErrorMessage(
+        Utils.displayMessage(
           context: context,
           message: 'Invalid username or password',
         );
+      } else if (e.code == 'email-already-in-use') {
+        Utils.displayMessage(
+            context: context, message: 'A user with that email already exists');
       } else {
         // other errors
-        displayErrorMessage(
+        Utils.displayMessage(
           context: context,
-          message: 'An unexpected error occurred',
+          message: 'An unexpected error occurred ${e.code}',
         );
       }
       Navigator.pop(context);
       return;
     }
 
-    // close loading indicator
-    Navigator.pop(context);
-
     // Navigate to the map page when the button is pressed
     Navigator.pushNamed(context, '/map');
-  }
-
-  void displayErrorMessage({required context, required String message}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      // displays error message at bottom of screen
-      SnackBar(
-        content: Text(message),
-      ),
-    );
   }
 
   @override
