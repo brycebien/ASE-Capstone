@@ -15,8 +15,21 @@ void main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  bool isDarkMode = false;
+
+  void toggleTheme(bool mode) {
+    setState(() {
+      isDarkMode = mode;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,11 +37,15 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: lightTheme,
       darkTheme: darkTheme,
+      themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
       title: 'Campus Compass',
       home: const AuthPage(),
       routes: {
         '/map': (context) => MapPage(),
-        '/settings': (context) => SettingsPage(),
+        '/settings': (context) => SettingsPage(
+              toggleTheme: toggleTheme,
+              isDarkMode: isDarkMode,
+            ),
       },
     );
   }

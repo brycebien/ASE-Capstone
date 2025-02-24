@@ -4,7 +4,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ase_capstone/utils/utils.dart';
 
 class SettingsPage extends StatefulWidget {
-  const SettingsPage({super.key});
+  final Function toggleTheme;
+  final bool isDarkMode;
+
+  const SettingsPage({
+    super.key,
+    required this.toggleTheme,
+    required this.isDarkMode,
+  });
 
   @override
   SettingsPageState createState() => SettingsPageState();
@@ -17,10 +24,17 @@ class SettingsPageState extends State<SettingsPage> {
   final User? user = FirebaseAuth.instance.currentUser!;
   bool isDarkMode = false;
 
+  @override
+  void initState() {
+    super.initState();
+    isDarkMode = widget.isDarkMode;
+  }
+
   // function to change dark mode (true/false)
   void toggleDarkMode(bool value) {
     setState(() {
       isDarkMode = value;
+      widget.toggleTheme(isDarkMode);
     });
   }
 
