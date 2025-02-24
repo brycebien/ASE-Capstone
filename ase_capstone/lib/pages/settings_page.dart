@@ -141,7 +141,7 @@ class SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Settings'),
+        title: Text('General'),
         backgroundColor: const Color.fromARGB(255, 248, 120, 81),
       ),
       body: ListView(

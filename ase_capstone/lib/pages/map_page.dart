@@ -85,7 +85,7 @@ class _MapPageState extends State<MapPage> {
               ),
               ListTile(
                 leading: Icon(Icons.settings),
-                title: Text('Settings'),
+                title: Text('General'),
                 onTap: () {
                   Navigator.pushNamed(
                     context,
