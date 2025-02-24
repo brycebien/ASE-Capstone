@@ -83,13 +83,13 @@ class LoginPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       // page background color
-      backgroundColor: const Color.fromARGB(255, 245, 184, 165),
+      backgroundColor: Theme.of(context).colorScheme.surface,
 
       appBar: AppBar(
-        title: const Text('Login'),
-        // appbar background color
-        backgroundColor: const Color.fromARGB(255, 248, 120, 81),
-      ),
+          title: Text('Login',
+              style: TextStyle(color: Theme.of(context).colorScheme.tertiary)),
+          // appbar background color
+          backgroundColor: Theme.of(context).colorScheme.primary),
 
       // Safe area to avoid notches and status bar
       body: SafeArea(
@@ -141,7 +141,10 @@ class LoginPage extends StatelessWidget {
                     children: [
                       Text(
                         'Forgot Password?',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.secondary,
+                          fontSize: 14,
+                        ),
                       ),
                     ],
                   ),
@@ -155,7 +158,8 @@ class LoginPage extends StatelessWidget {
                 ),
 
                 SizedBox(height: 20),
-                Divider(thickness: 1, color: Colors.black),
+                Divider(
+                    thickness: 1, color: const Color.fromARGB(255, 75, 75, 75)),
 
                 // Sign Up
                 Row(
@@ -163,7 +167,9 @@ class LoginPage extends StatelessWidget {
                   children: [
                     Text(
                       'Not a member?',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.secondary,
+                          fontSize: 14),
                     ),
                     SizedBox(width: 4),
                     GestureDetector(
@@ -171,7 +177,7 @@ class LoginPage extends StatelessWidget {
                       child: Text(
                         'Register now',
                         style: TextStyle(
-                          color: Color.fromARGB(255, 248, 120, 81),
+                          color: Theme.of(context).colorScheme.primary,
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
                         ),
