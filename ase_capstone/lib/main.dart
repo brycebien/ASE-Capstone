@@ -4,39 +4,48 @@ import 'package:ase_capstone/pages/settings_page.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'package:ase_capstone/themes/light_theme.dart';
+import 'package:ase_capstone/themes/dark_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
-  MyApp({super.key});
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
 
-  // Create a ValueNotifier to manage the theme state
-  final ValueNotifier<ThemeMode> _themeModeNotifier =
-      ValueNotifier(ThemeMode.light);
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  bool isDarkMode = true;
+
+  void toggleTheme(bool mode) {
+    setState(() {
+      isDarkMode = mode;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: _themeModeNotifier,
-      builder: (context, themeMode, child) {
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          title: 'Campus Compass',
-          theme: ThemeData.light(),
-          darkTheme: ThemeData.dark(),
-          themeMode: themeMode,
-          home: AuthPage(),
-          routes: {
-            '/map': (context) => MapPage(),
-            '/settings': (context) => SettingsPage(),
-          },
-        );
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: lightTheme,
+      darkTheme: darkTheme,
+      themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
+      title: 'Campus Compass',
+      home: const AuthPage(),
+      routes: {
+        '/map': (context) => MapPage(),
+        '/settings': (context) => SettingsPage(
+              toggleTheme: toggleTheme,
+              isDarkMode: isDarkMode,
+            ),
       },
     );
   }

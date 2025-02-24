@@ -1,4 +1,5 @@
 import 'package:ase_capstone/components/my_button.dart';
+import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ase_capstone/components/textfield.dart';
@@ -24,7 +25,7 @@ class LoginPage extends StatelessWidget {
 
     // check to ensure email and password are not empty
     if (usernameController.text.isEmpty || passwordController.text.isEmpty) {
-      displayErrorMessage(
+      Utils.displayMessage(
         context: context,
         message: 'Please enter the username and password for your account',
       );
@@ -45,19 +46,19 @@ class LoginPage extends StatelessWidget {
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
         // no user found with that email
-        displayErrorMessage(
+        Utils.displayMessage(
           context: context,
           message: 'User not found with that email address',
         );
       } else if (e.code == 'invalid-credential' || e.code == 'invalid-email') {
         // invalid email
-        displayErrorMessage(
+        Utils.displayMessage(
           context: context,
           message: 'Invalid username or password',
         );
       } else {
         // other errors
-        displayErrorMessage(
+        Utils.displayMessage(
           context: context,
           message: 'An unexpected error occurred',
         );
@@ -70,25 +71,14 @@ class LoginPage extends StatelessWidget {
     Navigator.pushNamed(context, '/map');
   }
 
-  void displayErrorMessage({required context, required String message}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      // displays error message at bottom of screen
-      SnackBar(
-        content: Text(message),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       // page background color
-      backgroundColor: const Color.fromARGB(255, 245, 184, 165),
+      backgroundColor: Theme.of(context).colorScheme.surface,
 
       appBar: AppBar(
-        title: const Text('Login'),
-        // appbar background color
-        backgroundColor: const Color.fromARGB(255, 248, 120, 81),
+        title: Text('Login'),
       ),
 
       // Safe area to avoid notches and status bar
@@ -141,7 +131,10 @@ class LoginPage extends StatelessWidget {
                     children: [
                       Text(
                         'Forgot Password?',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.secondary,
+                          fontSize: 14,
+                        ),
                       ),
                     ],
                   ),
@@ -155,7 +148,8 @@ class LoginPage extends StatelessWidget {
                 ),
 
                 SizedBox(height: 20),
-                Divider(thickness: 1, color: Colors.black),
+                Divider(
+                    thickness: 1, color: const Color.fromARGB(255, 75, 75, 75)),
 
                 // Sign Up
                 Row(
@@ -163,7 +157,9 @@ class LoginPage extends StatelessWidget {
                   children: [
                     Text(
                       'Not a member?',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.secondary,
+                          fontSize: 14),
                     ),
                     SizedBox(width: 4),
                     GestureDetector(
@@ -171,7 +167,7 @@ class LoginPage extends StatelessWidget {
                       child: Text(
                         'Register now',
                         style: TextStyle(
-                          color: Color.fromARGB(255, 248, 120, 81),
+                          color: Theme.of(context).colorScheme.primary,
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
                         ),

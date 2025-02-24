@@ -57,7 +57,6 @@ class _MapPageState extends State<MapPage> {
         ],
         automaticallyImplyLeading: false, // remove back button
         title: Text('Campus Compass'),
-        backgroundColor: const Color.fromARGB(255, 248, 120, 81),
       ),
       endDrawer: SafeArea(
         child: Drawer(
@@ -66,12 +65,12 @@ class _MapPageState extends State<MapPage> {
             children: <Widget>[
               DrawerHeader(
                 decoration: BoxDecoration(
-                  color: Colors.orange,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
                 child: Text(
                   'Settings',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.tertiary,
                     fontSize: 24,
                   ),
                 ),
@@ -85,7 +84,7 @@ class _MapPageState extends State<MapPage> {
               ),
               ListTile(
                 leading: Icon(Icons.settings),
-                title: Text('Settings'),
+                title: Text('General'),
                 onTap: () {
                   Navigator.pushNamed(
                     context,
