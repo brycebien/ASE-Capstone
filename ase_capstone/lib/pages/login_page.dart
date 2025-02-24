@@ -78,10 +78,7 @@ class LoginPage extends StatelessWidget {
       backgroundColor: Theme.of(context).colorScheme.surface,
 
       appBar: AppBar(
-        title: Text('Login',
-            style: TextStyle(color: Theme.of(context).colorScheme.tertiary)),
-        // appbar background color
-        // backgroundColor: Theme.of(context).colorScheme.primary,
+        title: Text('Login'),
       ),
 
       // Safe area to avoid notches and status bar

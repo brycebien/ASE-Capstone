@@ -22,7 +22,11 @@ class MyTextField extends StatelessWidget {
         obscureText: obscureText,
         decoration: InputDecoration(
           labelText: hintText,
+          labelStyle: TextStyle(
+            color: Theme.of(context).colorScheme.primary,
+          ),
           focusColor: Theme.of(context).colorScheme.surface,
+
           // border colors
           enabledBorder: OutlineInputBorder(
             borderSide: BorderSide(color: Colors.black),
@@ -31,7 +35,7 @@ class MyTextField extends StatelessWidget {
             borderSide: BorderSide(color: Colors.grey),
           ),
           // background color of textfield
-          fillColor: Colors.grey[200],
+          fillColor: Theme.of(context).colorScheme.surface,
           filled: true,
         ),
       ),

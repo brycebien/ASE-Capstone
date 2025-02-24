@@ -8,13 +8,13 @@ final ThemeData darkTheme = ThemeData(
     backgroundColor: Color.fromARGB(255, 54, 54, 54),
 
     // items on app bar like settings or logout
-    foregroundColor: Color.fromARGB(255, 54, 54, 54),
+    foregroundColor: Color.fromARGB(255, 180, 180, 180),
 
     // title on app bar
     titleTextStyle: TextStyle(
       fontSize: 26,
       fontWeight: FontWeight.bold,
-      color: Color.fromARGB(255, 54, 54, 54),
+      color: Color.fromARGB(255, 180, 180, 180),
     ),
   ),
   colorScheme: ColorScheme.dark(
