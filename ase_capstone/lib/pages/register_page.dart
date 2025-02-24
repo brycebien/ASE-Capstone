@@ -93,12 +93,17 @@ class RegisterPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       // page background color
-      backgroundColor: const Color.fromARGB(255, 245, 184, 165),
+      backgroundColor: Theme.of(context).colorScheme.surface,
 
       appBar: AppBar(
-        title: const Text('Create an Account'),
+        title: Text(
+          'Create an Account',
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.tertiary,
+          ),
+        ),
         // appbar background color
-        backgroundColor: const Color.fromARGB(255, 248, 120, 81),
+        backgroundColor: Theme.of(context).colorScheme.primary,
       ),
 
       // Safe area to avoid notches and status bar
@@ -181,7 +186,7 @@ class RegisterPage extends StatelessWidget {
                       child: Text(
                         'Log In',
                         style: TextStyle(
-                          color: Color.fromARGB(255, 248, 120, 81),
+                          color: Theme.of(context).colorScheme.primary,
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
                         ),
