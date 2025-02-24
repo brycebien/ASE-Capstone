@@ -66,9 +66,6 @@ class LoginPage extends StatelessWidget {
       return;
     }
 
-    // close loading indicator
-    Navigator.pop(context);
-
     // Navigate to the map page when the button is pressed
     Navigator.pushNamed(context, '/map');
   }
