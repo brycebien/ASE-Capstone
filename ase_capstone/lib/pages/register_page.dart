@@ -4,39 +4,40 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ase_capstone/components/textfield.dart';
 
-class RegisterPage extends StatelessWidget {
+class RegisterPage extends StatefulWidget {
   final Function()? onTap;
-  RegisterPage({super.key, required this.onTap});
+  const RegisterPage({super.key, required this.onTap});
 
+  @override
+  State<RegisterPage> createState() => _RegisterPageState();
+}
+
+class _RegisterPageState extends State<RegisterPage> {
   // text controllers
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
 
-  void signUserUp({required context}) async {
-    // loading indicator
-    showDialog(
-      context: context,
-      builder: (context) {
-        return const Center(
-          child: CircularProgressIndicator(),
-        );
-      },
-    );
+  bool _isLoading = false;
+  String _errorMessage = '';
 
+  Future<void> signUserUp() async {
     // create the user
     try {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = '';
+      });
+
       // check to ensure email and password are not empty
       if (usernameController.text.isEmpty ||
           passwordController.text.isEmpty ||
           confirmPasswordController.text.isEmpty) {
-        Utils.displayMessage(
-          context: context,
-          message: 'Please fill out all of the fields to continue',
-        );
-
-        // close loading indicator
-        Navigator.pop(context);
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Please fill out all of the fields to continue';
+          Utils.displayMessage(context: context, message: _errorMessage);
+        });
         return;
       }
 
@@ -46,9 +47,6 @@ class RegisterPage extends StatelessWidget {
           context: context,
           message: 'Passwords do not match',
         );
-
-        // close loading indicator
-        Navigator.pop(context);
         return;
       } else {
         await FirebaseAuth.instance.createUserWithEmailAndPassword(
@@ -56,37 +54,34 @@ class RegisterPage extends StatelessWidget {
           password: passwordController.text,
         );
       }
-      // close loading indicator
-      Navigator.pop(context);
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found') {
-        // no user found with that email
-        Utils.displayMessage(
-          context: context,
-          message: 'User not found with that email address',
-        );
-      } else if (e.code == 'invalid-credential' || e.code == 'invalid-email') {
-        // invalid email
-        Utils.displayMessage(
-          context: context,
-          message: 'Invalid username or password',
-        );
-      } else if (e.code == 'email-already-in-use') {
-        Utils.displayMessage(
-            context: context, message: 'A user with that email already exists');
-      } else {
-        // other errors
-        Utils.displayMessage(
-          context: context,
-          message: 'An unexpected error occurred ${e.code}',
-        );
-      }
-      Navigator.pop(context);
+      setState(() {
+        if (e.code == 'user-not-found') {
+          // no user found with that email
+          _errorMessage = 'User not found with that email address';
+          _isLoading = false;
+        } else if (e.code == 'invalid-credential' ||
+            e.code == 'invalid-email') {
+          // invalid email
+          _errorMessage = 'Invalid username or password';
+          _isLoading = false;
+        } else if (e.code == 'email-already-in-use') {
+          _errorMessage = 'A user with that email already exists';
+          _isLoading = false;
+        } else {
+          // other errors
+          _errorMessage = 'An unexpected error occurred ${e.code}';
+          _isLoading = false;
+        }
+        Utils.displayMessage(context: context, message: _errorMessage);
+      });
       return;
     }
 
-    // Navigate to the map page when the button is pressed
-    Navigator.pushNamed(context, '/map');
+    setState(() {
+      // Navigate to the map page when the button is pressed
+      Navigator.pushNamed(context, '/map');
+    });
   }
 
   @override
@@ -107,6 +102,12 @@ class RegisterPage extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
+                if (_isLoading)
+                  Column(
+                    children: [
+                      const CircularProgressIndicator(),
+                    ],
+                  ),
                 // Campus Compass Logo
                 Icon(
                   Icons.account_circle,
@@ -159,7 +160,7 @@ class RegisterPage extends StatelessWidget {
                 SizedBox(height: 20),
                 MyButton(
                   buttonText: 'Sign Up',
-                  onTap: () => signUserUp(context: context),
+                  onTap: () => signUserUp(),
                 ),
 
                 SizedBox(height: 20),
@@ -175,7 +176,7 @@ class RegisterPage extends StatelessWidget {
                     ),
                     SizedBox(width: 4),
                     GestureDetector(
-                      onTap: onTap,
+                      onTap: widget.onTap,
                       child: Text(
                         'Log In',
                         style: TextStyle(
