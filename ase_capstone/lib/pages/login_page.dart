@@ -4,71 +4,53 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ase_capstone/components/textfield.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   final Function()? onTap;
-  LoginPage({super.key, required this.onTap});
+  const LoginPage({super.key, required this.onTap});
 
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
   // text controllers
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
 
-  void signUserIn({required context}) async {
-    // loading indicator
-    showDialog(
-      context: context,
-      builder: (context) {
-        return const Center(
-          child: CircularProgressIndicator(),
-        );
-      },
-    );
+  bool _isLoading = false;
+  String _errorMessage = '';
 
-    // check to ensure email and password are not empty
-    if (usernameController.text.isEmpty || passwordController.text.isEmpty) {
-      Utils.displayMessage(
-        context: context,
-        message: 'Please enter the username and password for your account',
-      );
+  Future<void> signUserIn() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+    });
 
-      // close loading indicator
-      Navigator.pop(context);
-      return;
-    }
-
-    // sign user in
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: usernameController.text,
         password: passwordController.text,
       );
-      // close loading indicator
-      Navigator.pop(context);
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found') {
-        // no user found with that email
-        Utils.displayMessage(
-          context: context,
-          message: 'User not found with that email address',
-        );
-      } else if (e.code == 'invalid-credential' || e.code == 'invalid-email') {
-        // invalid email
-        Utils.displayMessage(
-          context: context,
-          message: 'Invalid username or password',
-        );
-      } else {
-        // other errors
-        Utils.displayMessage(
-          context: context,
-          message: 'An unexpected error occurred',
-        );
-      }
-      Navigator.pop(context);
+      setState(() {
+        if (e.code == 'invalid-credential' || e.code == 'invalid-email') {
+          _errorMessage = 'Invalid username or password';
+        } else if (usernameController.text.isEmpty ||
+            passwordController.text.isEmpty) {
+          _errorMessage =
+              'Please enter the username and password for your account';
+        } else {
+          _errorMessage = 'An unexpected error occurred';
+        }
+        _isLoading = false;
+        Utils.displayMessage(context: context, message: _errorMessage);
+      });
       return;
     }
 
-    // Navigate to the map page when the button is pressed
-    Navigator.pushNamed(context, '/map');
+    setState(() {
+      Navigator.pushNamed(context, '/map');
+    });
   }
 
   @override
@@ -89,6 +71,12 @@ class LoginPage extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
+                if (_isLoading)
+                  Column(
+                    children: [
+                      const CircularProgressIndicator(),
+                    ],
+                  ),
                 // Campus Compass Logo
                 Icon(
                   Icons.account_circle,
@@ -144,7 +132,7 @@ class LoginPage extends StatelessWidget {
                 SizedBox(height: 20),
                 MyButton(
                   buttonText: 'Sign In',
-                  onTap: () => signUserIn(context: context),
+                  onTap: () => signUserIn(),
                 ),
 
                 SizedBox(height: 20),
@@ -163,7 +151,7 @@ class LoginPage extends StatelessWidget {
                     ),
                     SizedBox(width: 4),
                     GestureDetector(
-                      onTap: onTap,
+                      onTap: widget.onTap,
                       child: Text(
                         'Register now',
                         style: TextStyle(
