@@ -20,12 +20,6 @@ class _LoginPageState extends State<LoginPage> {
   bool _isLoading = false;
   String _errorMessage = '';
 
-  void displayErrorMessage(String message) {
-    setState(() {
-      Utils.displayMessage(context: context, message: _errorMessage);
-    });
-  }
-
   Future<void> signUserIn() async {
     setState(() {
       _isLoading = true;
