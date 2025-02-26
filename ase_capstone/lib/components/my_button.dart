@@ -19,14 +19,14 @@ class MyButton extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color.fromARGB(255, 248, 120, 81),
+            color: Theme.of(context).colorScheme.primary,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Center(
             child: Text(
               buttonText,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.tertiary,
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
               ),

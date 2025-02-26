@@ -1,66 +1,129 @@
+import 'package:ase_capstone/components/textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:ase_capstone/utils/utils.dart';
 
 class SettingsPage extends StatefulWidget {
-  const SettingsPage({super.key});
+  final Function toggleTheme;
+  final bool isDarkMode;
+
+  const SettingsPage({
+    super.key,
+    required this.toggleTheme,
+    required this.isDarkMode,
+  });
 
   @override
-  _SettingsPageState createState() => _SettingsPageState();
+  SettingsPageState createState() => SettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsPage> {
+class SettingsPageState extends State<SettingsPage> {
+  TextEditingController oldPasswordController = TextEditingController();
+  TextEditingController newPasswordController = TextEditingController();
+  TextEditingController confirmPasswordController = TextEditingController();
+  final User? user = FirebaseAuth.instance.currentUser!;
   bool isDarkMode = false;
 
+  @override
+  void initState() {
+    super.initState();
+    isDarkMode = widget.isDarkMode;
+  }
+
+  // function to change dark mode (true/false)
   void toggleDarkMode(bool value) {
     setState(() {
       isDarkMode = value;
+      widget.toggleTheme(isDarkMode);
     });
   }
 
-  void changePassword() {
+  void _updatePassword({required String message}) async {
+    setState(() {
+      Utils.displayMessage(context: context, message: message);
+    });
+  }
+
+  void _changeUserPassword() async {
+    try {
+      // reauthenticate user to change password (will throw error if password is incorrect)
+      AuthCredential credential = EmailAuthProvider.credential(
+        email: user!.email!,
+        password: oldPasswordController.text,
+      );
+
+      // reauthenticate user
+      await user!.reauthenticateWithCredential(credential);
+
+      // check to ensure password and confirm password match
+      if ((confirmPasswordController.text == newPasswordController.text) &&
+          (confirmPasswordController.text.isNotEmpty &&
+              newPasswordController.text.isNotEmpty)) {
+        // update password
+        await user!.updatePassword(newPasswordController.text);
+        // send message to user that password has been changed
+        _updatePassword(message: 'Password changed successfully');
+      } else {
+        // send error to user that passwords do not match
+        _updatePassword(message: 'Passwords do not match');
+      }
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'invalid-credential') {
+        // send error to user that password is incorrect
+        _updatePassword(message: 'Invalid credentials');
+      } else if (e.code == 'weak-password') {
+        // send error to user that password is too weak
+        _updatePassword(message: 'That password is too weak please try again.');
+      } else {
+        // send error to user that an unknown error occurred
+        _updatePassword(message: 'An unknown error occurred');
+      }
+    }
+  }
+
+  void changePasswordDialog() {
+    // Show dialog to change password
     showDialog(
       context: context,
       builder: (context) {
-        final TextEditingController passwordController =
-            TextEditingController();
         return AlertDialog(
           title: Text('Change Password'),
-          content: TextField(
-            controller: passwordController,
-            decoration: InputDecoration(hintText: 'Enter new password'),
-            obscureText: true,
+          content: SingleChildScrollView(
+            child: Column(
+              children: [
+                MyTextField(
+                  controller: oldPasswordController,
+                  hintText: 'Enter your old password',
+                  obscureText: true,
+                ),
+                SizedBox(height: 10),
+                MyTextField(
+                  controller: newPasswordController,
+                  hintText: 'Enter your new password',
+                  obscureText: true,
+                ),
+                SizedBox(height: 10),
+                MyTextField(
+                  controller: confirmPasswordController,
+                  hintText: 'Confirm your new password',
+                  obscureText: true,
+                ),
+              ],
+            ),
           ),
-          actions: [
+          actions: <Widget>[
             TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
               child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
             ),
             TextButton(
-              onPressed: () async {
-                String newPassword = passwordController.text;
-                if (newPassword.isNotEmpty) {
-                  try {
-                    User? user = FirebaseAuth.instance.currentUser;
-                    await user?.updatePassword(newPassword);
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Password changed successfully')),
-                    );
-                  } catch (e) {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Failed to change password: $e')),
-                    );
-                  }
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Password cannot be empty')),
-                  );
-                }
-              },
               child: Text('Change'),
+              onPressed: () {
+                _changeUserPassword();
+                Navigator.of(context).pop();
+              },
             ),
           ],
         );
@@ -68,46 +131,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  void deleteAccount() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Delete Account'),
-          content: Text(
-              'Are you sure you want to delete your account? This action cannot be undone.'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () async {
-                try {
-                  User? user = FirebaseAuth.instance.currentUser;
-                  await user?.delete();
-                  Navigator.pop(context);
-                  Navigator.pushNamedAndRemoveUntil(
-                      context, '/', (route) => false);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Account deleted successfully')),
-                  );
-                } catch (e) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed to delete account: $e')),
-                  );
-                }
-              },
-              child: Text('Delete'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  void deleteAccount() {}
 
   void changeUserIcon() {}
 
@@ -117,8 +141,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Settings'),
-        backgroundColor: const Color.fromARGB(255, 248, 120, 81),
+        title: Text('General'),
       ),
       body: ListView(
         padding: EdgeInsets.zero,
@@ -132,7 +155,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ListTile(
             leading: Icon(Icons.lock),
             title: Text('Change Password'),
-            onTap: changePassword,
+            onTap: changePasswordDialog,
           ),
           ListTile(
             leading: Icon(Icons.delete),

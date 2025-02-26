@@ -1,86 +1,66 @@
 import 'package:ase_capstone/components/my_button.dart';
+import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ase_capstone/components/textfield.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   final Function()? onTap;
-  LoginPage({super.key, required this.onTap});
+  const LoginPage({super.key, required this.onTap});
 
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
   // text controllers
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
 
-  void signUserIn({required context}) async {
-    // loading indicator
-    showDialog(
-      context: context,
-      builder: (context) {
-        return const Center(
-          child: CircularProgressIndicator(),
-        );
-      },
-    );
+  bool _isLoading = false;
+  String _errorMessage = '';
 
-    // check to ensure email and password are not empty
-    if (usernameController.text.isEmpty || passwordController.text.isEmpty) {
-      displayErrorMessage(
-        context: context,
-        message: 'Please enter the username and password for your account',
-      );
-
-      // close loading indicator
-      Navigator.pop(context);
-      return;
-    }
+  Future<void> signUserIn() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+    });
 
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: usernameController.text,
         password: passwordController.text,
       );
-      Navigator.pop(context);
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found') {
-        displayErrorMessage(
-          context: context,
-          message: 'User not found with that email address',
-        );
-      } else if (e.code == 'invalid-credential' || e.code == 'invalid-email') {
-        displayErrorMessage(
-          context: context,
-          message: 'Invalid username or password',
-        );
-      } else {
-        displayErrorMessage(
-          context: context,
-          message: 'An unexpected error occurred',
-        );
-      }
-      Navigator.pop(context);
+      setState(() {
+        if (e.code == 'invalid-credential' || e.code == 'invalid-email') {
+          _errorMessage = 'Invalid username or password';
+        } else if (usernameController.text.isEmpty ||
+            passwordController.text.isEmpty) {
+          _errorMessage =
+              'Please enter the username and password for your account';
+        } else {
+          _errorMessage = 'An unexpected error occurred';
+        }
+        _isLoading = false;
+        Utils.displayMessage(context: context, message: _errorMessage);
+      });
       return;
     }
-    Navigator.pop(context);
-    Navigator.pushNamed(context, '/map');
-  }
 
-  void displayErrorMessage({required context, required String message}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-      ),
-    );
+    setState(() {
+      Navigator.pushNamed(context, '/map');
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 245, 184, 165),
+      // page background color
+      backgroundColor: Theme.of(context).colorScheme.surface,
 
       appBar: AppBar(
-        title: const Text('Login'),
-        // appbar background color
-        backgroundColor: const Color.fromARGB(255, 248, 120, 81),
+        title: Text('Login'),
       ),
 
       // Safe area to avoid notches and status bar
@@ -91,6 +71,12 @@ class LoginPage extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
+                if (_isLoading)
+                  Column(
+                    children: [
+                      const CircularProgressIndicator(),
+                    ],
+                  ),
                 // Campus Compass Logo
                 Icon(
                   Icons.account_circle,
@@ -133,7 +119,10 @@ class LoginPage extends StatelessWidget {
                     children: [
                       Text(
                         'Forgot Password?',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.secondary,
+                          fontSize: 14,
+                        ),
                       ),
                     ],
                   ),
@@ -143,11 +132,12 @@ class LoginPage extends StatelessWidget {
                 SizedBox(height: 20),
                 MyButton(
                   buttonText: 'Sign In',
-                  onTap: () => signUserIn(context: context),
+                  onTap: () => signUserIn(),
                 ),
 
                 SizedBox(height: 20),
-                Divider(thickness: 1, color: Colors.black),
+                Divider(
+                    thickness: 1, color: const Color.fromARGB(255, 75, 75, 75)),
 
                 // Sign Up
                 Row(
@@ -155,15 +145,17 @@ class LoginPage extends StatelessWidget {
                   children: [
                     Text(
                       'Not a member?',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.secondary,
+                          fontSize: 14),
                     ),
                     SizedBox(width: 4),
                     GestureDetector(
-                      onTap: onTap,
+                      onTap: widget.onTap,
                       child: Text(
                         'Register now',
                         style: TextStyle(
-                          color: Color.fromARGB(255, 248, 120, 81),
+                          color: Theme.of(context).colorScheme.primary,
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
                         ),
