@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'dart:async';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -14,26 +15,96 @@ class _MapPageState extends State<MapPage> {
   static const LatLng _center = LatLng(39.033, -84.4631);
   late GoogleMapController mapController;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
-  @override
-  void initState() {
-    // get username from email
-    super.initState();
-  }
+  Set<Marker> _markers = {};
 
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
   }
 
-  // sign user out
+  void _addEventMarker(LatLng position) async {
+    String markerId = position.toString();
+    String markerTitle = "Reported Event";
+    double markerColor = BitmapDescriptor.hueOrange;
+
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        TextEditingController nameController = TextEditingController();
+        return AlertDialog(
+          title: Text("Customize Event Marker"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(labelText: "Event Name"),
+              ),
+              DropdownButton<double>(
+                value: markerColor,
+                items: [
+                  DropdownMenuItem(
+                    child: Text("Orange"),
+                    value: BitmapDescriptor.hueOrange,
+                  ),
+                  DropdownMenuItem(
+                    child: Text("Red"),
+                    value: BitmapDescriptor.hueRed,
+                  ),
+                  DropdownMenuItem(
+                    child: Text("Blue"),
+                    value: BitmapDescriptor.hueBlue,
+                  ),
+                ],
+                onChanged: (value) {
+                  if (value != null) {
+                    markerColor = value;
+                  }
+                },
+              )
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                if (nameController.text.isNotEmpty) {
+                  markerTitle = nameController.text;
+                }
+                Navigator.pop(context);
+              },
+              child: Text("Save"),
+            ),
+          ],
+        );
+      },
+    );
+
+    final Marker marker = Marker(
+      markerId: MarkerId(markerId),
+      position: position,
+      icon: BitmapDescriptor.defaultMarkerWithHue(markerColor),
+      infoWindow: InfoWindow(title: markerTitle),
+    );
+
+    setState(() {
+      _markers.add(marker);
+    });
+
+    Timer(Duration(minutes: 2), () {
+      setState(() {
+        _markers.removeWhere((m) => m.markerId.value == markerId);
+      });
+    });
+  }
+
   void signUserOut() async {
-    // sign out user
     await FirebaseAuth.instance.signOut();
-
-    // check if the widget is still mounted
     if (!mounted) return;
-
-    // navigate to login page
     Navigator.of(context).pushReplacementNamed('/');
   }
 
@@ -49,13 +120,12 @@ class _MapPageState extends State<MapPage> {
           },
         ),
         actions: [
-          // sign out button
           IconButton(
             onPressed: signUserOut,
             icon: Icon(Icons.logout),
           ),
         ],
-        automaticallyImplyLeading: false, // remove back button
+        automaticallyImplyLeading: false,
         title: Text('Campus Compass'),
       ),
       endDrawer: SafeArea(
@@ -78,9 +148,7 @@ class _MapPageState extends State<MapPage> {
               ListTile(
                 leading: Icon(Icons.account_circle),
                 title: Text('Profile'),
-                onTap: () {
-                  // Handle profile tap
-                },
+                onTap: () {},
               ),
               ListTile(
                 leading: Icon(Icons.settings),
@@ -96,9 +164,7 @@ class _MapPageState extends State<MapPage> {
               ListTile(
                 leading: Icon(Icons.help),
                 title: Text('Help'),
-                onTap: () {
-                  // Handle help tap
-                },
+                onTap: () {},
               ),
             ],
           ),
@@ -112,15 +178,17 @@ class _MapPageState extends State<MapPage> {
               target: _center,
               zoom: 15.5,
             ),
-            zoomControlsEnabled: false, // Disable zoom controls
+            zoomControlsEnabled: false,
+            markers: _markers,
+            onTap: (LatLng position) {
+              _addEventMarker(position);
+            },
           ),
           Positioned(
             bottom: 16,
             right: 16,
             child: FloatingActionButton(
-              onPressed: () {
-                // Add your onPressed code here!
-              },
+              onPressed: () {},
               backgroundColor: Colors.orange,
               child: Icon(Icons.add_location_alt),
             ),
@@ -130,3 +198,4 @@ class _MapPageState extends State<MapPage> {
     );
   }
 }
+
