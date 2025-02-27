@@ -4,6 +4,7 @@ class FirestoreService {
   final CollectionReference _usersCollection =
       FirebaseFirestore.instance.collection('users');
 
+  // CHECK IF USERNAME EXISTS VALIDATION
   Future<bool> checkUsernameExists({required String username}) async {
     final QuerySnapshot result = await _usersCollection
         .where('username', isEqualTo: username)
