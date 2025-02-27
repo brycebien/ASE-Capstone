@@ -142,7 +142,8 @@ class _MapPageState extends State<MapPage> {
               zoom: 15.5,
               tilt: 0,
             ),
-            compassEnabled: true,
+            compassEnabled:
+                true, // not working? compass icon not showing (I think this is a location data issue since we are not getting the user's location yet)
             rotateGesturesEnabled: true,
             myLocationButtonEnabled: true,
             zoomControlsEnabled: false, // Disable zoom controls (+/- buttons)
