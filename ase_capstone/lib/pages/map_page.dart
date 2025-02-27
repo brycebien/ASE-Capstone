@@ -111,8 +111,20 @@ class _MapPageState extends State<MapPage> {
             initialCameraPosition: CameraPosition(
               target: _center,
               zoom: 15.5,
+              tilt: 0,
             ),
-            zoomControlsEnabled: false, // Disable zoom controls
+            compassEnabled: true,
+            rotateGesturesEnabled: true,
+            myLocationButtonEnabled: true,
+            zoomControlsEnabled: false, // Disable zoom controls (+/- buttons)
+            myLocationEnabled: true,
+            cameraTargetBounds: CameraTargetBounds(
+              LatLngBounds(
+                southwest: LatLng(39.028, -84.467),
+                northeast: LatLng(39.038, -84.459),
+              ),
+            ),
+            minMaxZoomPreference: MinMaxZoomPreference(15.0, 20.0),
           ),
           Positioned(
             bottom: 16,
