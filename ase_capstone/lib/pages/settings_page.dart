@@ -23,6 +23,7 @@ class SettingsPageState extends State<SettingsPage> {
   TextEditingController confirmPasswordController = TextEditingController();
   final User? user = FirebaseAuth.instance.currentUser!;
   bool isDarkMode = false;
+  String _errorMessage = '';
 
   @override
   void initState() {
@@ -35,12 +36,6 @@ class SettingsPageState extends State<SettingsPage> {
     setState(() {
       isDarkMode = value;
       widget.toggleTheme(isDarkMode);
-    });
-  }
-
-  void _updatePassword({required String message}) async {
-    setState(() {
-      Utils.displayMessage(context: context, message: message);
     });
   }
 
@@ -62,26 +57,41 @@ class SettingsPageState extends State<SettingsPage> {
         // update password
         await user!.updatePassword(newPasswordController.text);
         // send message to user that password has been changed
-        _updatePassword(message: 'Password changed successfully');
+        _errorMessage = 'Password changed successfully';
+        // _updatePassword(message: 'Password changed successfully');
       } else {
         // send error to user that passwords do not match
-        _updatePassword(message: 'Passwords do not match');
+        _errorMessage = 'Passwords do not match';
+        // _updatePassword(message: 'Passwords do not match');
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'invalid-credential') {
         // send error to user that password is incorrect
-        _updatePassword(message: 'Invalid credentials');
+        _errorMessage = 'Invalid credentials';
+        // _updatePassword(message: 'Invalid credentials');
       } else if (e.code == 'weak-password') {
         // send error to user that password is too weak
-        _updatePassword(message: 'That password is too weak please try again.');
+        _errorMessage = 'That password is too weak please try again.';
+        // _updatePassword(message: 'That password is too weak please try again.');
       } else {
         // send error to user that an unknown error occurred
-        _updatePassword(message: 'An unknown error occurred');
+        _errorMessage = 'An unknown error occurred';
+        // _updatePassword(message: 'An unknown error occurred');
       }
     }
+
+    // display error/success message to user
+    setState(() {
+      Utils.displayMessage(context: context, message: _errorMessage);
+    });
   }
 
   void changePasswordDialog() {
+    // clear text fields
+    oldPasswordController.clear();
+    newPasswordController.clear();
+    confirmPasswordController.clear();
+
     // Show dialog to change password
     showDialog(
       context: context,
