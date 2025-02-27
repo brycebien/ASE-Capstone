@@ -27,32 +27,35 @@ class _MapPageState extends State<MapPage> {
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
   }
-  
 
   void _listenToPins() {
     FirebaseFirestore.instance.collection('pins').snapshots().listen((snapshot) {
-      print("Firestore snapshot received: \${snapshot.docs.length} documents");
+      print("Firestore snapshot received: ${snapshot.docs.length} documents");
       setState(() {
         _markers.clear(); // Clear existing markers before updating
         for (var doc in snapshot.docs) {
           final data = doc.data();
-          if (data.containsKey('latitude') && data.containsKey('longitude') && data.containsKey('color') && data.containsKey('title')) {
-            print("Adding marker: \${data['title']} at (\${data['latitude']}, \${data['longitude']})");
+          if (data.containsKey('latitude') && data.containsKey('longitude') && data.containsKey('color') && data.containsKey('title') && data.containsKey('yesVotes') && data.containsKey('noVotes')) {
+            print("Adding marker: ${data['title']} at (${data['latitude']}, ${data['longitude']})");
             _markers.add(
               Marker(
                 markerId: MarkerId(doc.id),
                 position: LatLng((data['latitude'] as num).toDouble(), (data['longitude'] as num).toDouble()),
                 icon: BitmapDescriptor.defaultMarkerWithHue((data['color'] as num).toDouble()),
-                infoWindow: InfoWindow(title: data['title']),
+                infoWindow: InfoWindow(
+                  title: data['title'],
+                  snippet: 'Yes: ${data['yesVotes']} No: ${data['noVotes']}',
+                  onTap: () => _showVoteDialog(doc.id, data['yesVotes'], data['noVotes']),
+                ),
               ),
             );
           } else {
-            print("Document missing required fields: \${doc.id}");
+            print("Document missing required fields: ${doc.id}");
           }
         }
       });
     }, onError: (error) {
-      print("Error fetching Firestore data: \$error");
+      print("Error fetching Firestore data: $error");
     });
   }
 
@@ -101,6 +104,8 @@ class _MapPageState extends State<MapPage> {
                   'title': markerTitle,
                   'color': markerColor.toDouble(), // Ensure color is stored as double
                   'timestamp': FieldValue.serverTimestamp(),
+                  'yesVotes': 0,
+                  'noVotes': 0,
                 });
                 Navigator.pop(context);
               },
@@ -110,6 +115,59 @@ class _MapPageState extends State<MapPage> {
         );
       },
     );
+  }
+
+  void _showVoteDialog(String markerId, int yesVotes, int noVotes) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Is this event still here?"),
+          content: Text("Yes: $yesVotes No: $noVotes"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                _updateVotes(markerId, true);
+                Navigator.pop(context);
+              },
+              child: Text("Yes"),
+            ),
+            TextButton(
+              onPressed: () {
+                _updateVotes(markerId, false);
+                Navigator.pop(context);
+              },
+              child: Text("No"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _updateVotes(String markerId, bool isYesVote) async {
+    DocumentReference docRef = FirebaseFirestore.instance.collection('pins').doc(markerId);
+    FirebaseFirestore.instance.runTransaction((transaction) async {
+      DocumentSnapshot snapshot = await transaction.get(docRef);
+      if (!snapshot.exists) {
+        throw Exception("Marker does not exist!");
+      }
+
+      int newYesVotes = snapshot['yesVotes'];
+      int newNoVotes = snapshot['noVotes'];
+
+      if (isYesVote) {
+        newYesVotes += 1;
+      } else {
+        newNoVotes += 1;
+      }
+
+      if (newNoVotes > 5) {
+        transaction.delete(docRef);
+      } else {
+        transaction.update(docRef, {'yesVotes': newYesVotes, 'noVotes': newNoVotes});
+      }
+    });
   }
 
   void signUserOut() async {
