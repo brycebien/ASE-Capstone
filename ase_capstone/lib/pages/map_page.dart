@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter/services.dart' show rootBundle;
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -11,18 +12,46 @@ class MapPage extends StatefulWidget {
 
 class _MapPageState extends State<MapPage> {
   final user = FirebaseAuth.instance.currentUser!;
+  GoogleMapController? _controller;
   static const LatLng _center = LatLng(39.033, -84.4631);
-  late GoogleMapController mapController;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  late String _mapStyleString;
+  String? _mapStyle;
 
   @override
   void initState() {
     // get username from email
     super.initState();
+    _loadMapStyle();
   }
 
+  // get the map style from the json file as a string
+  Future _loadMapStyle() async {
+    _mapStyleString = await rootBundle.loadString('assets/map_dark_theme.json');
+  }
+
+  // update the map style when the map is created
   void _onMapCreated(GoogleMapController controller) {
-    mapController = controller;
+    _controller = controller;
+    _updateMapStyle(controller);
+  }
+
+  // update the map style when the theme changes
+  void _updateMapStyle(GoogleMapController controller) {
+    setState(() {
+      _mapStyle = Theme.of(context).brightness == Brightness.dark
+          ? _mapStyleString
+          : null;
+    });
+  }
+
+  // detect theme changes to update map style (other widgets change dynamically with the theme so no need to update them here)
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_controller != null) {
+      _updateMapStyle(_controller!);
+    }
   }
 
   // sign user out
@@ -30,11 +59,10 @@ class _MapPageState extends State<MapPage> {
     // sign out user
     await FirebaseAuth.instance.signOut();
 
-    // check if the widget is still mounted
-    if (!mounted) return;
-
     // navigate to login page
-    Navigator.of(context).pushReplacementNamed('/');
+    setState(() {
+      Navigator.of(context).pushReplacementNamed('/');
+    });
   }
 
   @override
@@ -108,6 +136,7 @@ class _MapPageState extends State<MapPage> {
         children: [
           GoogleMap(
             onMapCreated: _onMapCreated,
+            style: _mapStyle,
             initialCameraPosition: CameraPosition(
               target: _center,
               zoom: 15.5,
