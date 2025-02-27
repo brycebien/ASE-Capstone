@@ -76,23 +76,8 @@ class _RegisterPageState extends State<RegisterPage> {
       }
     } on FirebaseAuthException catch (e) {
       setState(() {
-        if (e.code == 'user-not-found') {
-          // no user found with that email
-          _errorMessage = 'User not found with that email address';
-          _isLoading = false;
-        } else if (e.code == 'invalid-credential' ||
-            e.code == 'invalid-email') {
-          // invalid email
-          _errorMessage = 'Invalid username or password';
-          _isLoading = false;
-        } else if (e.code == 'email-already-in-use') {
-          _errorMessage = 'A user with that email already exists';
-          _isLoading = false;
-        } else {
-          // other errors
-          _errorMessage = 'An unexpected error occurred ${e.code}';
-          _isLoading = false;
-        }
+        _errorMessage = Utils.authErrorHandler(e: e);
+        _isLoading = false;
         Utils.displayMessage(context: context, message: _errorMessage);
       });
       return;
