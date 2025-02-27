@@ -1,4 +1,7 @@
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'package:ase_capstone/components/my_button.dart';
+import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +16,9 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
+  // firebase operations
+  final FirestoreService firestoreService = FirestoreService();
+
   // text controllers
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
@@ -20,6 +26,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   bool _isLoading = false;
   String _errorMessage = '';
+  late UserCredential user;
 
   Future<void> signUserUp() async {
     // create the user
@@ -49,10 +56,22 @@ class _RegisterPageState extends State<RegisterPage> {
         );
         return;
       } else {
-        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        // create the user
+        user = await FirebaseAuth.instance
+            .createUserWithEmailAndPassword(
           email: usernameController.text,
           password: passwordController.text,
-        );
+        )
+            .then((userCredential) {
+          var bytes = utf8.encode(passwordController.text);
+          var digest = sha256.convert(bytes);
+          firestoreService.addUserToDatabase(
+            email: usernameController.text,
+            password: digest.toString(),
+          );
+          return userCredential;
+        });
+        // add user to database
       }
     } on FirebaseAuthException catch (e) {
       setState(() {
