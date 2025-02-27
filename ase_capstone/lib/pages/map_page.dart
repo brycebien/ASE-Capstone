@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:async';
@@ -17,12 +18,45 @@ class _MapPageState extends State<MapPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   Set<Marker> _markers = {};
 
+  @override
+  void initState() {
+    super.initState();
+    _listenToPins();
+  }
+
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
   }
+  
+
+  void _listenToPins() {
+    FirebaseFirestore.instance.collection('pins').snapshots().listen((snapshot) {
+      print("Firestore snapshot received: \${snapshot.docs.length} documents");
+      setState(() {
+        _markers.clear(); // Clear existing markers before updating
+        for (var doc in snapshot.docs) {
+          final data = doc.data();
+          if (data.containsKey('latitude') && data.containsKey('longitude') && data.containsKey('color') && data.containsKey('title')) {
+            print("Adding marker: \${data['title']} at (\${data['latitude']}, \${data['longitude']})");
+            _markers.add(
+              Marker(
+                markerId: MarkerId(doc.id),
+                position: LatLng((data['latitude'] as num).toDouble(), (data['longitude'] as num).toDouble()),
+                icon: BitmapDescriptor.defaultMarkerWithHue((data['color'] as num).toDouble()),
+                infoWindow: InfoWindow(title: data['title']),
+              ),
+            );
+          } else {
+            print("Document missing required fields: \${doc.id}");
+          }
+        }
+      });
+    }, onError: (error) {
+      print("Error fetching Firestore data: \$error");
+    });
+  }
 
   void _addEventMarker(LatLng position) async {
-    String markerId = position.toString();
     String markerTitle = "Reported Event";
     double markerColor = BitmapDescriptor.hueOrange;
 
@@ -42,18 +76,9 @@ class _MapPageState extends State<MapPage> {
               DropdownButton<double>(
                 value: markerColor,
                 items: [
-                  DropdownMenuItem(
-                    child: Text("Orange"),
-                    value: BitmapDescriptor.hueOrange,
-                  ),
-                  DropdownMenuItem(
-                    child: Text("Red"),
-                    value: BitmapDescriptor.hueRed,
-                  ),
-                  DropdownMenuItem(
-                    child: Text("Blue"),
-                    value: BitmapDescriptor.hueBlue,
-                  ),
+                  DropdownMenuItem(child: Text("Orange"), value: BitmapDescriptor.hueOrange),
+                  DropdownMenuItem(child: Text("Red"), value: BitmapDescriptor.hueRed),
+                  DropdownMenuItem(child: Text("Blue"), value: BitmapDescriptor.hueBlue),
                 ],
                 onChanged: (value) {
                   if (value != null) {
@@ -64,17 +89,19 @@ class _MapPageState extends State<MapPage> {
             ],
           ),
           actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text("Cancel"),
-            ),
+            TextButton(onPressed: () => Navigator.pop(context), child: Text("Cancel")),
             TextButton(
               onPressed: () {
                 if (nameController.text.isNotEmpty) {
                   markerTitle = nameController.text;
                 }
+                FirebaseFirestore.instance.collection('pins').add({
+                  'latitude': position.latitude,
+                  'longitude': position.longitude,
+                  'title': markerTitle,
+                  'color': markerColor.toDouble(), // Ensure color is stored as double
+                  'timestamp': FieldValue.serverTimestamp(),
+                });
                 Navigator.pop(context);
               },
               child: Text("Save"),
@@ -83,23 +110,6 @@ class _MapPageState extends State<MapPage> {
         );
       },
     );
-
-    final Marker marker = Marker(
-      markerId: MarkerId(markerId),
-      position: position,
-      icon: BitmapDescriptor.defaultMarkerWithHue(markerColor),
-      infoWindow: InfoWindow(title: markerTitle),
-    );
-
-    setState(() {
-      _markers.add(marker);
-    });
-
-    Timer(Duration(minutes: 2), () {
-      setState(() {
-        _markers.removeWhere((m) => m.markerId.value == markerId);
-      });
-    });
   }
 
   void signUserOut() async {
@@ -120,10 +130,7 @@ class _MapPageState extends State<MapPage> {
           },
         ),
         actions: [
-          IconButton(
-            onPressed: signUserOut,
-            icon: Icon(Icons.logout),
-          ),
+          IconButton(onPressed: signUserOut, icon: Icon(Icons.logout)),
         ],
         automaticallyImplyLeading: false,
         title: Text('Campus Compass'),
@@ -134,38 +141,14 @@ class _MapPageState extends State<MapPage> {
             padding: EdgeInsets.zero,
             children: <Widget>[
               DrawerHeader(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                child: Text(
-                  'Settings',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.tertiary,
-                    fontSize: 24,
-                  ),
-                ),
+                decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary),
+                child: Text('Settings', style: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontSize: 24)),
               ),
-              ListTile(
-                leading: Icon(Icons.account_circle),
-                title: Text('Profile'),
-                onTap: () {},
-              ),
-              ListTile(
-                leading: Icon(Icons.settings),
-                title: Text('General'),
-                onTap: () {
-                  Navigator.pushNamed(
-                    context,
-                    '/settings',
-                    arguments: user,
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.help),
-                title: Text('Help'),
-                onTap: () {},
-              ),
+              ListTile(leading: Icon(Icons.account_circle), title: Text('Profile'), onTap: () {}),
+              ListTile(leading: Icon(Icons.settings), title: Text('General'), onTap: () {
+                Navigator.pushNamed(context, '/settings', arguments: user);
+              }),
+              ListTile(leading: Icon(Icons.help), title: Text('Help'), onTap: () {}),
             ],
           ),
         ),
@@ -174,15 +157,10 @@ class _MapPageState extends State<MapPage> {
         children: [
           GoogleMap(
             onMapCreated: _onMapCreated,
-            initialCameraPosition: CameraPosition(
-              target: _center,
-              zoom: 15.5,
-            ),
+            initialCameraPosition: CameraPosition(target: _center, zoom: 15.5),
             zoomControlsEnabled: false,
             markers: _markers,
-            onTap: (LatLng position) {
-              _addEventMarker(position);
-            },
+            onTap: _addEventMarker,
           ),
           Positioned(
             bottom: 16,
@@ -198,4 +176,5 @@ class _MapPageState extends State<MapPage> {
     );
   }
 }
+
 
