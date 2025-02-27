@@ -6,8 +6,8 @@ class FirestoreService {
 
   // CREATE
   Future<void> addUserToDatabase(
-      {required String email, required password}) async {
-    await _usersCollection.add({
+      {required String uid, required String email, required password}) async {
+    await _usersCollection.doc(uid).set({
       'email': email,
       'password': password,
     });

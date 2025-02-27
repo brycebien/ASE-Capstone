@@ -66,6 +66,7 @@ class _RegisterPageState extends State<RegisterPage> {
           var bytes = utf8.encode(passwordController.text);
           var digest = sha256.convert(bytes);
           firestoreService.addUserToDatabase(
+            uid: userCredential.user!.uid,
             email: usernameController.text,
             password: digest.toString(),
           );
