@@ -1,4 +1,5 @@
 import 'package:ase_capstone/components/textfield.dart';
+import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ase_capstone/utils/utils.dart';
@@ -18,6 +19,7 @@ class SettingsPage extends StatefulWidget {
 }
 
 class SettingsPageState extends State<SettingsPage> {
+  final FirestoreService firestoreService = FirestoreService();
   TextEditingController oldPasswordController = TextEditingController();
   TextEditingController newPasswordController = TextEditingController();
   TextEditingController confirmPasswordController = TextEditingController();
@@ -56,27 +58,29 @@ class SettingsPageState extends State<SettingsPage> {
               newPasswordController.text.isNotEmpty)) {
         // update password
         await user!.updatePassword(newPasswordController.text);
+
+        // update password in database
+        firestoreService.updateUserPassword(
+          userId: user!.uid,
+          password: Utils.encrypt(newPasswordController.text),
+        );
+
         // send message to user that password has been changed
         _errorMessage = 'Password changed successfully';
-        // _updatePassword(message: 'Password changed successfully');
       } else {
         // send error to user that passwords do not match
         _errorMessage = 'Passwords do not match';
-        // _updatePassword(message: 'Passwords do not match');
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'invalid-credential') {
         // send error to user that password is incorrect
         _errorMessage = 'Invalid credentials';
-        // _updatePassword(message: 'Invalid credentials');
       } else if (e.code == 'weak-password') {
         // send error to user that password is too weak
         _errorMessage = 'That password is too weak please try again.';
-        // _updatePassword(message: 'That password is too weak please try again.');
       } else {
         // send error to user that an unknown error occurred
         _errorMessage = 'An unknown error occurred';
-        // _updatePassword(message: 'An unknown error occurred');
       }
     }
 

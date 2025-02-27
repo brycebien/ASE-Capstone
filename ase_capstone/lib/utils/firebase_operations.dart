@@ -29,6 +29,14 @@ class FirestoreService {
   // READ
 
   // UPDATE
+  Future<void> updateUserPassword({
+    required String userId,
+    required String password,
+  }) async {
+    await _usersCollection.doc(userId).update({
+      'password': password,
+    });
+  }
 
   // DELETE
 }
