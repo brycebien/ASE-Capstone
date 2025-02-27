@@ -20,6 +20,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final FirestoreService firestoreService = FirestoreService();
 
   // text controllers
+  final emailController = TextEditingController();
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
@@ -37,7 +38,8 @@ class _RegisterPageState extends State<RegisterPage> {
       });
 
       // check to ensure email and password are not empty
-      if (usernameController.text.isEmpty ||
+      if (emailController.text.isEmpty ||
+          usernameController.text.isEmpty ||
           passwordController.text.isEmpty ||
           confirmPasswordController.text.isEmpty) {
         setState(() {
@@ -55,11 +57,22 @@ class _RegisterPageState extends State<RegisterPage> {
           message: 'Passwords do not match',
         );
         return;
+      } else if (await firestoreService.checkUsernameExists(
+          username: usernameController.text)) {
+        // check to make sure there isnt a user with the same username
+        setState(() {
+          Utils.displayMessage(
+            context: context,
+            message: 'Username already exists',
+          );
+          _isLoading = false;
+        });
+        return;
       } else {
         // create the user
         user = await FirebaseAuth.instance
             .createUserWithEmailAndPassword(
-          email: usernameController.text,
+          email: emailController.text,
           password: passwordController.text,
         )
             .then((userCredential) {
@@ -67,7 +80,8 @@ class _RegisterPageState extends State<RegisterPage> {
           var digest = sha256.convert(bytes);
           firestoreService.addUserToDatabase(
             uid: userCredential.user!.uid,
-            email: usernameController.text,
+            email: emailController.text,
+            username: usernameController.text,
             password: digest.toString(),
           );
           return userCredential;
@@ -135,6 +149,15 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                 ),
                 SizedBox(height: 20),
+
+                // Email Text Field
+                MyTextField(
+                  controller: emailController,
+                  hintText: 'Email',
+                  obscureText: false,
+                ),
+
+                SizedBox(height: 10),
 
                 // Username Text Field
                 MyTextField(
