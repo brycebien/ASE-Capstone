@@ -18,12 +18,10 @@ class FirestoreService {
     required String uid,
     required String email,
     required username,
-    required password,
   }) async {
     await _usersCollection.doc(uid).set({
       'email': email,
       'username': username,
-      'password': password,
     });
   }
   // READ

@@ -59,12 +59,6 @@ class SettingsPageState extends State<SettingsPage> {
         // update password
         await user!.updatePassword(newPasswordController.text);
 
-        // update password in database
-        firestoreService.updateUserPassword(
-          userId: user!.uid,
-          password: Utils.encrypt(newPasswordController.text),
-        );
-
         // send message to user that password has been changed
         _errorMessage = 'Password changed successfully';
       } else {
