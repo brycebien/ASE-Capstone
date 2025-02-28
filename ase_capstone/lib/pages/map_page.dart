@@ -1,4 +1,3 @@
-import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -29,8 +28,27 @@ class _MapPageState extends State<MapPage> {
 
   void _getCurrentLocation() async {
     Location location = Location();
+
+    // check if location services are enabled and ask user to enable location permissions if not
+    var serviceEnabled = await location.serviceEnabled();
+    if (!serviceEnabled) {
+      serviceEnabled = await location.requestService();
+      if (!serviceEnabled) {
+        return;
+      }
+    }
+
+    // check if location permissions are granted and ask user to grant permissions if not
+    var permissionGranted = await location.hasPermission();
+    if (permissionGranted == PermissionStatus.denied) {
+      permissionGranted = await location.requestPermission();
+      if (permissionGranted != PermissionStatus.granted) {
+        return;
+      }
+    }
+
     // this stops the app from moving the camera to the user's location when the user does not move.
-    location.changeSettings(
+    await location.changeSettings(
       accuracy: LocationAccuracy.high, // high accuracy for better location
       interval: 1000, // update location every second
       distanceFilter: 10,
@@ -43,7 +61,7 @@ class _MapPageState extends State<MapPage> {
       });
 
       // update the current location when the user moves
-      location.onLocationChanged.listen((newLocation) {
+      location.onLocationChanged.listen((LocationData newLocation) {
         setState(() {
           _currentLocation = newLocation;
         });
@@ -60,10 +78,13 @@ class _MapPageState extends State<MapPage> {
         ));
       });
     } catch (e) {
-      Utils.displayMessage(
-        context: context,
-        message: 'Unable to get location: $e',
-      );
+      print("error occured: $e");
+      // setState(() {
+      //   Utils.displayMessage(
+      //     context: context,
+      //     message: 'Unable to get location: $e',
+      //   );
+      // });
     }
   }
 
