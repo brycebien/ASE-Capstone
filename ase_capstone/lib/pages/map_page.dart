@@ -157,10 +157,13 @@ class _MapPageState extends State<MapPage> {
                 },
               ),
               ListTile(
-                leading: Icon(Icons.help),
-                title: Text('Help'),
+                leading: Icon(Icons.calendar_today),
+                title: Text('Class Schedule'),
                 onTap: () {
-                  // Handle help tap
+                  Navigator.pushNamed(
+                    context,
+                    '/schedule',
+                  );
                 },
               ),
             ],

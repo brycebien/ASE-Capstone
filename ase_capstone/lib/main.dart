@@ -1,5 +1,6 @@
 import 'package:ase_capstone/pages/auth_page.dart';
 import 'package:ase_capstone/pages/map_page.dart';
+import 'package:ase_capstone/pages/schedule_page.dart';
 import 'package:ase_capstone/pages/settings_page.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -46,6 +47,7 @@ class _MyAppState extends State<MyApp> {
               toggleTheme: toggleTheme,
               isDarkMode: isDarkMode,
             ),
+        '/schedule': (context) => SchedulePage(),
       },
     );
   }
