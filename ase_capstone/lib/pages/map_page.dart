@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:location/location.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -17,12 +18,26 @@ class _MapPageState extends State<MapPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late String _mapStyleString;
   String? _mapStyle;
+  LocationData? _currentLocation;
 
   @override
   void initState() {
-    // get username from email
+    _getCurrentLocation(); // get the user's location
+    _loadMapStyle(); // load the map's color theme (light or dark mode)
     super.initState();
-    _loadMapStyle();
+  }
+
+  void _getCurrentLocation() async {
+    Location location = Location();
+    try {
+      location.getLocation().then((value) {
+        setState(() {
+          _currentLocation = value;
+        });
+      });
+    } catch (e) {
+      print('Could not get location: $e');
+    }
   }
 
   // get the map style from the json file as a string
@@ -132,43 +147,60 @@ class _MapPageState extends State<MapPage> {
           ),
         ),
       ),
-      body: Stack(
-        children: [
-          GoogleMap(
-            onMapCreated: _onMapCreated,
-            style: _mapStyle,
-            initialCameraPosition: CameraPosition(
-              target: _center,
-              zoom: 15.5,
-              tilt: 0,
+      body: _currentLocation == null
+          ? Center(
+              child: CircularProgressIndicator(),
+            )
+          : Stack(
+              children: [
+                GoogleMap(
+                  onMapCreated: _onMapCreated,
+                  style: _mapStyle,
+                  initialCameraPosition: CameraPosition(
+                    target: _center,
+                    zoom: 15.5,
+                    tilt: 0,
+                  ),
+                  rotateGesturesEnabled: true,
+                  myLocationButtonEnabled: true,
+                  zoomControlsEnabled:
+                      false, // Disable zoom controls (+/- buttons)
+                  myLocationEnabled: true,
+                  cameraTargetBounds: CameraTargetBounds(
+                    LatLngBounds(
+                      southwest: LatLng(39.028, -84.467),
+                      northeast: LatLng(39.038, -84.459),
+                    ),
+                  ),
+                  minMaxZoomPreference: MinMaxZoomPreference(15.0, 20.0),
+                  markers: {
+                    Marker(
+                      // Marker set to user's location
+                      markerId: const MarkerId('Current Location'),
+                      position: LatLng(
+                        _currentLocation!.latitude!,
+                        _currentLocation!.longitude!,
+                      ),
+                      infoWindow: InfoWindow(
+                        title: 'Current Location',
+                        snippet: 'You are here',
+                      ),
+                    ),
+                  },
+                ),
+                Positioned(
+                  bottom: 16,
+                  right: 16,
+                  child: FloatingActionButton(
+                    onPressed: () {
+                      // Add your onPressed code here!
+                    },
+                    backgroundColor: Colors.orange,
+                    child: Icon(Icons.add_location_alt),
+                  ),
+                ),
+              ],
             ),
-            compassEnabled:
-                true, // not working? compass icon not showing (I think this is a location data issue since we are not getting the user's location yet)
-            rotateGesturesEnabled: true,
-            myLocationButtonEnabled: true,
-            zoomControlsEnabled: false, // Disable zoom controls (+/- buttons)
-            myLocationEnabled: true,
-            cameraTargetBounds: CameraTargetBounds(
-              LatLngBounds(
-                southwest: LatLng(39.028, -84.467),
-                northeast: LatLng(39.038, -84.459),
-              ),
-            ),
-            minMaxZoomPreference: MinMaxZoomPreference(15.0, 20.0),
-          ),
-          Positioned(
-            bottom: 16,
-            right: 16,
-            child: FloatingActionButton(
-              onPressed: () {
-                // Add your onPressed code here!
-              },
-              backgroundColor: Colors.orange,
-              child: Icon(Icons.add_location_alt),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
