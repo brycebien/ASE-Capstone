@@ -112,12 +112,6 @@ class _MapPageState extends State<MapPage> {
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(Icons.menu),
-          onPressed: () {
-            _scaffoldKey.currentState?.openEndDrawer();
-          },
-        ),
         actions: [
           // sign out button
           IconButton(
@@ -125,10 +119,9 @@ class _MapPageState extends State<MapPage> {
             icon: Icon(Icons.logout),
           ),
         ],
-        automaticallyImplyLeading: false, // remove back button
         title: Text('Campus Compass'),
       ),
-      endDrawer: SafeArea(
+      drawer: SafeArea(
         child: Drawer(
           child: ListView(
             padding: EdgeInsets.zero,
