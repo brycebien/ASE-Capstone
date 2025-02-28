@@ -1,3 +1,4 @@
+import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -31,12 +32,18 @@ class _MapPageState extends State<MapPage> {
     Location location = Location();
     try {
       location.getLocation().then((value) {
-        setState(() {
-          _currentLocation = value;
-        });
+        _currentLocation = value;
+      });
+
+      location.onLocationChanged.listen((newLocation) {
+        _currentLocation = newLocation;
+        setState(() {});
       });
     } catch (e) {
-      print('Could not get location: $e');
+      Utils.displayMessage(
+        context: context,
+        message: 'Unable to get location: $e',
+      );
     }
   }
 
@@ -157,7 +164,10 @@ class _MapPageState extends State<MapPage> {
                   onMapCreated: _onMapCreated,
                   style: _mapStyle,
                   initialCameraPosition: CameraPosition(
-                    target: _center,
+                    target: LatLng(
+                      _currentLocation!.latitude!,
+                      _currentLocation!.longitude!,
+                    ),
                     zoom: 15.5,
                     tilt: 0,
                   ),
