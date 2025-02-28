@@ -15,7 +15,6 @@ class MapPage extends StatefulWidget {
 class _MapPageState extends State<MapPage> {
   final user = FirebaseAuth.instance.currentUser!;
   GoogleMapController? _controller;
-  static const LatLng _center = LatLng(39.033, -84.4631);
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late String _mapStyleString;
   String? _mapStyle;
@@ -30,14 +29,35 @@ class _MapPageState extends State<MapPage> {
 
   void _getCurrentLocation() async {
     Location location = Location();
+    // this stops the app from moving the camera to the user's location when the user does not move.
+    location.changeSettings(
+      accuracy: LocationAccuracy.high, // high accuracy for better location
+      interval: 1000, // update location every second
+      distanceFilter: 10,
+    );
+
     try {
+      // set current location to the user's location when the app starts
       location.getLocation().then((value) {
         _currentLocation = value;
       });
 
+      // update the current location when the user moves
       location.onLocationChanged.listen((newLocation) {
-        _currentLocation = newLocation;
-        setState(() {});
+        setState(() {
+          _currentLocation = newLocation;
+        });
+
+        // animate the camera to the user's location when the user moves/app is started
+        _controller?.animateCamera(CameraUpdate.newCameraPosition(
+          CameraPosition(
+            zoom: 20.0,
+            target: LatLng(
+              _currentLocation!.latitude!,
+              _currentLocation!.longitude!,
+            ),
+          ),
+        ));
       });
     } catch (e) {
       Utils.displayMessage(
