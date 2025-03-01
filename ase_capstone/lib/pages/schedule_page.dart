@@ -57,7 +57,10 @@ class _SchedulePageState extends State<SchedulePage> {
   TimeOfDay? startTime;
   TimeOfDay? endTime;
   String? building;
+  final TextEditingController _classNameController = TextEditingController();
+  final TextEditingController _roomController = TextEditingController();
 
+  // function to select start and end time
   Future<TimeOfDay?> _selectTime(BuildContext context) async {
     final TimeOfDay? newTime = await showTimePicker(
       context: context,
@@ -66,15 +69,13 @@ class _SchedulePageState extends State<SchedulePage> {
     return newTime;
   }
 
-  final TextEditingController _classNameController = TextEditingController();
-  final TextEditingController _roomController = TextEditingController();
-
   void _createClass() {
     if (_classNameController.text.isNotEmpty &&
         startTime != null &&
         endTime != null &&
         building != null &&
         _roomController.text.isNotEmpty) {
+      // add class to list (front end)
       setState(() {
         classes.add({
           'name': _classNameController.text,
@@ -85,12 +86,26 @@ class _SchedulePageState extends State<SchedulePage> {
               .firstWhere((element) => element['name'] == building)['code'],
           'room': _roomController.text
         });
+        // TODO: add class to database (back end)
+
+        // clear text fields
         _classNameController.clear();
+        _roomController.clear();
+        building = null;
         startTime = null;
         endTime = null;
       });
       Navigator.of(context).pop();
     }
+  }
+
+  void _deleteClass(index) {
+    // TODO: remove the class from the database (back end)
+
+    // remove class from schedule (front end)
+    setState(() {
+      classes.removeAt(index);
+    });
   }
 
   void _addClass() {
@@ -259,7 +274,7 @@ class _SchedulePageState extends State<SchedulePage> {
                             trailing: IconButton(
                               icon: Icon(Icons.delete),
                               onPressed: () {
-                                // delete class from schedule
+                                _deleteClass(classes.indexOf(e));
                               },
                             ),
                           ),
