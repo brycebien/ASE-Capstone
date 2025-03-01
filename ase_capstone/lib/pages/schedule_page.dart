@@ -9,6 +9,12 @@ class SchedulePage extends StatefulWidget {
 }
 
 class _SchedulePageState extends State<SchedulePage> {
+  @override
+  void initState() {
+    // TODO: get classes from database (back end)
+    super.initState();
+  }
+
   List classes = [
     // {'name': 'Math', 'time': '8:00 AM', 'building': 'MP', 'room': '101'},
     // {'name': 'Science', 'time': '9:00 AM', 'building': 'SC', 'room': '202'}
