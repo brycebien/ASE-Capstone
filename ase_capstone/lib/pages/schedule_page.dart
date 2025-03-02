@@ -86,7 +86,7 @@ class _SchedulePageState extends State<SchedulePage> {
         endTime != null &&
         building != null &&
         _roomController.text.isNotEmpty) {
-      Map userClass = {
+      Map<String, dynamic> userClass = {
         'name': _classNameController.text,
         'startTime': startTime!.format(context),
         'endTime': endTime!.format(context),
@@ -97,7 +97,6 @@ class _SchedulePageState extends State<SchedulePage> {
       // add class to list (front end)
       setState(() {
         classes.add(userClass);
-        // TODO: add class to database (back end)
         firestoreService.addClassToDatabase(
             userId: currentUser!.uid, userClass: userClass);
 

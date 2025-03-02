@@ -27,14 +27,6 @@ class FirestoreService {
     });
   }
 
-  // create class
-  Future<void> addClassToDatabase({
-    required String userId,
-    required Map userClass,
-  }) async {
-    print("::::: getting here with class: $userClass");
-  }
-
   // READ
 
   // UPDATE
@@ -44,6 +36,16 @@ class FirestoreService {
   }) async {
     await _usersCollection.doc(userId).update({
       'password': password,
+    });
+  }
+
+  // create/add a class
+  Future<void> addClassToDatabase({
+    required String userId,
+    required Map<String, dynamic> userClass,
+  }) async {
+    await _usersCollection.doc(userId).update({
+      'classes': FieldValue.arrayUnion([userClass]),
     });
   }
 
