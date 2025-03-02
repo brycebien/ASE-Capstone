@@ -114,6 +114,32 @@ class _SchedulePageState extends State<SchedulePage> {
     });
   }
 
+  Future<String?> _buildingsMenu() async {
+    String? selectedBuilding;
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Select a Building'),
+          content: SingleChildScrollView(
+            child: Column(
+              children: buildings.map((e) {
+                return ListTile(
+                  title: Text(e['name']),
+                  onTap: () {
+                    selectedBuilding = e['name'];
+                    Navigator.of(context).pop();
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+        );
+      },
+    );
+    return selectedBuilding;
+  }
+
   void _addClass() {
     // add class to schedule
     showDialog(
@@ -199,19 +225,19 @@ class _SchedulePageState extends State<SchedulePage> {
                             style: TextStyle(fontSize: 16),
                           ),
                           SizedBox(width: 10),
-                          DropdownMenu<String>(
-                            dropdownMenuEntries: buildings
-                                .map<DropdownMenuEntry<String>>((building) {
-                              return DropdownMenuEntry(
-                                label: building['code'],
-                                value: building['name'],
-                              );
-                            }).toList(),
-                            onSelected: (String? value) {
+                          GestureDetector(
+                            onTap: () async {
+                              final selectedBuilding = await _buildingsMenu();
                               setState(() {
-                                building = value;
+                                building = selectedBuilding;
                               });
                             },
+                            child: (building?.isEmpty ?? true)
+                                ? Icon(Icons.location_on, size: 20)
+                                : Text(
+                                    building!,
+                                    style: TextStyle(fontSize: 16),
+                                  ),
                           ),
                         ],
                       ),
