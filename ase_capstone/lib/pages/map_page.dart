@@ -1,3 +1,4 @@
+import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -78,13 +79,12 @@ class _MapPageState extends State<MapPage> {
         ));
       });
     } catch (e) {
-      print("error occured: $e");
-      // setState(() {
-      //   Utils.displayMessage(
-      //     context: context,
-      //     message: 'Unable to get location: $e',
-      //   );
-      // });
+      setState(() {
+        Utils.displayMessage(
+          context: context,
+          message: 'Unable to get location: $e',
+        );
+      });
     }
   }
 
