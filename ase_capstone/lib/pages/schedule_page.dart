@@ -114,6 +114,10 @@ class _SchedulePageState extends State<SchedulePage> {
 
   void _deleteClass(index) {
     // TODO: remove the class from the database (back end)
+    firestoreService.deleteClassFromDatabase(
+      userId: currentUser!.uid,
+      userClass: classes[index],
+    );
 
     // remove class from schedule (front end)
     setState(() {

@@ -50,4 +50,12 @@ class FirestoreService {
   }
 
   // DELETE
+  Future<void> deleteClassFromDatabase({
+    required String userId,
+    required Map<String, dynamic> userClass,
+  }) async {
+    await _usersCollection.doc(userId).update({
+      'classes': FieldValue.arrayRemove([userClass]),
+    });
+  }
 }
