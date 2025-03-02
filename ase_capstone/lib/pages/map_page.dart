@@ -22,6 +22,7 @@ class _MapPageState extends State<MapPage> {
   void initState() {
     super.initState();
     _listenToPins();
+    _checkExpiredPins();
   }
 
   void _onMapCreated(GoogleMapController controller) {
@@ -165,8 +166,21 @@ class _MapPageState extends State<MapPage> {
       if (newNoVotes > 5) {
         transaction.delete(docRef);
       } else {
-        transaction.update(docRef, {'yesVotes': newYesVotes, 'noVotes': newNoVotes});
+        transaction.update(docRef, {'yesVotes': newYesVotes, 'noVotes': newNoVotes, 'lastActivity': FieldValue.serverTimestamp()});
       }
+    });
+  }
+
+  void _checkExpiredPins() async {
+    final now = DateTime.now();
+    final expirationTime = now.subtract(Duration(hours: 24));
+
+    FirebaseFirestore.instance.collection('pins').where('lastActivity', isLessThan: expirationTime).get().then((snapshot) {
+      for (var doc in snapshot.docs) {
+        doc.reference.delete();
+      }
+    }).catchError((error) {
+      print("Error checking expired pins: $error");
     });
   }
 
