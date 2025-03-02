@@ -27,11 +27,18 @@ class _SchedulePageState extends State<SchedulePage> {
     });
   }
 
+  final List<String> _days = [
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday'
+  ];
+  List<String> selectedDays = [];
   List<dynamic> classes = [
     // {'name': 'Math', 'time': '8:00 AM', 'building': 'MP', 'room': '101'},
     // {'name': 'Science', 'time': '9:00 AM', 'building': 'SC', 'room': '202'}
   ];
-
   List buildings = [
     {'name': 'Lucas Administrative Center', 'code': 'AC'},
     {'name': 'Business Academic Center', 'code': 'BC'},
@@ -93,15 +100,19 @@ class _SchedulePageState extends State<SchedulePage> {
         startTime != null &&
         endTime != null &&
         building != null &&
-        _roomController.text.isNotEmpty) {
+        _roomController.text.isNotEmpty &&
+        selectedDays.isNotEmpty) {
+      print("selectedDays::::::::::::::::::::::::::::::: $selectedDays");
       Map<String, dynamic> userClass = {
         'name': _classNameController.text,
         'startTime': startTime!.format(context),
         'endTime': endTime!.format(context),
         'building': building,
         'code': buildingCode,
-        'room': _roomController.text
+        'room': _roomController.text,
+        'days': selectedDays,
       };
+      print("Saved days as:::::: ${userClass['days']}");
       // add class to list (front end)
       setState(() {
         classes.add(userClass);
@@ -115,6 +126,7 @@ class _SchedulePageState extends State<SchedulePage> {
         buildingCode = null;
         startTime = null;
         endTime = null;
+        selectedDays.clear();
       });
       Navigator.of(context).pop();
     }
@@ -266,16 +278,53 @@ class _SchedulePageState extends State<SchedulePage> {
                       ),
                     ),
                     SizedBox(height: 10),
+                    // Room
                     MyTextField(
                       controller: _roomController,
                       hintText: 'Room',
                       obscureText: false,
                       isNumber: true,
                     ),
+                    SizedBox(height: 10),
+                    // Days
+                    Wrap(
+                      spacing: 8.0,
+                      children: _days.map(
+                        (day) {
+                          return ChoiceChip(
+                            label: Text(day),
+                            selected: selectedDays.contains(day),
+                            onSelected: (selected) {
+                              setState(() {
+                                if (selected) {
+                                  selectedDays.add(day);
+                                } else {
+                                  selectedDays.remove(day);
+                                }
+                              });
+                            },
+                          );
+                        },
+                      ).toList(),
+                    ),
                   ],
                 ),
               ),
               actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _classNameController.clear();
+                      startTime = null;
+                      endTime = null;
+                      building = null;
+                      buildingCode = null;
+                      selectedDays.clear();
+                      _roomController.clear();
+                    });
+                  },
+                  child: Text('Clear'),
+                ),
                 TextButton(
                   onPressed: () {
                     Navigator.of(context).pop();
@@ -328,7 +377,7 @@ class _SchedulePageState extends State<SchedulePage> {
                               style: TextStyle(fontSize: 20),
                             ),
                             subtitle: Text(
-                                '${e['startTime']} - ${e['endTime']}\n${e['building']} - ${e['code']}\nRoom: ${e['room']}'),
+                                '${e['startTime']} - ${e['endTime']}\n${e['building']} - ${e['code']}\nRoom: ${e['room']}\nDays: ${e['days'].join(', ').toString()}'),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
