@@ -16,10 +16,19 @@ class _SchedulePageState extends State<SchedulePage> {
   @override
   void initState() {
     // TODO: get classes from database (back end)
+    _getClassSchedule();
     super.initState();
   }
 
-  List classes = [
+  Future<void> _getClassSchedule() async {
+    Map<String, dynamic> userClasses =
+        await firestoreService.getClassesFromDatabase(userId: currentUser!.uid);
+    setState(() {
+      classes = userClasses['classes'] ?? [];
+    });
+  }
+
+  List<dynamic> classes = [
     // {'name': 'Math', 'time': '8:00 AM', 'building': 'MP', 'room': '101'},
     // {'name': 'Science', 'time': '9:00 AM', 'building': 'SC', 'room': '202'}
   ];
@@ -113,7 +122,6 @@ class _SchedulePageState extends State<SchedulePage> {
   }
 
   void _deleteClass(index) {
-    // TODO: remove the class from the database (back end)
     firestoreService.deleteClassFromDatabase(
       userId: currentUser!.uid,
       userClass: classes[index],
