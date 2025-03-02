@@ -15,7 +15,6 @@ class _SchedulePageState extends State<SchedulePage> {
   User? currentUser = FirebaseAuth.instance.currentUser;
   @override
   void initState() {
-    // TODO: get classes from database (back end)
     _getClassSchedule();
     super.initState();
   }

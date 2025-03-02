@@ -31,7 +31,6 @@ class FirestoreService {
   Future<Map<String, dynamic>> getClassesFromDatabase(
       {required String userId}) async {
     final DocumentSnapshot userDoc = await _usersCollection.doc(userId).get();
-    print("THIS IS BEING RETURNED::::::::::: ${userDoc.data()}");
     return userDoc.data() as Map<String, dynamic>;
   }
 
