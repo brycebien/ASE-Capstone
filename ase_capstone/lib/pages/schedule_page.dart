@@ -11,6 +11,7 @@ class SchedulePage extends StatefulWidget {
 }
 
 class _SchedulePageState extends State<SchedulePage> {
+  bool _isLoading = false;
   FirestoreService firestoreService = FirestoreService();
   User? currentUser = FirebaseAuth.instance.currentUser;
   @override
@@ -20,11 +21,13 @@ class _SchedulePageState extends State<SchedulePage> {
   }
 
   Future<void> _getClassSchedule() async {
+    _isLoading = true;
     Map<String, dynamic> userClasses =
         await firestoreService.getClassesFromDatabase(userId: currentUser!.uid);
     setState(() {
       classes = userClasses['classes'] ?? [];
     });
+    _isLoading = false;
   }
 
   final List<String> _days = [
@@ -102,7 +105,6 @@ class _SchedulePageState extends State<SchedulePage> {
         building != null &&
         _roomController.text.isNotEmpty &&
         selectedDays.isNotEmpty) {
-      print("selectedDays::::::::::::::::::::::::::::::: $selectedDays");
       Map<String, dynamic> userClass = {
         'name': _classNameController.text,
         'startTime': startTime!.format(context),
@@ -112,12 +114,14 @@ class _SchedulePageState extends State<SchedulePage> {
         'room': _roomController.text,
         'days': selectedDays,
       };
-      print("Saved days as:::::: ${userClass['days']}");
       // add class to list (front end)
       setState(() {
-        classes.add(userClass);
+        // add class to database
         firestoreService.addClassToDatabase(
             userId: currentUser!.uid, userClass: userClass);
+
+        // add class to list
+        _getClassSchedule();
 
         // clear text fields
         _classNameController.clear();
@@ -319,7 +323,7 @@ class _SchedulePageState extends State<SchedulePage> {
                       endTime = null;
                       building = null;
                       buildingCode = null;
-                      selectedDays.clear();
+                      //   selectedDays.clear();
                       _roomController.clear();
                     });
                   },
@@ -356,66 +360,77 @@ class _SchedulePageState extends State<SchedulePage> {
       appBar: AppBar(
         title: Text('Campus Compass'),
       ),
-      body: Padding(
-          padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
-          child: Stack(
-            children: [
-              classes.isEmpty
-                  ? Center(
-                      child: Text(
-                        textAlign: TextAlign.center,
-                        'No classes scheduled.\nPress the + button to add a class.',
-                        style: TextStyle(fontSize: 20),
-                      ),
-                    )
-                  : Column(
-                      children: classes.map((e) {
-                        return Card(
-                          child: ListTile(
-                            title: Text(
-                              e['name'],
-                              style: TextStyle(fontSize: 20),
-                            ),
-                            subtitle: Text(
-                                '${e['startTime']} - ${e['endTime']}\n${e['building']} - ${e['code']}\nRoom: ${e['room']}\nDays: ${e['days'].join(', ').toString()}'),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: Icon(Icons.directions_walk),
-                                  style: ButtonStyle(
-                                    foregroundColor:
-                                        WidgetStateProperty.all(Colors.blue),
+      body: _isLoading
+          ? Center(
+              child: CircularProgressIndicator(),
+            )
+          : Padding(
+              padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: Stack(
+                children: [
+                  classes.isEmpty
+                      ? Center(
+                          child: Text(
+                            textAlign: TextAlign.center,
+                            'No classes scheduled.\nPress the + button to add a class.',
+                            style: TextStyle(fontSize: 20),
+                          ),
+                        )
+                      : Padding(
+                          padding: const EdgeInsets.only(bottom: 8.0),
+                          child: SingleChildScrollView(
+                            child: Column(
+                              children: classes.map((e) {
+                                return Card(
+                                  child: ListTile(
+                                    title: Text(
+                                      e['name'],
+                                      style: TextStyle(fontSize: 20),
+                                    ),
+                                    subtitle: Text(
+                                        '${e['startTime']} - ${e['endTime']}\n${e['building']} - ${e['code']}\nRoom: ${e['room']}\nDays: ${e['days'].join(', ')}'),
+                                    trailing: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          icon: Icon(Icons.directions_walk),
+                                          style: ButtonStyle(
+                                            foregroundColor:
+                                                WidgetStateProperty.all(
+                                                    Colors.blue),
+                                          ),
+                                          onPressed: () {
+                                            // TODO: implement Navigation functionality
+                                          },
+                                        ),
+                                        IconButton(
+                                          icon: Icon(Icons.delete),
+                                          style: ButtonStyle(
+                                            foregroundColor:
+                                                WidgetStateProperty.all(
+                                                    Colors.red),
+                                          ),
+                                          onPressed: () {
+                                            _deleteClass(classes.indexOf(e));
+                                          },
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                  onPressed: () {
-                                    // TODO: implement Navigation functionality
-                                  },
-                                ),
-                                IconButton(
-                                  icon: Icon(Icons.delete),
-                                  style: ButtonStyle(
-                                    foregroundColor:
-                                        WidgetStateProperty.all(Colors.red),
-                                  ),
-                                  onPressed: () {
-                                    _deleteClass(classes.indexOf(e));
-                                  },
-                                ),
-                              ],
+                                );
+                              }).toList(),
                             ),
                           ),
-                        );
-                      }).toList(),
+                        ),
+                  Container(
+                    alignment: Alignment.bottomRight,
+                    child: FloatingActionButton(
+                      onPressed: _addClass,
+                      child: Icon(Icons.add),
                     ),
-              Container(
-                alignment: Alignment.bottomRight,
-                child: FloatingActionButton(
-                  onPressed: _addClass,
-                  child: Icon(Icons.add),
-                ),
-              )
-            ],
-          )),
+                  )
+                ],
+              )),
     );
   }
 }
