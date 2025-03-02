@@ -1,5 +1,7 @@
 import 'package:ase_capstone/components/textfield.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ase_capstone/utils/firebase_operations.dart';
 
 class SchedulePage extends StatefulWidget {
   const SchedulePage({super.key});
@@ -9,6 +11,8 @@ class SchedulePage extends StatefulWidget {
 }
 
 class _SchedulePageState extends State<SchedulePage> {
+  FirestoreService firestoreService = FirestoreService();
+  User? currentUser = FirebaseAuth.instance.currentUser;
   @override
   void initState() {
     // TODO: get classes from database (back end)
@@ -63,6 +67,7 @@ class _SchedulePageState extends State<SchedulePage> {
   TimeOfDay? startTime;
   TimeOfDay? endTime;
   String? building;
+  String? buildingCode;
   final TextEditingController _classNameController = TextEditingController();
   final TextEditingController _roomController = TextEditingController();
 
@@ -81,23 +86,26 @@ class _SchedulePageState extends State<SchedulePage> {
         endTime != null &&
         building != null &&
         _roomController.text.isNotEmpty) {
+      Map userClass = {
+        'name': _classNameController.text,
+        'startTime': startTime!.format(context),
+        'endTime': endTime!.format(context),
+        'building': building,
+        'code': buildingCode,
+        'room': _roomController.text
+      };
       // add class to list (front end)
       setState(() {
-        classes.add({
-          'name': _classNameController.text,
-          'startTime': startTime!.format(context),
-          'endTime': endTime!.format(context),
-          'building': building,
-          'code': buildings
-              .firstWhere((element) => element['name'] == building)['code'],
-          'room': _roomController.text
-        });
+        classes.add(userClass);
         // TODO: add class to database (back end)
+        firestoreService.addClassToDatabase(
+            userId: currentUser!.uid, userClass: userClass);
 
         // clear text fields
         _classNameController.clear();
         _roomController.clear();
         building = null;
+        buildingCode = null;
         startTime = null;
         endTime = null;
       });
@@ -230,13 +238,18 @@ class _SchedulePageState extends State<SchedulePage> {
                               final selectedBuilding = await _buildingsMenu();
                               setState(() {
                                 building = selectedBuilding;
+                                buildingCode = buildings.firstWhere((element) =>
+                                    element['name'] == building)['code'];
                               });
                             },
-                            child: (building?.isEmpty ?? true)
+                            child: (buildingCode?.isEmpty ?? true)
                                 ? Icon(Icons.location_on, size: 20)
                                 : Text(
-                                    building!,
-                                    style: TextStyle(fontSize: 16),
+                                    buildingCode!,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
                           ),
                         ],

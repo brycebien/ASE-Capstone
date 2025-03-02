@@ -14,6 +14,8 @@ class FirestoreService {
   }
 
   // CREATE
+
+  // create user
   Future<void> addUserToDatabase({
     required String uid,
     required String email,
@@ -24,6 +26,15 @@ class FirestoreService {
       'username': username,
     });
   }
+
+  // create class
+  Future<void> addClassToDatabase({
+    required String userId,
+    required Map userClass,
+  }) async {
+    print("::::: getting here with class: $userClass");
+  }
+
   // READ
 
   // UPDATE
