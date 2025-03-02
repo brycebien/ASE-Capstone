@@ -4,12 +4,14 @@ class MyTextField extends StatelessWidget {
   final TextEditingController controller;
   final String hintText;
   final bool obscureText;
+  final bool? isNumber;
 
   const MyTextField({
     super.key,
     required this.controller,
     required this.hintText,
     required this.obscureText,
+    this.isNumber,
   });
 
   @override
@@ -19,6 +21,8 @@ class MyTextField extends StatelessWidget {
       // Username Text Field
       child: TextField(
         controller: controller,
+        keyboardType:
+            isNumber == true ? TextInputType.number : TextInputType.text,
         obscureText: obscureText,
         decoration: InputDecoration(
           labelText: hintText,

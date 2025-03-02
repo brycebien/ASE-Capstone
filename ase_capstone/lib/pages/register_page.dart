@@ -1,5 +1,3 @@
-import 'dart:convert';
-import 'package:crypto/crypto.dart';
 import 'package:ase_capstone/components/my_button.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:ase_capstone/utils/utils.dart';
@@ -20,6 +18,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final FirestoreService firestoreService = FirestoreService();
 
   // text controllers
+  final emailController = TextEditingController();
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
@@ -37,7 +36,8 @@ class _RegisterPageState extends State<RegisterPage> {
       });
 
       // check to ensure email and password are not empty
-      if (usernameController.text.isEmpty ||
+      if (emailController.text.isEmpty ||
+          usernameController.text.isEmpty ||
           passwordController.text.isEmpty ||
           confirmPasswordController.text.isEmpty) {
         setState(() {
@@ -55,19 +55,29 @@ class _RegisterPageState extends State<RegisterPage> {
           message: 'Passwords do not match',
         );
         return;
+      } else if (await firestoreService.checkUsernameExists(
+          username: usernameController.text)) {
+        // check to make sure there isnt a user with the same username
+        setState(() {
+          Utils.displayMessage(
+            context: context,
+            message: 'Username already exists',
+          );
+          _isLoading = false;
+        });
+        return;
       } else {
         // create the user
         user = await FirebaseAuth.instance
             .createUserWithEmailAndPassword(
-          email: usernameController.text,
+          email: emailController.text,
           password: passwordController.text,
         )
             .then((userCredential) {
-          var bytes = utf8.encode(passwordController.text);
-          var digest = sha256.convert(bytes);
           firestoreService.addUserToDatabase(
-            email: usernameController.text,
-            password: digest.toString(),
+            uid: userCredential.user!.uid,
+            email: emailController.text,
+            username: usernameController.text,
           );
           return userCredential;
         });
@@ -75,23 +85,8 @@ class _RegisterPageState extends State<RegisterPage> {
       }
     } on FirebaseAuthException catch (e) {
       setState(() {
-        if (e.code == 'user-not-found') {
-          // no user found with that email
-          _errorMessage = 'User not found with that email address';
-          _isLoading = false;
-        } else if (e.code == 'invalid-credential' ||
-            e.code == 'invalid-email') {
-          // invalid email
-          _errorMessage = 'Invalid username or password';
-          _isLoading = false;
-        } else if (e.code == 'email-already-in-use') {
-          _errorMessage = 'A user with that email already exists';
-          _isLoading = false;
-        } else {
-          // other errors
-          _errorMessage = 'An unexpected error occurred ${e.code}';
-          _isLoading = false;
-        }
+        _errorMessage = Utils.authErrorHandler(e: e);
+        _isLoading = false;
         Utils.displayMessage(context: context, message: _errorMessage);
       });
       return;
@@ -149,6 +144,15 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                 ),
                 SizedBox(height: 20),
+
+                // Email Text Field
+                MyTextField(
+                  controller: emailController,
+                  hintText: 'Email',
+                  obscureText: false,
+                ),
+
+                SizedBox(height: 10),
 
                 // Username Text Field
                 MyTextField(
