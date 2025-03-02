@@ -21,7 +21,7 @@ class _MapPageState extends State<MapPage> {
   late String _mapStyleString;
   String? _mapStyle;
   LocationData? _currentLocation;
-  Set<Marker> _markers = {};
+  final Set<Marker> _markers = {};
 
   @override
   void initState() {
@@ -125,7 +125,6 @@ class _MapPageState extends State<MapPage> {
   void _listenToPins() {
     FirebaseFirestore.instance.collection('pins').snapshots().listen(
         (snapshot) {
-      print("Firestore snapshot received: ${snapshot.docs.length} documents");
       setState(() {
         _markers.clear(); // Clear existing markers before updating
         for (var doc in snapshot.docs) {
@@ -136,8 +135,6 @@ class _MapPageState extends State<MapPage> {
               data.containsKey('title') &&
               data.containsKey('yesVotes') &&
               data.containsKey('noVotes')) {
-            print(
-                "Adding marker: ${data['title']} at (${data['latitude']}, ${data['longitude']})");
             _markers.add(
               Marker(
                 markerId: MarkerId(doc.id),
@@ -153,14 +150,10 @@ class _MapPageState extends State<MapPage> {
                 ),
               ),
             );
-          } else {
-            print("Document missing required fields: ${doc.id}");
-          }
+          } else {}
         }
       });
-    }, onError: (error) {
-      print("Error fetching Firestore data: $error");
-    });
+    }, onError: (error) {});
   }
 
   void _addEventMarker(LatLng position) async {
@@ -184,11 +177,17 @@ class _MapPageState extends State<MapPage> {
                 value: markerColor,
                 items: [
                   DropdownMenuItem(
-                      child: Text("Orange"), value: BitmapDescriptor.hueOrange),
+                    value: BitmapDescriptor.hueOrange,
+                    child: Text("Orange"),
+                  ),
                   DropdownMenuItem(
-                      child: Text("Red"), value: BitmapDescriptor.hueRed),
+                    value: BitmapDescriptor.hueRed,
+                    child: Text("Red"),
+                  ),
                   DropdownMenuItem(
-                      child: Text("Blue"), value: BitmapDescriptor.hueBlue),
+                    value: BitmapDescriptor.hueBlue,
+                    child: Text("Blue"),
+                  ),
                 ],
                 onChanged: (value) {
                   if (value != null) {
@@ -296,9 +295,7 @@ class _MapPageState extends State<MapPage> {
       for (var doc in snapshot.docs) {
         doc.reference.delete();
       }
-    }).catchError((error) {
-      print("Error checking expired pins: $error");
-    });
+    }).catchError((error) {});
   }
 
   void signUserOut() async {
