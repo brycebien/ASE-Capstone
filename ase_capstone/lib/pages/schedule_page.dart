@@ -300,14 +300,36 @@ class _SchedulePageState extends State<SchedulePage> {
                       children: classes.map((e) {
                         return Card(
                           child: ListTile(
-                            title: Text(e['name']),
+                            title: Text(
+                              e['name'],
+                              style: TextStyle(fontSize: 20),
+                            ),
                             subtitle: Text(
                                 '${e['startTime']} - ${e['endTime']}\n${e['building']} - ${e['code']}\nRoom: ${e['room']}'),
-                            trailing: IconButton(
-                              icon: Icon(Icons.delete),
-                              onPressed: () {
-                                _deleteClass(classes.indexOf(e));
-                              },
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: Icon(Icons.directions_walk),
+                                  style: ButtonStyle(
+                                    foregroundColor:
+                                        WidgetStateProperty.all(Colors.blue),
+                                  ),
+                                  onPressed: () {
+                                    // TODO: implement Navigation functionality
+                                  },
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.delete),
+                                  style: ButtonStyle(
+                                    foregroundColor:
+                                        WidgetStateProperty.all(Colors.red),
+                                  ),
+                                  onPressed: () {
+                                    _deleteClass(classes.indexOf(e));
+                                  },
+                                ),
+                              ],
                             ),
                           ),
                         );
