@@ -1,3 +1,5 @@
+import 'package:ase_capstone/utils/firebase_operations.dart';
+import 'package:ase_capstone/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
@@ -11,7 +13,30 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  final FirestoreService firestoreService = FirestoreService();
   final User? user = FirebaseAuth.instance.currentUser;
+  late Map<String, dynamic> userData;
+
+  @override
+  void initState() {
+    super.initState();
+    _getUser();
+  }
+
+  // get user from firestore db
+  Future<void> _getUser() async {
+    try {
+      userData = await firestoreService.getUser(userId: user?.uid);
+    } on FirebaseException catch (e) {
+      setState(() {
+        Utils.displayMessage(
+          context: context,
+          message: 'Error: ${e.toString()}',
+        );
+      });
+    }
+  }
+
   File? _image;
 
   Future<void> changeProfilePicture() async {
@@ -77,13 +102,12 @@ class _ProfilePageState extends State<ProfilePage> {
                     setState(() {});
                   }
                 } catch (e) {
-                  if (!mounted) return;
-                  if (mounted) {
-                    // ignore: use_build_context_synchronously
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error: ${e.toString()}')),
+                  setState(() {
+                    Utils.displayMessage(
+                      context: context,
+                      message: 'Error: ${e.toString()}',
                     );
-                  }
+                  });
                 }
               },
               child: const Text('Save'),
@@ -116,11 +140,14 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ),
             const SizedBox(height: 16),
-            Text(user?.displayName ?? 'No Name',
-                style:
-                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            Text('Username: @${user?.uid ?? 'not set'}',
-                style: const TextStyle(fontSize: 16, color: Colors.blueGrey)),
+            Text(
+              userData['username'],
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            Text(
+              'Username: @${userData['username']}',
+              style: const TextStyle(fontSize: 16, color: Colors.blueGrey),
+            ),
             Text(user?.email ?? 'No Email',
                 style: const TextStyle(color: Colors.grey)),
             const SizedBox(height: 20),
