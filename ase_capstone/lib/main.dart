@@ -3,6 +3,7 @@ import 'package:ase_capstone/pages/forgot_password_page.dart';
 import 'package:ase_capstone/pages/map_page.dart';
 import 'package:ase_capstone/pages/schedule_page.dart';
 import 'package:ase_capstone/pages/settings_page.dart';
+import 'package:ase_capstone/pages/profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -44,11 +45,13 @@ class _MyAppState extends State<MyApp> {
       home: const AuthPage(),
       routes: {
         '/forgot-password': (context) => ForgotPassword(),
-        '/map': (context) => MapPage(),
+        '/auth': (context) => const AuthPage(),
+        '/profile': (context) => const ProfilePage(),
         '/settings': (context) => SettingsPage(
               toggleTheme: toggleTheme,
               isDarkMode: isDarkMode,
             ),
+        '/map': (context) => const MapPage(),
         '/schedule': (context) => SchedulePage(),
       },
     );
