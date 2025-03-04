@@ -139,8 +139,6 @@ class SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  void deleteAccount() {}
-
   void changeUserIcon() {}
 
   void manageNotifications() {}
@@ -164,11 +162,6 @@ class SettingsPageState extends State<SettingsPage> {
             leading: Icon(Icons.lock),
             title: Text('Change Password'),
             onTap: changePasswordDialog,
-          ),
-          ListTile(
-            leading: Icon(Icons.delete),
-            title: Text('Delete Account'),
-            onTap: deleteAccount,
           ),
           ListTile(
             leading: Icon(Icons.notifications),

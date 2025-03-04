@@ -15,7 +15,7 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   final FirestoreService firestoreService = FirestoreService();
   final User? user = FirebaseAuth.instance.currentUser;
-  late Map<String, dynamic> userData;
+  Map<String, dynamic> userData = {};
 
   @override
   void initState() {
@@ -26,7 +26,11 @@ class _ProfilePageState extends State<ProfilePage> {
   // get user from firestore db
   Future<void> _getUser() async {
     try {
-      userData = await firestoreService.getUser(userId: user?.uid);
+      Map<String, dynamic> data =
+          await firestoreService.getUser(userId: user?.uid);
+      setState(() {
+        userData = data;
+      });
     } on FirebaseException catch (e) {
       setState(() {
         Utils.displayMessage(
@@ -124,45 +128,49 @@ class _ProfilePageState extends State<ProfilePage> {
       appBar: AppBar(title: const Text('Profile')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            GestureDetector(
-              onTap: changeProfilePicture,
-              child: CircleAvatar(
-                radius: 50,
-                backgroundImage: _image != null
-                    ? FileImage(_image!)
-                    : NetworkImage(user?.photoURL ?? '') as ImageProvider,
-                child: _image == null && user?.photoURL == null
-                    ? const Icon(Icons.person, size: 50)
-                    : null,
+        child: userData.isEmpty
+            ? const Center(child: CircularProgressIndicator())
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  GestureDetector(
+                    onTap: changeProfilePicture,
+                    child: CircleAvatar(
+                      radius: 50,
+                      backgroundImage: _image != null
+                          ? FileImage(_image!)
+                          : NetworkImage(user?.photoURL ?? '') as ImageProvider,
+                      child: _image == null && user?.photoURL == null
+                          ? const Icon(Icons.person, size: 50)
+                          : null,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    userData['username'],
+                    style: const TextStyle(
+                        fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    'Username: @${userData['username']}',
+                    style:
+                        const TextStyle(fontSize: 16, color: Colors.blueGrey),
+                  ),
+                  Text(user?.email ?? 'No Email',
+                      style: const TextStyle(color: Colors.grey)),
+                  const SizedBox(height: 20),
+                  ListTile(
+                    leading: const Icon(Icons.edit),
+                    title: const Text('Edit Profile'),
+                    onTap: editProfile,
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.camera_alt),
+                    title: const Text('Change Profile Picture'),
+                    onTap: changeProfilePicture,
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              userData['username'],
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              'Username: @${userData['username']}',
-              style: const TextStyle(fontSize: 16, color: Colors.blueGrey),
-            ),
-            Text(user?.email ?? 'No Email',
-                style: const TextStyle(color: Colors.grey)),
-            const SizedBox(height: 20),
-            ListTile(
-              leading: const Icon(Icons.edit),
-              title: const Text('Edit Profile'),
-              onTap: editProfile,
-            ),
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text('Change Profile Picture'),
-              onTap: changeProfilePicture,
-            ),
-          ],
-        ),
       ),
     );
   }
