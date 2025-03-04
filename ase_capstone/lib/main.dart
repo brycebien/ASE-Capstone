@@ -1,4 +1,5 @@
 import 'package:ase_capstone/pages/auth_page.dart';
+import 'package:ase_capstone/pages/forgot_password_page.dart';
 import 'package:ase_capstone/pages/map_page.dart';
 import 'package:ase_capstone/pages/schedule_page.dart';
 import 'package:ase_capstone/pages/settings_page.dart';
@@ -43,6 +44,7 @@ class _MyAppState extends State<MyApp> {
       title: 'Campus Compass',
       home: const AuthPage(),
       routes: {
+        '/forgot-password': (context) => ForgotPassword(),
         '/auth': (context) => const AuthPage(),
         '/profile': (context) => const ProfilePage(),
         '/settings': (context) => SettingsPage(
@@ -51,7 +53,6 @@ class _MyAppState extends State<MyApp> {
             ),
         '/map': (context) => const MapPage(),
         '/schedule': (context) => SchedulePage(),
-
       },
     );
   }

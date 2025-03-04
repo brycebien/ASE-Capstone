@@ -34,6 +34,12 @@ class FirestoreService {
     return userDoc.data() as Map<String, dynamic>;
   }
 
+  // get user
+  Future<Map<String, dynamic>> getUser({required String? userId}) async {
+    final DocumentSnapshot userDoc = await _usersCollection.doc(userId).get();
+    return userDoc.data() as Map<String, dynamic>;
+  }
+
   // UPDATE
   Future<void> updateUserPassword({
     required String userId,
