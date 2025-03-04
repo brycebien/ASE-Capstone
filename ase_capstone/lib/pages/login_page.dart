@@ -33,21 +33,14 @@ class _LoginPageState extends State<LoginPage> {
       );
     } on FirebaseAuthException catch (e) {
       setState(() {
-        if (e.code == 'invalid-credential' || e.code == 'invalid-email') {
-          _errorMessage = 'Invalid username or password';
-        } else if (usernameController.text.isEmpty ||
-            passwordController.text.isEmpty) {
-          _errorMessage =
-              'Please enter the username and password for your account';
-        } else {
-          _errorMessage = 'An unexpected error occurred';
-        }
+        _errorMessage = Utils.authErrorHandler(e: e);
         _isLoading = false;
         Utils.displayMessage(context: context, message: _errorMessage);
       });
       return;
     }
 
+    // send user to map page upon successful login
     setState(() {
       Navigator.pushNamed(context, '/map');
     });
