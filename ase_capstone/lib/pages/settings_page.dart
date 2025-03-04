@@ -171,11 +171,6 @@ class SettingsPageState extends State<SettingsPage> {
             onTap: deleteAccount,
           ),
           ListTile(
-            leading: Icon(Icons.account_circle),
-            title: Text('Change User Icon'),
-            onTap: changeUserIcon,
-          ),
-          ListTile(
             leading: Icon(Icons.notifications),
             title: Text('Notifications'),
             onTap: manageNotifications,

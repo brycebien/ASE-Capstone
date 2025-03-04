@@ -334,7 +334,11 @@ class _MapPageState extends State<MapPage> {
                 leading: Icon(Icons.account_circle),
                 title: Text('Profile'),
                 onTap: () {
-                  // Handle profile tap
+                  Navigator.pushNamed(
+                    context,
+                    '/profile',
+                    arguments: user,
+                  );
                 },
               ),
               ListTile(
