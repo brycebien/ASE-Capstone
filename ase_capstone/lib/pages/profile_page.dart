@@ -22,6 +22,7 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
     _getUser();
+    _getProfilePicture();
   }
 
   // get user from firestore db
@@ -31,6 +32,23 @@ class _ProfilePageState extends State<ProfilePage> {
           await firestoreService.getUser(userId: user?.uid);
       setState(() {
         userData = data;
+      });
+    } on FirebaseException catch (e) {
+      setState(() {
+        Utils.displayMessage(
+          context: context,
+          message: 'Error: ${e.toString()}',
+        );
+      });
+    }
+  }
+
+  Future<void> _getProfilePicture() async {
+    try {
+      final profilePicturePath =
+          await firestoreService.getProfilePicture(userId: user!.uid);
+      setState(() {
+        _image = File(profilePicturePath);
       });
     } on FirebaseException catch (e) {
       setState(() {

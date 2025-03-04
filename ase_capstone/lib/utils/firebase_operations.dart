@@ -38,6 +38,8 @@ class FirestoreService {
   }
 
   // READ
+
+  // get classes
   Future<Map<String, dynamic>> getClassesFromDatabase(
       {required String userId}) async {
     final DocumentSnapshot userDoc = await _usersCollection.doc(userId).get();
@@ -48,6 +50,13 @@ class FirestoreService {
   Future<Map<String, dynamic>> getUser({required String? userId}) async {
     final DocumentSnapshot userDoc = await _usersCollection.doc(userId).get();
     return userDoc.data() as Map<String, dynamic>;
+  }
+
+  // get profile picture
+  Future<String> getProfilePicture({required String userId}) async {
+    final DocumentSnapshot userDoc = await _usersCollection.doc(userId).get();
+    final String profilePicture = userDoc.get('profilePicture');
+    return profilePicture;
   }
 
   // UPDATE
