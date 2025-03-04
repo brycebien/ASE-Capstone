@@ -15,6 +15,7 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   final FirestoreService firestoreService = FirestoreService();
   final User? user = FirebaseAuth.instance.currentUser;
+  File? _image;
   Map<String, dynamic> userData = {};
 
   @override
@@ -41,8 +42,6 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  File? _image;
-
   Future<void> changeProfilePicture() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
@@ -50,10 +49,23 @@ class _ProfilePageState extends State<ProfilePage> {
       setState(() {
         _image = File(pickedFile.path);
       });
-      // Upload logic to Firebase Storage or another storage system can be added here
+
+      // upload image to firebase storage
+      try {
+        firestoreService.uploadProfilePicture(
+          userId: user!.uid,
+          filePath: _image!.path,
+        );
+      } catch (e) {
+        setState(() {
+          Utils.displayMessage(
+            context: context,
+            message: 'Error: ${e.toString()}',
+          );
+        });
+      }
     }
   }
-  //verify
 
   void editProfile() {
     TextEditingController nameController =

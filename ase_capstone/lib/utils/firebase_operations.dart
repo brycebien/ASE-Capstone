@@ -27,6 +27,16 @@ class FirestoreService {
     });
   }
 
+  // upload profile picture
+  Future<void> uploadProfilePicture({
+    required String userId,
+    required String filePath,
+  }) async {
+    await _usersCollection.doc(userId).update({
+      'profilePicture': filePath,
+    });
+  }
+
   // READ
   Future<Map<String, dynamic>> getClassesFromDatabase(
       {required String userId}) async {
