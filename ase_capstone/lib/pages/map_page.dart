@@ -76,6 +76,7 @@ class _MapPageState extends State<MapPage> {
         _controller?.animateCamera(CameraUpdate.newCameraPosition(
           CameraPosition(
             zoom: 20.0,
+            tilt: 50.0,
             target: LatLng(
               _currentLocation!.latitude!,
               _currentLocation!.longitude!,
