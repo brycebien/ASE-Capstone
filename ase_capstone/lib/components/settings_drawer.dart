@@ -1,3 +1,4 @@
+import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -59,11 +60,10 @@ class SettingsDrawerState extends State<SettingsDrawer> {
           ListTile(
             leading: Icon(Icons.school),
             title: Text('Choose Your University'),
-            onTap: () {
-              Navigator.pushNamed(
-                context,
-                '/choose-university',
-              );
+            onTap: () async {
+              final String? result =
+                  await Utils.showUniversityDialog(context: context);
+              print("RESULT:::::::: $result");
             },
           )
         ],
