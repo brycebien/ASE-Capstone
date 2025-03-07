@@ -1,3 +1,4 @@
+import 'package:ase_capstone/components/settings_drawer.dart';
 import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -319,63 +320,7 @@ class _MapPageState extends State<MapPage> {
         title: Text('Campus Compass'),
       ),
       drawer: SafeArea(
-        child: Drawer(
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: <Widget>[
-              DrawerHeader(
-                decoration:
-                    BoxDecoration(color: Theme.of(context).colorScheme.primary),
-                child: Text('Settings',
-                    style: TextStyle(
-                        color: Theme.of(context).colorScheme.tertiary,
-                        fontSize: 24)),
-              ),
-              ListTile(
-                leading: Icon(Icons.account_circle),
-                title: Text('Profile'),
-                onTap: () {
-                  Navigator.pushNamed(
-                    context,
-                    '/profile',
-                    arguments: user,
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.settings),
-                title: Text('General'),
-                onTap: () {
-                  Navigator.pushNamed(
-                    context,
-                    '/settings',
-                    arguments: user,
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.calendar_today),
-                title: Text('Class Schedule'),
-                onTap: () {
-                  Navigator.pushNamed(
-                    context,
-                    '/schedule',
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.school),
-                title: Text('Choose Your University'),
-                onTap: () {
-                  Navigator.pushNamed(
-                    context,
-                    '/choose-university',
-                  );
-                },
-              )
-            ],
-          ),
-        ),
+        child: SettingsDrawer(user: user),
       ),
       body: _currentLocation == null
           ? Center(
