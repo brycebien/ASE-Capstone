@@ -56,6 +56,30 @@ class FirestoreService {
         .toList();
   }
 
+  // get buildings
+  Future<List<dynamic>> getBuildings({
+    required String userId,
+  }) async {
+    final DocumentSnapshot userDoc = await _usersCollection.doc(userId).get();
+
+    if (!userDoc.exists) {
+      throw Exception('User not found');
+    }
+
+    final String university = userDoc.get('university');
+
+    final DocumentSnapshot universityDoc = await FirebaseFirestore.instance
+        .collection('universities')
+        .doc(university)
+        .get();
+
+    if (!universityDoc.exists) {
+      throw Exception('University not found');
+    }
+
+    return universityDoc.get('buildings');
+  }
+
   // get classes
   Future<Map<String, dynamic>> getClassesFromDatabase(
       {required String userId}) async {

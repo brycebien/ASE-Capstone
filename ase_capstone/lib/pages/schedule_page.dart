@@ -1,4 +1,5 @@
 import 'package:ase_capstone/components/textfield.dart';
+import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
@@ -14,9 +15,18 @@ class _SchedulePageState extends State<SchedulePage> {
   bool _isLoading = false;
   FirestoreService firestoreService = FirestoreService();
   User? currentUser = FirebaseAuth.instance.currentUser;
+  late List<dynamic> buildings;
+  TimeOfDay? startTime;
+  TimeOfDay? endTime;
+  String? building;
+  String? buildingCode;
+  final TextEditingController _classNameController = TextEditingController();
+  final TextEditingController _roomController = TextEditingController();
+
   @override
   void initState() {
     _getClassSchedule();
+    _getBuildings();
     super.initState();
   }
 
@@ -42,52 +52,23 @@ class _SchedulePageState extends State<SchedulePage> {
     // {'name': 'Math', 'time': '8:00 AM', 'building': 'MP', 'room': '101'},
     // {'name': 'Science', 'time': '9:00 AM', 'building': 'SC', 'room': '202'}
   ];
-  List buildings = [
-    {'name': 'Lucas Administrative Center', 'code': 'AC'},
-    {'name': 'Business Academic Center', 'code': 'BC'},
-    {'name': 'Campbell Hall', 'code': 'CA'},
-    {'name': 'Callahan Hall', 'code': 'CH '},
-    {'name': 'Ceramics & Sculpture Studio', 'code': 'CS'},
-    {'name': 'Commonwealth Hall ', 'code': 'CW'},
-    {'name': 'Fine Arts Center ', 'code': 'FA'},
-    {'name': 'Founders Hall', 'code': 'FH'},
-    {'name': 'Griffin Hall', 'code': 'GH'},
-    {'name': 'Albright Health Center', 'code': 'HC'},
-    {'name': 'Health Innovation Center', 'code': 'HE'},
-    {'name': 'New Residence Hall', 'code': 'HJ'},
-    {'name': 'Intramural Field Complex', 'code': 'IM'},
-    {'name': 'Kenton Garage', 'code': 'KG'},
-    {'name': 'Kentucky Hall', 'code': 'KY'},
-    {'name': 'Landrum Academic Center', 'code': 'LA'},
-    {'name': 'Maintenance Building', 'code': 'MB'},
-    {'name': 'Mathematics Education Psychology Center', 'code': 'MP'},
-    {'name': 'Norse Commons', 'code': 'NC'},
-    {'name': 'Nunn Hall', 'code': 'NH'},
-    {'name': 'Norse Hall', 'code': 'NO'},
-    {'name': 'Northern Terrace', 'code': 'NT'},
-    {'name': 'Outdoor Space', 'code': 'OD'},
-    {'name': 'Opportunity House ', 'code': 'OH'},
-    {'name': 'Central Power Plant', 'code': 'PP'},
-    {'name': 'Regents Hall', 'code': 'RH'},
-    {'name': 'Dorothy W. Herrmann Natural Science Center', 'code': 'SC'},
-    {'name': 'Steely Library', 'code': 'SL'},
-    {'name': 'Soccer Stadium', 'code': 'SS'},
-    {'name': 'Votruba Student Union', 'code': 'SU'},
-    {'name': 'Truist Arena', 'code': 'TR'},
-    {'name': 'University Center', 'code': 'UC'},
-    {'name': 'University Garage', 'code': 'UG'},
-    {'name': 'University Police', 'code': 'UP'},
-    {'name': 'University Suites', 'code': 'US'},
-    {'name': 'Welcome Center', 'code': 'WC'},
-    {'name': 'Welcome Center Garage', 'code': 'WG'}
-  ];
-
-  TimeOfDay? startTime;
-  TimeOfDay? endTime;
-  String? building;
-  String? buildingCode;
-  final TextEditingController _classNameController = TextEditingController();
-  final TextEditingController _roomController = TextEditingController();
+  Future<void> _getBuildings() async {
+    try {
+      List<dynamic> result =
+          await firestoreService.getBuildings(userId: currentUser!.uid);
+      setState(() {
+        buildings = result;
+      });
+    } catch (e) {
+      setState(() {
+        Utils.displayMessage(
+          context: context,
+          message:
+              'An unexpected error occured.\nPlease try again later, or try changing your university in settings.',
+        );
+      });
+    }
+  }
 
   // function to select start and end time
   Future<TimeOfDay?> _selectTime(BuildContext context) async {
