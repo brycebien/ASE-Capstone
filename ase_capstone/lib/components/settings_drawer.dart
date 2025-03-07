@@ -34,7 +34,6 @@ class SettingsDrawerState extends State<SettingsDrawer> {
               Navigator.pushNamed(
                 context,
                 '/profile',
-                arguments: widget.user,
               );
             },
           ),
@@ -45,7 +44,6 @@ class SettingsDrawerState extends State<SettingsDrawer> {
               Navigator.pushNamed(
                 context,
                 '/settings',
-                arguments: widget.user,
               );
             },
           ),

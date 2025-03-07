@@ -1,5 +1,6 @@
 import 'package:ase_capstone/components/settings_drawer.dart';
 import 'package:ase_capstone/models/directions.dart';
+import 'package:ase_capstone/models/directions_handler.dart';
 import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -24,7 +25,8 @@ class _MapPageState extends State<MapPage> {
   String? _mapStyle;
   LocationData? _currentLocation;
   final Set<Marker> _markers = {};
-  late Directions _info;
+  LatLng? destination;
+  Directions? _info;
 
   @override
   void initState() {
@@ -33,6 +35,24 @@ class _MapPageState extends State<MapPage> {
     _loadMapStyle(); // load the map's color theme (light or dark mode)
     _listenToPins();
     _checkExpiredPins();
+  }
+
+  void _checkForDirections() async {
+    if (destination != null) {
+      final directions = await DirectionsHandler().getDirections(
+        origin: LatLng(
+          _currentLocation!.latitude!,
+          _currentLocation!.longitude!,
+        ),
+        destination: destination!,
+      );
+      setState(() {
+        _info = directions;
+      });
+    } else {
+      // no destination provided
+      return;
+    }
   }
 
   void _getCurrentLocation() async {
@@ -73,6 +93,7 @@ class _MapPageState extends State<MapPage> {
       location.onLocationChanged.listen((LocationData newLocation) {
         setState(() {
           _currentLocation = newLocation;
+          _checkForDirections();
         });
 
         // animate the camera to the user's location when the user moves/app is started
@@ -123,6 +144,15 @@ class _MapPageState extends State<MapPage> {
     super.didChangeDependencies();
     if (_controller != null) {
       _updateMapStyle(_controller!);
+    }
+
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    if (args != null) {
+      setState(() {
+        destination = args['destination'] as LatLng?;
+      });
+      _checkForDirections();
     }
   }
 
@@ -353,6 +383,17 @@ class _MapPageState extends State<MapPage> {
                     ),
                   ),
                   minMaxZoomPreference: MinMaxZoomPreference(15.0, 20.0),
+                  polylines: {
+                    if (_info != null)
+                      Polyline(
+                        polylineId: PolylineId('route'),
+                        points: _info!.polylineCoordinates
+                            .map((e) => LatLng(e.latitude, e.longitude))
+                            .toList(),
+                        color: Colors.yellow,
+                        width: 5,
+                      ),
+                  },
                   markers: _markers,
                   onTap: _addEventMarker,
                 ),

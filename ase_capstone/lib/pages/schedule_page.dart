@@ -3,6 +3,7 @@ import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class SchedulePage extends StatefulWidget {
   const SchedulePage({super.key});
@@ -382,6 +383,14 @@ class _SchedulePageState extends State<SchedulePage> {
                                           ),
                                           onPressed: () {
                                             // TODO: implement Navigation functionality
+                                            Navigator.pushNamed(
+                                              context,
+                                              '/map',
+                                              arguments: {
+                                                'destination': LatLng(
+                                                    39.030430, -84.462659),
+                                              },
+                                            );
                                           },
                                         ),
                                         IconButton(
