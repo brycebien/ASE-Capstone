@@ -363,6 +363,16 @@ class _MapPageState extends State<MapPage> {
                   );
                 },
               ),
+              ListTile(
+                leading: Icon(Icons.school),
+                title: Text('Choose Your University'),
+                onTap: () {
+                  Navigator.pushNamed(
+                    context,
+                    '/choose-university',
+                  );
+                },
+              )
             ],
           ),
         ),
