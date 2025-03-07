@@ -12,6 +12,7 @@ class SettingsDrawer extends StatefulWidget {
 }
 
 class SettingsDrawerState extends State<SettingsDrawer> {
+  final FirestoreService _firestoreService = FirestoreService();
   @override
   Widget build(BuildContext context) {
     return Drawer(
@@ -62,9 +63,16 @@ class SettingsDrawerState extends State<SettingsDrawer> {
             leading: Icon(Icons.school),
             title: Text('Choose Your University'),
             onTap: () async {
-              final String? result = await Utils.showUniversityDialog(
-                  context: context, firesotreService: FirestoreService());
-              print("RESULT:::::::: $result");
+              final String? selectedUniversity =
+                  await Utils.showUniversityDialog(
+                      context: context, firesotreService: _firestoreService);
+
+              if (selectedUniversity != null) {
+                await _firestoreService.updateUserUniversity(
+                  userId: widget.user!.uid,
+                  university: selectedUniversity,
+                );
+              }
             },
           )
         ],

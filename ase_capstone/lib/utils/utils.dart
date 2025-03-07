@@ -49,9 +49,9 @@ class Utils {
               children: universities.map(
                 (e) {
                   return ListTile(
-                    title: Text(e['name']!),
+                    title: Text("${e['name']!}\n(${e['abbreviation']})"),
                     onTap: () {
-                      Navigator.pop(context, e['abbreviation']);
+                      Navigator.pop(context, e['name']);
                     },
                   );
                 },

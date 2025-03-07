@@ -13,7 +13,11 @@ class FirestoreService {
     return result.docs.isNotEmpty;
   }
 
-  // CREATE
+  /*
+  
+    CREATE
+
+  */
 
   // create user
   Future<void> addUserToDatabase({
@@ -37,7 +41,11 @@ class FirestoreService {
     });
   }
 
-  // READ
+  /*
+
+    READ
+
+  */
 
   // get universities
   Future<List<Map<String, dynamic>>> getUniversities() async {
@@ -68,7 +76,13 @@ class FirestoreService {
     return profilePicture;
   }
 
-  // UPDATE
+  /*
+
+    UPDATE
+
+  */
+
+  // update user password
   Future<void> updateUserPassword({
     required String userId,
     required String password,
@@ -88,7 +102,22 @@ class FirestoreService {
     });
   }
 
-  // DELETE
+  // update user's preferred university
+  Future<void> updateUserUniversity({
+    required String userId,
+    required String university,
+  }) async {
+    await _usersCollection.doc(userId).update({
+      'university': university,
+    });
+  }
+
+  /*
+
+    // DELETE
+
+  */
+
   Future<void> deleteClassFromDatabase({
     required String userId,
     required Map<String, dynamic> userClass,
