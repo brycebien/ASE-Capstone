@@ -1,4 +1,5 @@
 import 'package:ase_capstone/components/settings_drawer.dart';
+import 'package:ase_capstone/models/directions.dart';
 import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -23,6 +24,7 @@ class _MapPageState extends State<MapPage> {
   String? _mapStyle;
   LocationData? _currentLocation;
   final Set<Marker> _markers = {};
+  late Directions _info;
 
   @override
   void initState() {
