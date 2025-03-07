@@ -39,6 +39,15 @@ class FirestoreService {
 
   // READ
 
+  // get universities
+  Future<List<Map<String, dynamic>>> getUniversities() async {
+    final QuerySnapshot universities =
+        await FirebaseFirestore.instance.collection('universities').get();
+    return universities.docs
+        .map((DocumentSnapshot doc) => doc.data() as Map<String, dynamic>)
+        .toList();
+  }
+
   // get classes
   Future<Map<String, dynamic>> getClassesFromDatabase(
       {required String userId}) async {

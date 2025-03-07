@@ -1,3 +1,4 @@
+import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -61,8 +62,8 @@ class SettingsDrawerState extends State<SettingsDrawer> {
             leading: Icon(Icons.school),
             title: Text('Choose Your University'),
             onTap: () async {
-              final String? result =
-                  await Utils.showUniversityDialog(context: context);
+              final String? result = await Utils.showUniversityDialog(
+                  context: context, firesotreService: FirestoreService());
               print("RESULT:::::::: $result");
             },
           )
