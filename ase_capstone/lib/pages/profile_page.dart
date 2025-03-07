@@ -23,7 +23,6 @@ class _ProfilePageState extends State<ProfilePage> {
     _getUser();
   }
 
-  // get user from firestore db
   Future<void> _getUser() async {
     try {
       Map<String, dynamic> data =
@@ -50,10 +49,8 @@ class _ProfilePageState extends State<ProfilePage> {
       setState(() {
         _image = File(pickedFile.path);
       });
-      // Upload logic to Firebase Storage or another storage system can be added here
     }
   }
-  //verify
 
   void editProfile() {
     TextEditingController nameController =
@@ -122,6 +119,78 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  ///---
+
+  Future<void> deleteAccount() async {
+    if (user == null) return;
+
+    try {
+      AuthCredential credential = EmailAuthProvider.credential(
+        email: user!.email!,
+        password: await _promptForPassword(),
+      );
+
+      await user!.reauthenticateWithCredential(credential);
+
+      await firestoreService.deleteClassFromDatabase(
+          userId: user!.uid,
+          userClass: {
+            'username': userData['username'],
+            'email': userData['email']
+          });
+
+      await firestoreService.deleteUserData(user!.uid);
+
+      await user!.delete();
+
+      Utils.displayMessage(
+          context: context, message: "Account deleted successfully.");
+
+      Navigator.of(context).pushReplacementNamed('/login');
+    } on FirebaseAuthException catch (e) {
+      Utils.displayMessage(
+          context: context, message: "Re-authentication failed: ${e.message}");
+    } catch (e) {
+      Utils.displayMessage(
+          context: context, message: "Error deleting account: ${e.toString()}");
+    }
+  }
+
+  Future<String> _promptForPassword() async {
+    TextEditingController passwordController = TextEditingController();
+    return await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Re-authenticate'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Please enter your password to continue.'),
+              TextField(
+                controller: passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Password'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, ''),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, passwordController.text),
+              child: const Text('Confirm'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  ///---
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -168,6 +237,37 @@ class _ProfilePageState extends State<ProfilePage> {
                     leading: const Icon(Icons.camera_alt),
                     title: const Text('Change Profile Picture'),
                     onTap: changeProfilePicture,
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.delete, color: Colors.red),
+                    title: const Text('Delete Account',
+                        style: TextStyle(color: Colors.red)),
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: const Text('Confirm Deletion'),
+                            content: const Text(
+                                'Are you sure you want to delete your account? This action cannot be undone.'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () async {
+                                  Navigator.pop(context);
+                                  await deleteAccount();
+                                },
+                                child: const Text('Delete',
+                                    style: TextStyle(color: Colors.red)),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
                   ),
                 ],
               ),
