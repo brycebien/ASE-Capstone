@@ -191,10 +191,12 @@ class _MapPageState extends State<MapPage> {
         });
       },
       onError: (error) {
-        Utils.displayMessage(
-          context: context,
-          message: 'Error loading pins: $error',
-        );
+        setState(() {
+          Utils.displayMessage(
+            context: context,
+            message: 'Error loading pins: $error',
+          );
+        });
       },
     );
   }
