@@ -139,8 +139,6 @@ class SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  void openInbox() {}
-
   void changeUserIcon() {}
 
   void manageNotifications() {}
@@ -169,11 +167,6 @@ class SettingsPageState extends State<SettingsPage> {
             leading: Icon(Icons.notifications),
             title: Text('Notifications'),
             onTap: manageNotifications,
-          ),
-          ListTile(
-            leading: Icon(Icons.inbox),
-            title: Text('Inbox'),
-            onTap: openInbox,
           ),
         ],
       ),

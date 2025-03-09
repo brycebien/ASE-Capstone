@@ -381,6 +381,16 @@ class _MapPageState extends State<MapPage> {
                   );
                 },
               ),
+              ListTile(
+                leading: Icon(Icons.inbox),
+                title: Text('Inbox'),
+                onTap: () {
+                  Navigator.pushNamed(
+                    context,
+                    '/inbox',
+                  );
+                },
+              ),
             ],
           ),
         ),
