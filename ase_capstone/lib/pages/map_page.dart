@@ -23,6 +23,8 @@ class _MapPageState extends State<MapPage> {
   LocationData? _currentLocation;
   final Set<Marker> _markers = {};
 
+  final Set<String> _votedPins = {};
+
   @override
   void initState() {
     super.initState();
@@ -124,36 +126,43 @@ class _MapPageState extends State<MapPage> {
 
   void _listenToPins() {
     FirebaseFirestore.instance.collection('pins').snapshots().listen(
-        (snapshot) {
-      setState(() {
-        _markers.clear(); // Clear existing markers before updating
-        for (var doc in snapshot.docs) {
-          final data = doc.data();
-          if (data.containsKey('latitude') &&
-              data.containsKey('longitude') &&
-              data.containsKey('color') &&
-              data.containsKey('title') &&
-              data.containsKey('yesVotes') &&
-              data.containsKey('noVotes')) {
-            _markers.add(
-              Marker(
-                markerId: MarkerId(doc.id),
-                position: LatLng((data['latitude'] as num).toDouble(),
-                    (data['longitude'] as num).toDouble()),
-                icon: BitmapDescriptor.defaultMarkerWithHue(
-                    (data['color'] as num).toDouble()),
-                infoWindow: InfoWindow(
-                  title: data['title'],
-                  snippet: 'Yes: ${data['yesVotes']} No: ${data['noVotes']}',
-                  onTap: () => _showVoteDialog(
-                      doc.id, data['yesVotes'], data['noVotes']),
+      (snapshot) {
+        setState(() {
+          _markers.clear(); // Clear existing markers before updating
+          for (var doc in snapshot.docs) {
+            final data = doc.data();
+            if (data.containsKey('latitude') &&
+                data.containsKey('longitude') &&
+                data.containsKey('color') &&
+                data.containsKey('title') &&
+                data.containsKey('yesVotes') &&
+                data.containsKey('noVotes')) {
+              _markers.add(
+                Marker(
+                  markerId: MarkerId(doc.id),
+                  position: LatLng((data['latitude'] as num).toDouble(),
+                      (data['longitude'] as num).toDouble()),
+                  icon: BitmapDescriptor.defaultMarkerWithHue(
+                      (data['color'] as num).toDouble()),
+                  infoWindow: InfoWindow(
+                    title: data['title'],
+                    snippet: 'Yes: ${data['yesVotes']} No: ${data['noVotes']}',
+                    onTap: () => _showVoteDialog(
+                        doc.id, data['yesVotes'], data['noVotes']),
+                  ),
                 ),
-              ),
-            );
-          } else {}
-        }
-      });
-    }, onError: (error) {});
+              );
+            }
+          }
+        });
+      },
+      onError: (error) {
+        Utils.displayMessage(
+          context: context,
+          message: 'Error loading pins: $error',
+        );
+      },
+    );
   }
 
   void _addEventMarker(LatLng position) async {
@@ -226,6 +235,14 @@ class _MapPageState extends State<MapPage> {
   }
 
   void _showVoteDialog(String markerId, int yesVotes, int noVotes) {
+    if (_votedPins.contains(markerId)) {
+      Utils.displayMessage(
+        context: context,
+        message: 'You have already voted on this event.',
+      );
+      return;
+    }
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -236,6 +253,7 @@ class _MapPageState extends State<MapPage> {
             TextButton(
               onPressed: () {
                 _updateVotes(markerId, true);
+                _votedPins.add(markerId);
                 Navigator.pop(context);
               },
               child: Text("Yes"),
@@ -243,6 +261,7 @@ class _MapPageState extends State<MapPage> {
             TextButton(
               onPressed: () {
                 _updateVotes(markerId, false);
+                _votedPins.add(markerId);
                 Navigator.pop(context);
               },
               child: Text("No"),
