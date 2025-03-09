@@ -69,4 +69,9 @@ class FirestoreService {
       'classes': FieldValue.arrayRemove([userClass]),
     });
   }
+
+  // DELETE USER
+  Future<void> deleteUserData(String userId) async {
+    await _usersCollection.doc(userId).delete();
+  }
 }
