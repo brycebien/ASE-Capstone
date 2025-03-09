@@ -166,6 +166,14 @@ class _MapPageState extends State<MapPage> {
   }
 
   void _addEventMarker(LatLng position) async {
+    if (_currentLocation == null) {
+      Utils.displayMessage(
+        context: context,
+        message: 'Current location is not available.',
+      );
+      return;
+    }
+
     String markerTitle = "Reported Event";
     double markerColor = BitmapDescriptor.hueOrange;
 
@@ -215,11 +223,10 @@ class _MapPageState extends State<MapPage> {
                   markerTitle = nameController.text;
                 }
                 FirebaseFirestore.instance.collection('pins').add({
-                  'latitude': position.latitude,
-                  'longitude': position.longitude,
+                  'latitude': _currentLocation!.latitude,
+                  'longitude': _currentLocation!.longitude,
                   'title': markerTitle,
-                  'color': markerColor
-                      .toDouble(), // Ensure color is stored as double
+                  'color': markerColor.toDouble(), // Ensure color is stored as double
                   'timestamp': FieldValue.serverTimestamp(),
                   'yesVotes': 0,
                   'noVotes': 0,
@@ -425,14 +432,18 @@ class _MapPageState extends State<MapPage> {
                   ),
                   minMaxZoomPreference: MinMaxZoomPreference(15.0, 20.0),
                   markers: _markers,
-                  onTap: _addEventMarker,
                 ),
                 Positioned(
                   bottom: 16,
                   right: 16,
                   child: FloatingActionButton(
                     onPressed: () {
-                      // Add your onPressed code here!
+                      if (_currentLocation != null) {
+                        _addEventMarker(LatLng(
+                          _currentLocation!.latitude!,
+                          _currentLocation!.longitude!,
+                        ));
+                      }
                     },
                     backgroundColor: Colors.orange,
                     child: Icon(Icons.add_location_alt),
