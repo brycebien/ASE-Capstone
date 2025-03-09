@@ -1,3 +1,4 @@
+import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -28,5 +29,35 @@ class Utils {
       default:
         return 'An unexpected error occured: ${e.message!}';
     }
+  }
+
+  static Future<String?> showUniversityDialog({
+    required BuildContext context,
+    required FirestoreService firesotreService,
+  }) async {
+    List<Map<String, dynamic>> universities =
+        await firesotreService.getUniversities();
+
+    return showDialog<String>(
+        // ignore: use_build_context_synchronously
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Choose University'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: universities.map(
+                (e) {
+                  return ListTile(
+                    title: Text("${e['name']!}\n(${e['abbreviation']})"),
+                    onTap: () {
+                      Navigator.pop(context, e['name']);
+                    },
+                  );
+                },
+              ).toList(),
+            ),
+          );
+        });
   }
 }

@@ -15,12 +15,14 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   final FirestoreService firestoreService = FirestoreService();
   final User? user = FirebaseAuth.instance.currentUser;
+  File? _image;
   Map<String, dynamic> userData = {};
 
   @override
   void initState() {
     super.initState();
     _getUser();
+    _getProfilePicture();
   }
 
   Future<void> _getUser() async {
@@ -40,7 +42,22 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  File? _image;
+  Future<void> _getProfilePicture() async {
+    try {
+      final profilePicturePath =
+          await firestoreService.getProfilePicture(userId: user!.uid);
+      setState(() {
+        _image = File(profilePicturePath);
+      });
+    } on FirebaseException catch (e) {
+      setState(() {
+        Utils.displayMessage(
+          context: context,
+          message: 'Error: ${e.toString()}',
+        );
+      });
+    }
+  }
 
   Future<void> changeProfilePicture() async {
     final picker = ImagePicker();
@@ -49,6 +66,21 @@ class _ProfilePageState extends State<ProfilePage> {
       setState(() {
         _image = File(pickedFile.path);
       });
+
+      // upload image to firebase storage
+      try {
+        firestoreService.uploadProfilePicture(
+          userId: user!.uid,
+          filePath: _image!.path,
+        );
+      } catch (e) {
+        setState(() {
+          Utils.displayMessage(
+            context: context,
+            message: 'Error: ${e.toString()}',
+          );
+        });
+      }
     }
   }
 

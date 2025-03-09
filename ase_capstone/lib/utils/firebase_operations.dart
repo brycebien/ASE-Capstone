@@ -13,7 +13,11 @@ class FirestoreService {
     return result.docs.isNotEmpty;
   }
 
-  // CREATE
+  /*
+  
+    CREATE
+
+  */
 
   // create user
   Future<void> addUserToDatabase({
@@ -27,7 +31,56 @@ class FirestoreService {
     });
   }
 
-  // READ
+  // upload profile picture
+  Future<void> uploadProfilePicture({
+    required String userId,
+    required String filePath,
+  }) async {
+    await _usersCollection.doc(userId).update({
+      'profilePicture': filePath,
+    });
+  }
+
+  /*
+
+    READ
+
+  */
+
+  // get universities
+  Future<List<Map<String, dynamic>>> getUniversities() async {
+    final QuerySnapshot universities =
+        await FirebaseFirestore.instance.collection('universities').get();
+    return universities.docs
+        .map((DocumentSnapshot doc) => doc.data() as Map<String, dynamic>)
+        .toList();
+  }
+
+  // get buildings
+  Future<List<dynamic>> getBuildings({
+    required String userId,
+  }) async {
+    final DocumentSnapshot userDoc = await _usersCollection.doc(userId).get();
+
+    if (!userDoc.exists) {
+      throw Exception('User not found');
+    }
+
+    final String university = userDoc.get('university');
+
+    final DocumentSnapshot universityDoc = await FirebaseFirestore.instance
+        .collection('universities')
+        .doc(university)
+        .get();
+
+    if (!universityDoc.exists) {
+      throw Exception('University not found');
+    }
+
+    return universityDoc.get('buildings');
+  }
+
+  // get classes
   Future<Map<String, dynamic>> getClassesFromDatabase(
       {required String userId}) async {
     final DocumentSnapshot userDoc = await _usersCollection.doc(userId).get();
@@ -40,7 +93,20 @@ class FirestoreService {
     return userDoc.data() as Map<String, dynamic>;
   }
 
-  // UPDATE
+  // get profile picture
+  Future<String> getProfilePicture({required String userId}) async {
+    final DocumentSnapshot userDoc = await _usersCollection.doc(userId).get();
+    final String profilePicture = userDoc.get('profilePicture');
+    return profilePicture;
+  }
+
+  /*
+
+    UPDATE
+
+  */
+
+  // update user password
   Future<void> updateUserPassword({
     required String userId,
     required String password,
@@ -60,7 +126,22 @@ class FirestoreService {
     });
   }
 
-  // DELETE
+  // update user's preferred university
+  Future<void> updateUserUniversity({
+    required String userId,
+    required String university,
+  }) async {
+    await _usersCollection.doc(userId).update({
+      'university': university,
+    });
+  }
+
+  /*
+
+    // DELETE
+
+  */
+
   Future<void> deleteClassFromDatabase({
     required String userId,
     required Map<String, dynamic> userClass,

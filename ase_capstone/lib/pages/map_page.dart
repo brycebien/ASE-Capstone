@@ -1,3 +1,6 @@
+import 'package:ase_capstone/components/settings_drawer.dart';
+import 'package:ase_capstone/models/directions.dart';
+import 'package:ase_capstone/models/directions_handler.dart';
 import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -24,6 +27,8 @@ class _MapPageState extends State<MapPage> {
   final Set<Marker> _markers = {};
 
   final Set<String> _votedPins = {};
+  LatLng? destination;
+  Directions? _info;
 
   @override
   void initState() {
@@ -32,6 +37,24 @@ class _MapPageState extends State<MapPage> {
     _loadMapStyle(); // load the map's color theme (light or dark mode)
     _listenToPins();
     _checkExpiredPins();
+  }
+
+  void _checkForDirections() async {
+    if (destination != null) {
+      final directions = await DirectionsHandler().getDirections(
+        origin: LatLng(
+          _currentLocation!.latitude!,
+          _currentLocation!.longitude!,
+        ),
+        destination: destination!,
+      );
+      setState(() {
+        _info = directions;
+      });
+    } else {
+      // no destination provided
+      return;
+    }
   }
 
   void _getCurrentLocation() async {
@@ -72,12 +95,14 @@ class _MapPageState extends State<MapPage> {
       location.onLocationChanged.listen((LocationData newLocation) {
         setState(() {
           _currentLocation = newLocation;
+          _checkForDirections();
         });
 
         // animate the camera to the user's location when the user moves/app is started
         _controller?.animateCamera(CameraUpdate.newCameraPosition(
           CameraPosition(
             zoom: 20.0,
+            tilt: 50.0,
             target: LatLng(
               _currentLocation!.latitude!,
               _currentLocation!.longitude!,
@@ -121,6 +146,15 @@ class _MapPageState extends State<MapPage> {
     super.didChangeDependencies();
     if (_controller != null) {
       _updateMapStyle(_controller!);
+    }
+
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    if (args != null) {
+      setState(() {
+        destination = args['destination'] as LatLng?;
+      });
+      _checkForDirections();
     }
   }
 
@@ -226,7 +260,8 @@ class _MapPageState extends State<MapPage> {
                   'latitude': _currentLocation!.latitude,
                   'longitude': _currentLocation!.longitude,
                   'title': markerTitle,
-                  'color': markerColor.toDouble(), // Ensure color is stored as double
+                  'color': markerColor
+                      .toDouble(), // Ensure color is stored as double
                   'timestamp': FieldValue.serverTimestamp(),
                   'yesVotes': 0,
                   'noVotes': 0,
@@ -344,63 +379,7 @@ class _MapPageState extends State<MapPage> {
         title: Text('Campus Compass'),
       ),
       drawer: SafeArea(
-        child: Drawer(
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: <Widget>[
-              DrawerHeader(
-                decoration:
-                    BoxDecoration(color: Theme.of(context).colorScheme.primary),
-                child: Text('Settings',
-                    style: TextStyle(
-                        color: Theme.of(context).colorScheme.tertiary,
-                        fontSize: 24)),
-              ),
-              ListTile(
-                leading: Icon(Icons.account_circle),
-                title: Text('Profile'),
-                onTap: () {
-                  Navigator.pushNamed(
-                    context,
-                    '/profile',
-                    arguments: user,
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.settings),
-                title: Text('General'),
-                onTap: () {
-                  Navigator.pushNamed(
-                    context,
-                    '/settings',
-                    arguments: user,
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.calendar_today),
-                title: Text('Class Schedule'),
-                onTap: () {
-                  Navigator.pushNamed(
-                    context,
-                    '/schedule',
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.inbox),
-                title: Text('Inbox'),
-                onTap: () {
-                  Navigator.pushNamed(
-                    context,
-                    '/inbox',
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
+        child: SettingsDrawer(user: user),
       ),
       body: _currentLocation == null
           ? Center(
@@ -431,6 +410,17 @@ class _MapPageState extends State<MapPage> {
                     ),
                   ),
                   minMaxZoomPreference: MinMaxZoomPreference(15.0, 20.0),
+                  polylines: {
+                    if (_info != null)
+                      Polyline(
+                        polylineId: PolylineId('route'),
+                        points: _info!.polylineCoordinates
+                            .map((e) => LatLng(e.latitude, e.longitude))
+                            .toList(),
+                        color: Colors.yellow,
+                        width: 5,
+                      ),
+                  },
                   markers: _markers,
                 ),
                 Positioned(
