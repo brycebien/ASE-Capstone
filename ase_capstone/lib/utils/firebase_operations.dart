@@ -213,7 +213,7 @@ class FirestoreService {
     });
   }
 
-  // DELETE USER
+  // delete user data
   Future<void> deleteUserData(String userId) async {
     await _usersCollection.doc(userId).delete();
   }

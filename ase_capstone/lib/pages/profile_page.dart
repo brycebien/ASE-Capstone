@@ -1,3 +1,4 @@
+import 'package:ase_capstone/components/textfield.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:ase_capstone/utils/utils.dart';
 import 'package:flutter/material.dart';
@@ -17,6 +18,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final User? user = FirebaseAuth.instance.currentUser;
   File? _image;
   Map<String, dynamic> userData = {};
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -49,13 +51,8 @@ class _ProfilePageState extends State<ProfilePage> {
       setState(() {
         _image = File(profilePicturePath);
       });
-    } on FirebaseException catch (e) {
-      setState(() {
-        Utils.displayMessage(
-          context: context,
-          message: 'Error: ${e.toString()}',
-        );
-      });
+    } catch (e) {
+      // ignore error (user does not have a profile picture set)
     }
   }
 
@@ -151,8 +148,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  ///---
-
   Future<void> deleteAccount() async {
     if (user == null) return;
 
@@ -171,17 +166,21 @@ class _ProfilePageState extends State<ProfilePage> {
             'email': userData['email']
           });
 
+      setState(() {
+        _isLoading = true;
+      });
       await firestoreService.deleteUserData(user!.uid);
 
       await user!.delete();
 
       setState(() {
+        _isLoading = false;
         Utils.displayMessage(
           context: context,
           message: "Account deleted successfully.",
         );
 
-        Navigator.of(context).pushReplacementNamed('/login');
+        Navigator.of(context).pushReplacementNamed('/');
       });
     } on FirebaseAuthException catch (e) {
       setState(() {
@@ -211,10 +210,11 @@ class _ProfilePageState extends State<ProfilePage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Text('Please enter your password to continue.'),
-              TextField(
+              SizedBox(height: 10),
+              MyTextField(
                 controller: passwordController,
+                hintText: "Password",
                 obscureText: true,
-                decoration: const InputDecoration(labelText: 'Password'),
               ),
             ],
           ),
@@ -233,8 +233,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  ///---
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -243,78 +241,77 @@ class _ProfilePageState extends State<ProfilePage> {
         padding: const EdgeInsets.all(16.0),
         child: userData.isEmpty
             ? const Center(child: CircularProgressIndicator())
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  GestureDetector(
-                    onTap: changeProfilePicture,
-                    child: CircleAvatar(
-                      radius: 50,
-                      backgroundImage: _image != null
-                          ? FileImage(_image!)
-                          : NetworkImage(user?.photoURL ?? '') as ImageProvider,
-                      child: _image == null && user?.photoURL == null
-                          ? const Icon(Icons.person, size: 50)
-                          : null,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    userData['username'],
-                    style: const TextStyle(
-                        fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    'Username: @${userData['username']}',
-                    style:
-                        const TextStyle(fontSize: 16, color: Colors.blueGrey),
-                  ),
-                  Text(user?.email ?? 'No Email',
-                      style: const TextStyle(color: Colors.grey)),
-                  const SizedBox(height: 20),
-                  ListTile(
-                    leading: const Icon(Icons.edit),
-                    title: const Text('Edit Profile'),
-                    onTap: editProfile,
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.camera_alt),
-                    title: const Text('Change Profile Picture'),
-                    onTap: changeProfilePicture,
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.delete, color: Colors.red),
-                    title: const Text('Delete Account',
-                        style: TextStyle(color: Colors.red)),
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            title: const Text('Confirm Deletion'),
-                            content: const Text(
-                                'Are you sure you want to delete your account? This action cannot be undone.'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: const Text('Cancel'),
-                              ),
-                              TextButton(
-                                onPressed: () async {
-                                  Navigator.pop(context);
-                                  await deleteAccount();
-                                },
-                                child: const Text('Delete',
-                                    style: TextStyle(color: Colors.red)),
-                              ),
-                            ],
+            : _isLoading
+                ? Center(child: CircularProgressIndicator())
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      GestureDetector(
+                        onTap: changeProfilePicture,
+                        child: CircleAvatar(
+                          radius: 50,
+                          backgroundImage:
+                              _image != null ? FileImage(_image!) : null,
+                          child: const Icon(Icons.person, size: 50),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        userData['username'],
+                        style: const TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        'Username: @${userData['username']}',
+                        style: const TextStyle(
+                            fontSize: 16, color: Colors.blueGrey),
+                      ),
+                      Text(user?.email ?? 'No Email',
+                          style: const TextStyle(color: Colors.grey)),
+                      const SizedBox(height: 20),
+                      ListTile(
+                        leading: const Icon(Icons.edit),
+                        title: const Text('Edit Profile'),
+                        onTap: editProfile,
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.camera_alt),
+                        title: const Text('Change Profile Picture'),
+                        onTap: changeProfilePicture,
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.delete, color: Colors.red),
+                        title: const Text('Delete Account',
+                            style: TextStyle(color: Colors.red)),
+                        onTap: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                title: const Text('Confirm Deletion'),
+                                content: const Text(
+                                    'Are you sure you want to delete your account? This action cannot be undone.'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () async {
+                                      Navigator.pop(context);
+                                      await deleteAccount();
+                                    },
+                                    child: const Text('Delete',
+                                        style: TextStyle(color: Colors.red)),
+                                  ),
+                                ],
+                              );
+                            },
                           );
                         },
-                      );
-                    },
+                      ),
+                    ],
                   ),
-                ],
-              ),
       ),
     );
   }
