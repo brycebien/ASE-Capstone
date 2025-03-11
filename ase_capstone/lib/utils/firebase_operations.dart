@@ -56,6 +56,16 @@ class FirestoreService {
         .toList();
   }
 
+  // get user's university
+  Future<String> getUserUniversity({required String userId}) async {
+    try {
+      final DocumentSnapshot userDoc = await _usersCollection.doc(userId).get();
+      return userDoc.get('university');
+    } catch (e) {
+      return "";
+    }
+  }
+
   // get buildings
   Future<List<dynamic>> getBuildings({
     required String userId,

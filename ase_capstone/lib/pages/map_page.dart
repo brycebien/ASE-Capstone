@@ -1,6 +1,7 @@
 import 'package:ase_capstone/components/settings_drawer.dart';
 import 'package:ase_capstone/models/directions.dart';
 import 'package:ase_capstone/models/directions_handler.dart';
+import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -18,6 +19,7 @@ class MapPage extends StatefulWidget {
 }
 
 class _MapPageState extends State<MapPage> {
+  final FirestoreService _firestoreServices = FirestoreService();
   final user = FirebaseAuth.instance.currentUser!;
   GoogleMapController? _controller;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -25,6 +27,7 @@ class _MapPageState extends State<MapPage> {
   String? _mapStyle;
   LocationData? _currentLocation;
   final Set<Marker> _markers = {};
+  bool? _hasUniversity;
 
   final Set<String> _votedPins = {};
   LatLng? destination;
@@ -37,6 +40,16 @@ class _MapPageState extends State<MapPage> {
     _loadMapStyle(); // load the map's color theme (light or dark mode)
     _listenToPins();
     _checkExpiredPins();
+    _checkUserUniversity();
+  }
+
+  void _checkUserUniversity() async {
+    bool hasUniversity =
+        await _firestoreServices.getUserUniversity(userId: user.uid) == "";
+    print("Setting _hasUniversity to ${!hasUniversity}");
+    setState(() {
+      _hasUniversity = !hasUniversity;
+    });
   }
 
   void _checkForDirections() async {
@@ -140,14 +153,15 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
-  // detect theme changes to update map style (other widgets change dynamically with the theme so no need to update them here)
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    // detect theme changes to update map style (other widgets change dynamically with the theme so no need to update them here)
     if (_controller != null) {
       _updateMapStyle(_controller!);
     }
 
+    // get args passed to map page via Navigator.pushNamed
     final args =
         ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     if (args != null) {
@@ -387,62 +401,87 @@ class _MapPageState extends State<MapPage> {
           ? Center(
               child: CircularProgressIndicator(),
             )
-          : Stack(
-              children: [
-                GoogleMap(
-                  onMapCreated: _onMapCreated,
-                  style: _mapStyle,
-                  initialCameraPosition: CameraPosition(
-                    target: LatLng(
-                      _currentLocation!.latitude!,
-                      _currentLocation!.longitude!,
+          : !_hasUniversity!
+              ? AlertDialog(
+                  title: Text('No University Selected'),
+                  content: Text('Please select a university to use the map.'),
+                  actions: [
+                    TextButton(
+                      onPressed: () async {
+                        String? university = await Utils.showUniversityDialog(
+                          context: context,
+                          firesotreService: _firestoreServices,
+                        );
+                        if (university != null) {
+                          await _firestoreServices.updateUserUniversity(
+                            userId: user.uid,
+                            university: university,
+                          );
+                          setState(() {
+                            _hasUniversity = true;
+                          });
+                        }
+                      },
+                      child: Text('Universities'),
                     ),
-                    zoom: 15.5,
-                    tilt: 0,
-                  ),
-                  rotateGesturesEnabled: true,
-                  myLocationButtonEnabled: true,
-                  zoomControlsEnabled:
-                      false, // Disable zoom controls (+/- buttons)
-                  myLocationEnabled: true,
-                  cameraTargetBounds: CameraTargetBounds(
-                    LatLngBounds(
-                      southwest: LatLng(39.028, -84.467),
-                      northeast: LatLng(39.038, -84.459),
-                    ),
-                  ),
-                  minMaxZoomPreference: MinMaxZoomPreference(15.0, 20.0),
-                  polylines: {
-                    if (_info != null)
-                      Polyline(
-                        polylineId: PolylineId('route'),
-                        points: _info!.polylineCoordinates
-                            .map((e) => LatLng(e.latitude, e.longitude))
-                            .toList(),
-                        color: Colors.yellow,
-                        width: 5,
-                      ),
-                  },
-                  markers: _markers,
-                ),
-                Positioned(
-                  bottom: 16,
-                  right: 16,
-                  child: FloatingActionButton(
-                    onPressed: () {
-                      if (_currentLocation != null) {
-                        _addEventMarker(LatLng(
+                  ],
+                )
+              : Stack(
+                  children: [
+                    GoogleMap(
+                      onMapCreated: _onMapCreated,
+                      style: _mapStyle,
+                      initialCameraPosition: CameraPosition(
+                        target: LatLng(
                           _currentLocation!.latitude!,
                           _currentLocation!.longitude!,
-                        ));
-                      }
-                    },
-                    backgroundColor: Colors.orange,
-                    child: Icon(Icons.add_location_alt),
-                  ),
+                        ),
+                        zoom: 15.5,
+                        tilt: 0,
+                      ),
+                      rotateGesturesEnabled: true,
+                      myLocationButtonEnabled: true,
+                      zoomControlsEnabled:
+                          false, // Disable zoom controls (+/- buttons)
+                      myLocationEnabled: true,
+                      cameraTargetBounds: CameraTargetBounds(
+                        LatLngBounds(
+                          southwest: LatLng(39.028, -84.467),
+                          northeast: LatLng(39.038, -84.459),
+                        ),
+                      ),
+                      minMaxZoomPreference: MinMaxZoomPreference(15.0, 20.0),
+                      polylines: {
+                        if (_info != null)
+                          Polyline(
+                            polylineId: PolylineId('route'),
+                            points: _info!.polylineCoordinates
+                                .map((e) => LatLng(e.latitude, e.longitude))
+                                .toList(),
+                            color: Colors.yellow,
+                            width: 5,
+                          ),
+                      },
+                      markers: _markers,
+                    ),
+                    Positioned(
+                      bottom: 16,
+                      right: 16,
+                      child: FloatingActionButton(
+                        onPressed: () {
+                          if (_currentLocation != null) {
+                            _addEventMarker(LatLng(
+                              _currentLocation!.latitude!,
+                              _currentLocation!.longitude!,
+                            ));
+                          }
+                        },
+                        backgroundColor: Colors.orange,
+                        child: Icon(Icons.add_location_alt),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
     );
   }
 }
