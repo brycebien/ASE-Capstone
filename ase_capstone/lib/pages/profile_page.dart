@@ -127,10 +127,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       emailController.text != user?.email) {
                     await user?.verifyBeforeUpdateEmail(emailController.text);
                   }
-
-                  if (mounted) {
-                    setState(() {});
-                  }
                 } catch (e) {
                   setState(() {
                     Utils.displayMessage(

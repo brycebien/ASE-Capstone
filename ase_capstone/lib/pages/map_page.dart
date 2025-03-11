@@ -100,7 +100,9 @@ class _MapPageState extends State<MapPage> {
     try {
       // set current location to the user's location when the app starts
       location.getLocation().then((value) {
-        _currentLocation = value;
+        setState(() {
+          _currentLocation = value;
+        });
       });
 
       // update the current location when the user moves
