@@ -38,15 +38,14 @@ class _MapPageState extends State<MapPage> {
     super.initState();
     _getCurrentLocation(); // get the user's location
     _loadMapStyle(); // load the map's color theme (light or dark mode)
-    _listenToPins();
-    _checkExpiredPins();
-    _checkUserUniversity();
+    _listenToPins(); // check for pins in the database
+    _checkExpiredPins(); // check that no pins are expired (older than 24 hrs)
+    _checkUserUniversity(); // check that he user has a university chosen
   }
 
   void _checkUserUniversity() async {
     bool hasUniversity =
         await _firestoreServices.getUserUniversity(userId: user.uid) == "";
-    print("Setting _hasUniversity to ${!hasUniversity}");
     setState(() {
       _hasUniversity = !hasUniversity;
     });
@@ -304,18 +303,28 @@ class _MapPageState extends State<MapPage> {
           content: Text("Yes: $yesVotes No: $noVotes"),
           actions: [
             TextButton(
-              onPressed: () {
-                _updateVotes(markerId, true);
+              onPressed: () async {
+                await _firestoreServices.updatePins(
+                  markerId: markerId,
+                  isYesVote: true,
+                );
                 _votedPins.add(markerId);
-                Navigator.pop(context);
+                setState(() {
+                  Navigator.pop(context);
+                });
               },
               child: Text("Yes"),
             ),
             TextButton(
-              onPressed: () {
-                _updateVotes(markerId, false);
+              onPressed: () async {
+                await _firestoreServices.updatePins(
+                  markerId: markerId,
+                  isYesVote: false,
+                );
                 _votedPins.add(markerId);
-                Navigator.pop(context);
+                setState(() {
+                  Navigator.pop(context);
+                });
               },
               child: Text("No"),
             ),
@@ -325,49 +334,21 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  void _updateVotes(String markerId, bool isYesVote) async {
-    DocumentReference docRef =
-        FirebaseFirestore.instance.collection('pins').doc(markerId);
-    FirebaseFirestore.instance.runTransaction((transaction) async {
-      DocumentSnapshot snapshot = await transaction.get(docRef);
-      if (!snapshot.exists) {
-        throw Exception("Marker does not exist!");
-      }
-
-      int newYesVotes = snapshot['yesVotes'];
-      int newNoVotes = snapshot['noVotes'];
-
-      if (isYesVote) {
-        newYesVotes += 1;
-      } else {
-        newNoVotes += 1;
-      }
-
-      if (newNoVotes > 5) {
-        transaction.delete(docRef);
-      } else {
-        transaction.update(docRef, {
-          'yesVotes': newYesVotes,
-          'noVotes': newNoVotes,
-          'lastActivity': FieldValue.serverTimestamp()
-        });
-      }
-    });
-  }
-
   void _checkExpiredPins() async {
     final now = DateTime.now();
     final expirationTime = now.subtract(Duration(hours: 24));
 
-    FirebaseFirestore.instance
-        .collection('pins')
-        .where('lastActivity', isLessThan: expirationTime)
-        .get()
-        .then((snapshot) {
-      for (var doc in snapshot.docs) {
-        doc.reference.delete();
-      }
-    }).catchError((error) {});
+    try {
+      await _firestoreServices.deleteExpiredPins(
+          expirationTime: expirationTime);
+    } catch (e) {
+      setState(() {
+        Utils.displayMessage(
+          context: context,
+          message: e.toString(),
+        );
+      });
+    }
   }
 
   void signUserOut() async {

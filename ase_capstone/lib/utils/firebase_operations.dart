@@ -164,6 +164,40 @@ class FirestoreService {
     });
   }
 
+  // update pins
+  Future<void> updatePins({
+    required String markerId,
+    required bool isYesVote,
+  }) async {
+    DocumentReference docRef =
+        FirebaseFirestore.instance.collection('pins').doc(markerId);
+    FirebaseFirestore.instance.runTransaction((transaction) async {
+      DocumentSnapshot snapshot = await transaction.get(docRef);
+      if (!snapshot.exists) {
+        throw Exception("Marker does not exist!");
+      }
+
+      int newYesVotes = snapshot['yesVotes'];
+      int newNoVotes = snapshot['noVotes'];
+
+      if (isYesVote) {
+        newYesVotes += 1;
+      } else {
+        newNoVotes += 1;
+      }
+
+      if (newNoVotes > 5) {
+        transaction.delete(docRef);
+      } else {
+        transaction.update(docRef, {
+          'yesVotes': newYesVotes,
+          'noVotes': newNoVotes,
+          'lastActivity': FieldValue.serverTimestamp()
+        });
+      }
+    });
+  }
+
   /*
 
     // DELETE
@@ -182,5 +216,20 @@ class FirestoreService {
   // DELETE USER
   Future<void> deleteUserData(String userId) async {
     await _usersCollection.doc(userId).delete();
+  }
+
+  // delete expired pins
+  Future<void> deleteExpiredPins({required DateTime expirationTime}) async {
+    FirebaseFirestore.instance
+        .collection('pins')
+        .where('lastActivity', isLessThan: expirationTime)
+        .get()
+        .then((snapshot) {
+      for (var doc in snapshot.docs) {
+        doc.reference.delete();
+      }
+    }).catchError((error) {
+      throw Exception('Error deleting expired pins: $error');
+    });
   }
 }
