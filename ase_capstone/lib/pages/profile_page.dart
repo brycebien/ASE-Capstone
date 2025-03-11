@@ -175,16 +175,28 @@ class _ProfilePageState extends State<ProfilePage> {
 
       await user!.delete();
 
-      Utils.displayMessage(
-          context: context, message: "Account deleted successfully.");
+      setState(() {
+        Utils.displayMessage(
+          context: context,
+          message: "Account deleted successfully.",
+        );
 
-      Navigator.of(context).pushReplacementNamed('/login');
+        Navigator.of(context).pushReplacementNamed('/login');
+      });
     } on FirebaseAuthException catch (e) {
-      Utils.displayMessage(
-          context: context, message: "Re-authentication failed: ${e.message}");
+      setState(() {
+        Utils.displayMessage(
+          context: context,
+          message: "Re-authentication failed: ${e.message}",
+        );
+      });
     } catch (e) {
-      Utils.displayMessage(
-          context: context, message: "Error deleting account: ${e.toString()}");
+      setState(() {
+        Utils.displayMessage(
+          context: context,
+          message: "Error deleting account: ${e.toString()}",
+        );
+      });
     }
   }
 
