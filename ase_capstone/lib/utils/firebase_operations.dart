@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:location/location.dart';
 
 class FirestoreService {
   final CollectionReference _usersCollection =
@@ -38,6 +39,23 @@ class FirestoreService {
   }) async {
     await _usersCollection.doc(userId).update({
       'profilePicture': filePath,
+    });
+  }
+
+  // create pin
+  Future<void> createPin({
+    required LocationData currentLocation,
+    required String markerTitle,
+    required double markerColor,
+  }) async {
+    await FirebaseFirestore.instance.collection('pins').add({
+      'latitude': currentLocation.latitude,
+      'longitude': currentLocation.longitude,
+      'title': markerTitle,
+      'color': markerColor.toDouble(), // Ensure color is stored as double
+      'timestamp': FieldValue.serverTimestamp(),
+      'yesVotes': 0,
+      'noVotes': 0,
     });
   }
 

@@ -272,16 +272,11 @@ class _MapPageState extends State<MapPage> {
                 if (nameController.text.isNotEmpty) {
                   markerTitle = nameController.text;
                 }
-                FirebaseFirestore.instance.collection('pins').add({
-                  'latitude': _currentLocation!.latitude,
-                  'longitude': _currentLocation!.longitude,
-                  'title': markerTitle,
-                  'color': markerColor
-                      .toDouble(), // Ensure color is stored as double
-                  'timestamp': FieldValue.serverTimestamp(),
-                  'yesVotes': 0,
-                  'noVotes': 0,
-                });
+                _firestoreServices.createPin(
+                  currentLocation: _currentLocation!,
+                  markerTitle: markerTitle,
+                  markerColor: markerColor,
+                );
                 Navigator.pop(context);
               },
               child: Text("Save"),
