@@ -484,6 +484,7 @@ class _MapPageState extends State<MapPage> {
                           onPressed: () {
                             setState(() {
                               _info = null;
+                              destination = null;
                             });
                           },
                           backgroundColor:
