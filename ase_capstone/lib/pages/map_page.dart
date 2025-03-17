@@ -62,6 +62,13 @@ class _MapPageState extends State<MapPage> {
       );
       setState(() {
         _info = directions;
+        _markers.add(Marker(
+          markerId: MarkerId('destinationMarker'),
+          position: destination!,
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueViolet,
+          ),
+        ));
       });
     } else {
       // no destination provided
@@ -456,6 +463,15 @@ class _MapPageState extends State<MapPage> {
                       markers: _markers,
                       onLongPress: (LatLng tappedPoint) {
                         _getDirections(destination: tappedPoint);
+                        _markers.add(
+                          Marker(
+                            markerId: MarkerId('destinationMarker'),
+                            position: tappedPoint,
+                            icon: BitmapDescriptor.defaultMarkerWithHue(
+                              BitmapDescriptor.hueViolet,
+                            ),
+                          ),
+                        );
                       },
                     ),
                     // Report event button
@@ -485,6 +501,9 @@ class _MapPageState extends State<MapPage> {
                             setState(() {
                               _info = null;
                               destination = null;
+                              _markers.removeWhere((element) =>
+                                  element.markerId.value ==
+                                  'destinationMarker');
                             });
                           },
                           backgroundColor:
