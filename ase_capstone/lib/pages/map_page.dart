@@ -417,6 +417,7 @@ class _MapPageState extends State<MapPage> {
                   ],
                 )
               : Stack(
+                  alignment: Alignment.center,
                   children: [
                     GoogleMap(
                       onMapCreated: _onMapCreated,
@@ -475,22 +476,48 @@ class _MapPageState extends State<MapPage> {
                       ),
                     ),
                     // Cancel directions button
-                    _info != null
-                        ? Positioned(
-                            bottom: 25,
-                            left: 16,
-                            child: FloatingActionButton(
-                              onPressed: () {
-                                setState(() {
-                                  _info = null;
-                                });
-                              },
-                              backgroundColor:
-                                  Theme.of(context).colorScheme.primary,
-                              child: Icon(Icons.delete),
+                    if (_info != null)
+                      Positioned(
+                        bottom: 25,
+                        left: 16,
+                        child: FloatingActionButton(
+                          onPressed: () {
+                            setState(() {
+                              _info = null;
+                            });
+                          },
+                          backgroundColor:
+                              Theme.of(context).colorScheme.primary,
+                          child: Icon(Icons.delete),
+                        ),
+                      ),
+                    if (_info != null)
+                      // Display distance and time
+                      Positioned(
+                        top: 20,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                              vertical: 10, horizontal: 20),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primary,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 1),
+                                blurRadius: 6,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            'Distance: ${_info!.totalDistance}\nTime: ${_info!.totalDuration}',
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 16,
                             ),
-                          )
-                        : Container(),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
     );
