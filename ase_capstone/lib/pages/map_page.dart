@@ -362,6 +362,18 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
+  void _getDirections({required LatLng destination}) async {
+    final directions = await DirectionsHandler().getDirections(
+        origin: LatLng(
+          _currentLocation!.latitude!,
+          _currentLocation!.longitude!,
+        ),
+        destination: destination);
+    setState(() {
+      _info = directions;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -441,9 +453,13 @@ class _MapPageState extends State<MapPage> {
                           ),
                       },
                       markers: _markers,
+                      onLongPress: (LatLng tappedPoint) {
+                        _getDirections(destination: tappedPoint);
+                      },
                     ),
+                    // Report event button
                     Positioned(
-                      bottom: 16,
+                      bottom: 25,
                       right: 16,
                       child: FloatingActionButton(
                         onPressed: () {
@@ -454,10 +470,27 @@ class _MapPageState extends State<MapPage> {
                             ));
                           }
                         },
-                        backgroundColor: Colors.orange,
+                        backgroundColor: Theme.of(context).colorScheme.primary,
                         child: Icon(Icons.add_location_alt),
                       ),
                     ),
+                    // Cancel directions button
+                    _info != null
+                        ? Positioned(
+                            bottom: 25,
+                            left: 16,
+                            child: FloatingActionButton(
+                              onPressed: () {
+                                setState(() {
+                                  _info = null;
+                                });
+                              },
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.primary,
+                              child: Icon(Icons.delete),
+                            ),
+                          )
+                        : Container(),
                   ],
                 ),
     );
