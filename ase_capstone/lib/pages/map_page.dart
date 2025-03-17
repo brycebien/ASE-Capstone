@@ -184,7 +184,9 @@ class _MapPageState extends State<MapPage> {
     FirebaseFirestore.instance.collection('pins').snapshots().listen(
       (snapshot) {
         setState(() {
-          _markers.clear(); // Clear existing markers before updating
+          _markers.removeWhere((element) =>
+              element.markerId.value !=
+              'destinationMarker'); // Clear existing markers before updating
           for (var doc in snapshot.docs) {
             final data = doc.data();
             if (data.containsKey('latitude') &&
