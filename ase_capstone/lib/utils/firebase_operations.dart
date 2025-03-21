@@ -128,6 +128,14 @@ class FirestoreService {
     return profilePicture;
   }
 
+  // check if the user is an adimin
+  Future<bool> isAdmin({required String userId}) async {
+    final DocumentSnapshot userDoc = await _usersCollection.doc(userId).get();
+    final bool? isAdmin = userDoc.get('isAdmin');
+
+    return isAdmin ?? false;
+  }
+
   /*
 
     UPDATE

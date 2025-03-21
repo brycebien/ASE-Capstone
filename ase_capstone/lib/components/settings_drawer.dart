@@ -13,6 +13,21 @@ class SettingsDrawer extends StatefulWidget {
 
 class SettingsDrawerState extends State<SettingsDrawer> {
   final FirestoreService _firestoreService = FirestoreService();
+  bool _isAdmin = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkIfAdmin();
+  }
+
+  Future<void> _checkIfAdmin() async {
+    bool isAdmin = await _firestoreService.isAdmin(userId: widget.user!.uid);
+    setState(() {
+      _isAdmin = isAdmin;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Drawer(
@@ -72,7 +87,18 @@ class SettingsDrawerState extends State<SettingsDrawer> {
                 );
               }
             },
-          )
+          ),
+          if (_isAdmin)
+            ListTile(
+              leading: Icon(Icons.admin_panel_settings),
+              title: Text('Map Development Page'),
+              onTap: () {
+                Navigator.pushNamed(
+                  context,
+                  '/development-page',
+                );
+              },
+            ),
         ],
       ),
     );
