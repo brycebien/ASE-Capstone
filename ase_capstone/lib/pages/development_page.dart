@@ -70,6 +70,7 @@ class _DevelopmentPageState extends State<DevelopmentPage> {
                       padding: const EdgeInsets.all(8.0),
                       child: Card(
                         key: ValueKey(_foundUniversities[index]['name']),
+                        elevation: 8,
                         child: ListTile(
                           title: Text(_foundUniversities[index]['name']),
                           subtitle:
@@ -80,6 +81,17 @@ class _DevelopmentPageState extends State<DevelopmentPage> {
                               //TODO: handle edit university
                               print(
                                   "pressed: ${_foundUniversities[index]['name']}");
+                              /**
+                               * Push named /edit-university
+                               * pass university data as argument
+                               *    name
+                               *    abbreviation 
+                               *    buildings
+                               *    etc.
+                               * 
+                               * Allow user to edit university data such as buildings, address, resources, etc.
+                               * 
+                               */
                             },
                           ),
                         ),
@@ -91,6 +103,7 @@ class _DevelopmentPageState extends State<DevelopmentPage> {
               },
             ),
           ),
+          // TODO: allow users to create a new university
         ],
       ),
     );
