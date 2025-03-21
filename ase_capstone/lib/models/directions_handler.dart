@@ -39,16 +39,5 @@ class DirectionsHandler {
 
     return LatLng(result.data['results'][0]['geometry']['location']['lat'],
         result.data['results'][0]['geometry']['location']['lng']);
-
-    // try {
-    //   final directions = getDirections(
-    //       origin: origin,
-    //       destination: LatLng(
-    //           result.data['results'][0]['geometry']['location']['lat'],
-    //           result.data['results'][0]['geometry']['location']['lng']));
-    //   return directions;
-    // } catch (e) {
-    //   throw Exception('Failed to load directions');
-    // }
   }
 }

@@ -386,7 +386,7 @@ class _SchedulePageState extends State<SchedulePage> {
                                                     Colors.blue),
                                           ),
                                           onPressed: () async {
-                                            // TODO: implement Navigation functionality
+                                            // get destination from building address
                                             final LatLng destination =
                                                 await DirectionsHandler()
                                                     .getDirectionFromAddress(
@@ -396,7 +396,7 @@ class _SchedulePageState extends State<SchedulePage> {
                                                 context,
                                                 '/map',
                                                 arguments: {
-                                                  // pass building address to map page for directions
+                                                  // pass building latlng to map page for directions
                                                   'destination': destination,
                                                 },
                                               );
