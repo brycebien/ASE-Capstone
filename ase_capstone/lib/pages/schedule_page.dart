@@ -99,7 +99,6 @@ class _SchedulePageState extends State<SchedulePage> {
         'room': _roomController.text,
         'days': selectedDays,
       };
-      print("user class: $userClass");
       // add class to list (front end)
       setState(() {
         // add class to database
