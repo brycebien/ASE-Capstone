@@ -344,7 +344,7 @@ class _SchedulePageState extends State<SchedulePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Campus Compass'),
+        title: Text('Classes'),
       ),
       body: _isLoading
           ? Center(
