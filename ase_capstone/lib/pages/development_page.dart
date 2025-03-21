@@ -45,67 +45,80 @@ class _DevelopmentPageState extends State<DevelopmentPage> {
       appBar: AppBar(
         title: const Text('Development Page'),
       ),
-      body: Column(
+      body: Stack(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: const InputDecoration(
-                labelText: 'Search',
-                suffixIcon: Icon(Icons.search),
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: const InputDecoration(
+                    labelText: 'Search',
+                    suffixIcon: Icon(Icons.search),
+                  ),
+                  onChanged: (value) {
+                    _searchUniversities(value);
+                  },
+                ),
               ),
-              onChanged: (value) {
-                _searchUniversities(value);
-              },
-            ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _foundUniversities.length,
-              itemBuilder: (context, index) {
-                return Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Card(
-                        key: ValueKey(_foundUniversities[index]['name']),
-                        elevation: 8,
-                        child: ListTile(
-                          title: Text(_foundUniversities[index]['name']),
-                          subtitle:
-                              Text(_foundUniversities[index]['abbreviation']),
-                          trailing: IconButton(
-                            icon: Icon(Icons.edit),
-                            onPressed: () {
-                              //TODO: handle edit university
-                              print(
-                                  "pressed: ${_foundUniversities[index]['name']}");
-                              /**
-                               * Push named /edit-university
-                               * pass university data as argument
-                               *    name
-                               *    abbreviation 
-                               *    buildings
-                               *    etc.
-                               * 
-                               * Allow user to edit university data such as buildings, address, resources, etc.
-                               * Allow user to add new buildings, resources, etc.
-                               * Allow user to delete buildings, resources, etc.
-                               * Allow user to add events
-                               */
-                            },
+              Expanded(
+                child: ListView.builder(
+                  itemCount: _foundUniversities.length,
+                  itemBuilder: (context, index) {
+                    return Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Card(
+                            key: ValueKey(_foundUniversities[index]['name']),
+                            elevation: 8,
+                            child: ListTile(
+                              title: Text(_foundUniversities[index]['name']),
+                              subtitle: Text(
+                                  _foundUniversities[index]['abbreviation']),
+                              trailing: IconButton(
+                                icon: Icon(Icons.edit),
+                                onPressed: () {
+                                  //TODO: handle edit university
+                                  print(
+                                      "pressed: ${_foundUniversities[index]['name']}");
+                                  /**
+                                 * Push named /edit-university
+                                 * pass university data as argument
+                                 *    name
+                                 *    abbreviation 
+                                 *    buildings
+                                 *    etc.
+                                 * 
+                                 * Allow user to edit university data such as buildings, address, resources, etc.
+                                 * Allow user to add new buildings, resources, etc.
+                                 * Allow user to delete buildings, resources, etc.
+                                 * Allow user to add events
+                                 */
+                                },
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                    SizedBox(height: 10)
-                  ],
-                );
-              },
-            ),
+                        SizedBox(height: 10)
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
-          // TODO: allow users to create a new university
+          Positioned(
+            bottom: 16.0,
+            right: 16.0,
+            child: FloatingActionButton(
+              onPressed: () {
+                // TODO: allow users to create a new university
+              },
+              child: Icon(Icons.add),
+            ),
+          )
         ],
       ),
     );
