@@ -1,4 +1,5 @@
 import 'package:ase_capstone/components/textfield.dart';
+import 'package:ase_capstone/models/directions_handler.dart';
 import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -92,10 +93,13 @@ class _SchedulePageState extends State<SchedulePage> {
         'startTime': startTime!.format(context),
         'endTime': endTime!.format(context),
         'building': building,
+        'address': buildings
+            .firstWhere((element) => element['name'] == building)['address'],
         'code': buildingCode,
         'room': _roomController.text,
         'days': selectedDays,
       };
+      print("user class: $userClass");
       // add class to list (front end)
       setState(() {
         // add class to database
@@ -381,16 +385,22 @@ class _SchedulePageState extends State<SchedulePage> {
                                                 WidgetStateProperty.all(
                                                     Colors.blue),
                                           ),
-                                          onPressed: () {
+                                          onPressed: () async {
                                             // TODO: implement Navigation functionality
-                                            Navigator.pushNamed(
-                                              context,
-                                              '/map',
-                                              arguments: {
-                                                'destination': LatLng(
-                                                    39.030430, -84.462659),
-                                              },
-                                            );
+                                            final LatLng destination =
+                                                await DirectionsHandler()
+                                                    .getDirectionFromAddress(
+                                                        address: e['address']);
+                                            setState(() {
+                                              Navigator.pushNamed(
+                                                context,
+                                                '/map',
+                                                arguments: {
+                                                  // pass building address to map page for directions
+                                                  'destination': destination,
+                                                },
+                                              );
+                                            });
                                           },
                                         ),
                                         IconButton(

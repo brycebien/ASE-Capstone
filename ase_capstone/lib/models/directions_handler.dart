@@ -6,6 +6,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 class DirectionsHandler {
   static const String _baseUrl =
       'https://maps.googleapis.com/maps/api/directions/json?';
+  static const String _baseUrlGeocoding =
+      'https://maps.googleapis.com/maps/api/geocode/json?';
 
   final Dio _dio;
 
@@ -27,5 +29,26 @@ class DirectionsHandler {
     } else {
       throw Exception('Failed to load directions');
     }
+  }
+
+  Future<LatLng> getDirectionFromAddress({required String address}) async {
+    final result = await _dio.get(_baseUrlGeocoding, queryParameters: {
+      'address': address,
+      'key': dotenv.env['GOOGLE_MAPS_API_KEY'],
+    });
+
+    return LatLng(result.data['results'][0]['geometry']['location']['lat'],
+        result.data['results'][0]['geometry']['location']['lng']);
+
+    // try {
+    //   final directions = getDirections(
+    //       origin: origin,
+    //       destination: LatLng(
+    //           result.data['results'][0]['geometry']['location']['lat'],
+    //           result.data['results'][0]['geometry']['location']['lng']));
+    //   return directions;
+    // } catch (e) {
+    //   throw Exception('Failed to load directions');
+    // }
   }
 }

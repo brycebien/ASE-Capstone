@@ -176,7 +176,6 @@ class _MapPageState extends State<MapPage> {
       setState(() {
         destination = args['destination'] as LatLng?;
       });
-      _checkForDirections();
     }
   }
 
