@@ -87,15 +87,18 @@ class FirestoreService {
   // get university by name
   Future<Map<String, dynamic>> getUniversityByName(String name) async {
     try {
-      print("NAME::::::::::::::: $name");
       final QuerySnapshot university = await FirebaseFirestore.instance
           .collection('universities')
           .where('name', isEqualTo: name)
           .get();
       return university.docs.first.data() as Map<String, dynamic>;
     } catch (e) {
-      print("ERROR GETTING UNIVERSITY BY NAME: $e");
-      return {};
+      // return empty university if not found
+      return {
+        'name': '',
+        'abbreviation': '',
+        'buildings': [],
+      };
     }
   }
 
