@@ -73,7 +73,11 @@ class _EditUniversityPageState extends State<EditUniversityPage> {
                             title: Text(building['name']),
                             subtitle: Text(building['code']),
                             trailing: IconButton(
-                                icon: const Icon(Icons.edit), onPressed: () {}),
+                              icon: const Icon(Icons.edit),
+                              onPressed: () {
+                                // TODO: Implement edit building alert dialog
+                              },
+                            ),
                           );
                         }).toList(),
                       ),
