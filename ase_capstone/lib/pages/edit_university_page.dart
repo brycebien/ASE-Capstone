@@ -47,7 +47,7 @@ class _EditUniversityPageState extends State<EditUniversityPage> {
               title: Text('Edit ${_university['abbreviation']}'),
             ),
             body: Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 80),
               child: SingleChildScrollView(
                 child: Center(
                   child: Column(
@@ -61,12 +61,18 @@ class _EditUniversityPageState extends State<EditUniversityPage> {
                         textAlign: TextAlign.center,
                       ),
 
-                      Divider(),
+                      Divider(color: const Color.fromARGB(255, 75, 75, 75)),
                       SizedBox(height: 10),
 
                       // Buildings ExpansionTile
                       ExpansionTile(
-                        title: const Text('Buildings'),
+                        title: const Text(
+                          'Buildings',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         children:
                             _university['buildings'].map<Widget>((building) {
                           return ListTile(
@@ -81,10 +87,20 @@ class _EditUniversityPageState extends State<EditUniversityPage> {
                           );
                         }).toList(),
                       ),
+                      /** TODO:
+                       * add list of resources
+                       * add list of events
+                       */
                     ],
                   ),
                 ),
               ),
+            ),
+            floatingActionButton: FloatingActionButton(
+              onPressed: () {
+                // TODO: Implement add new building functionality
+              },
+              child: const Icon(Icons.add),
             ),
           );
   }
