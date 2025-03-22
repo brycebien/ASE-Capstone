@@ -81,15 +81,15 @@ class _DevelopmentPageState extends State<DevelopmentPage> {
                                 icon: Icon(Icons.edit),
                                 onPressed: () {
                                   //TODO: handle edit university
-                                  print(
-                                      "pressed: ${_foundUniversities[index]['name']}");
+                                  Navigator.pushNamed(
+                                    context,
+                                    '/edit-university',
+                                    arguments: {
+                                      'name': _foundUniversities[index]['name']
+                                    },
+                                  );
                                   /**
                                  * Push named /edit-university
-                                 * pass university data as argument
-                                 *    name
-                                 *    abbreviation 
-                                 *    buildings
-                                 *    etc.
                                  * 
                                  * Allow user to edit university data such as buildings, address, resources, etc.
                                  *        - univ, lat lng and bounds
