@@ -248,7 +248,9 @@ class _ProfilePageState extends State<ProfilePage> {
                           radius: 50,
                           backgroundImage:
                               _image != null ? FileImage(_image!) : null,
-                          child: const Icon(Icons.person, size: 50),
+                          child: _image != null
+                              ? null
+                              : const Icon(Icons.person, size: 50),
                         ),
                       ),
                       const SizedBox(height: 16),
