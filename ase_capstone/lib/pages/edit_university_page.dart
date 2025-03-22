@@ -46,7 +46,42 @@ class _EditUniversityPageState extends State<EditUniversityPage> {
             appBar: AppBar(
               title: Text('Edit ${_university['abbreviation']}'),
             ),
-            body: const Placeholder(),
+            body: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: SingleChildScrollView(
+                child: Center(
+                  child: Column(
+                    // crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // University Title
+                      Text(
+                        _university['name'],
+                        style: const TextStyle(fontSize: 24),
+                        overflow: TextOverflow.clip,
+                        textAlign: TextAlign.center,
+                      ),
+
+                      Divider(),
+                      SizedBox(height: 10),
+
+                      // Buildings ExpansionTile
+                      ExpansionTile(
+                        title: const Text('Buildings'),
+                        children:
+                            _university['buildings'].map<Widget>((building) {
+                          return ListTile(
+                            title: Text(building['name']),
+                            subtitle: Text(building['code']),
+                            trailing: IconButton(
+                                icon: const Icon(Icons.edit), onPressed: () {}),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           );
   }
 }

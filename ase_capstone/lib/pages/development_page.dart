@@ -88,15 +88,6 @@ class _DevelopmentPageState extends State<DevelopmentPage> {
                                       'name': _foundUniversities[index]['name']
                                     },
                                   );
-                                  /**
-                                 * Push named /edit-university
-                                 * 
-                                 * Allow user to edit university data such as buildings, address, resources, etc.
-                                 *        - univ, lat lng and bounds
-                                 * Allow user to add new buildings, resources, etc.
-                                 * Allow user to delete buildings, resources, etc.
-                                 * Allow user to add events
-                                 */
                                 },
                               ),
                             ),
