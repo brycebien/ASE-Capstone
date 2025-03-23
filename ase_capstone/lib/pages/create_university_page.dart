@@ -356,7 +356,6 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                       (building) => building['address'] == buildingLocation,
                     );
                   });
-                  // TODO: remove building from db
                   Navigator.of(context).pop();
                 },
                 child: const Text('Yes'),
@@ -364,6 +363,88 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
             ],
           );
         });
+  }
+
+  void _editBuilding({required Map<String, dynamic> building}) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Edit Building'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Building Name: ${building['name']}'),
+              SizedBox(height: 5),
+              MyTextField(
+                controller: _buildingNameController,
+                hintText: 'Building Name',
+                obscureText: false,
+              ),
+              SizedBox(height: 10),
+              Text('Building Code: ${building['code']}'),
+              SizedBox(height: 5),
+              MyTextField(
+                controller: _buildingCodeController,
+                hintText: 'Building Code',
+                obscureText: false,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _buildingNameController.clear();
+                  _buildingCodeController.clear();
+                  _buildingAddressController.clear();
+                });
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                if (_buildingCodeController.text.isEmpty ||
+                    _buildingNameController.text.isEmpty) {
+                  Utils.displayMessage(
+                    context: context,
+                    message: 'Please fill out all fields.',
+                  );
+                } else {
+                  setState(() {
+                    // update marker on map for the building
+                    _buildingMarkers.removeWhere(
+                      (marker) => marker.markerId == MarkerId(building['name']),
+                    );
+                    _buildingMarkers.add(
+                      Marker(
+                        markerId: MarkerId(_buildingNameController.text),
+                        position: building['address'],
+                        infoWindow: InfoWindow(
+                          title: _buildingNameController.text,
+                          snippet: _buildingCodeController.text,
+                        ),
+                      ),
+                    );
+
+                    // update building locally
+                    building['name'] = _buildingNameController.text;
+                    building['code'] = _buildingCodeController.text;
+
+                    // clear controllers
+                    _buildingNameController.clear();
+                    _buildingCodeController.clear();
+                    Navigator.of(context).pop();
+                  });
+                }
+              },
+              child: const Text('Confirm'),
+            )
+          ],
+        );
+      },
+    );
   }
 
   void _zoomToLocation({required LatLng location, double zoom = 14}) {
@@ -433,7 +514,6 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                                   children: [
                                     Text('Buildings: (${_buildings.length})'),
                                     IconButton(
-                                      //TODO: searchable popup list with all buildings
                                       onPressed: () async {
                                         Map<String, dynamic> result =
                                             await showDialog(
@@ -458,6 +538,7 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                                           } else if (result['callback'] ==
                                               'editBuilding') {
                                             //TODO: edit building info
+                                            _editBuilding(building: building);
                                           } else if (result['callback'] ==
                                               'deleteBuilding') {
                                             _deleteBuilding(
