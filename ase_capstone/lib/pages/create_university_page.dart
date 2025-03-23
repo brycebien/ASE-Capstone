@@ -121,10 +121,6 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                 children: [
                   const Text(
                       'You have selected a location for the university.'),
-                  SizedBox(height: 10),
-                  Text(
-                    'Latitude: ${_universityLocation!.latitude}\nLongitude: ${_universityLocation!.longitude}',
-                  ),
                 ],
               ),
               actions: [
@@ -185,7 +181,7 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Text(
-                  'Next, tap the bottom left corner of the university, then the top right corner to set the camperas boundary.',
+                  'Next, tap the bottom left corner of the university, then the top right corner to set the camera\'s boundary.',
                 ),
               ],
             ),
@@ -315,12 +311,12 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                         _buildingCodeController.clear();
                         _buildingAddressController.clear();
                       }
-                      if (_buildings.length == 1) {
+                      // set instruction after first building is created
+                      if (_currentInstructions != null) {
                         _currentInstructions =
-                            'Long press on the map to create another building.\n\nYou can also delete a building by tapping on the pin, then the title of the building.';
+                            'To see the list of buildings you created press the arrow next to the buildings count on the bottm right of the screen.\n\nOnce there, you can choose to edit, delete, or zoom to a building.';
                       }
                     });
-                    // set instruction after first building is created
                   },
                   child: const Text('Create'),
                 ),
@@ -453,9 +449,6 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                                           Map<String, dynamic> building =
                                               result['building'];
 
-                                          print(
-                                              "BUILDING WE ARE WORKING WITH:::::::::: $building");
-
                                           if (result['callback'] ==
                                               'zoomToBuilding') {
                                             _zoomToLocation(
@@ -467,11 +460,22 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                                             //TODO: edit building info
                                           } else if (result['callback'] ==
                                               'deleteBuilding') {
-                                            //TODO: delete building from db and map
                                             _deleteBuilding(
                                                 buildingLocation:
                                                     building['address']);
                                           }
+                                        }
+                                        // clear instructions for buildings
+                                        if (_currentInstructions != null &&
+                                            _currentInstructions!.contains(
+                                                'To see the list of buildings you created')) {
+                                          setState(() {
+                                            _currentInstructions = null;
+                                            Utils.displayMessage(
+                                                context: context,
+                                                message:
+                                                    'You have successfully completed the tutorial!');
+                                          });
                                         }
                                       },
                                       icon: Icon(

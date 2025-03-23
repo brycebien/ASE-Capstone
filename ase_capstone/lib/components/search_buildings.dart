@@ -22,8 +22,9 @@ class _SearchBuildingsState extends State<SearchBuildings> {
     setState(() {
       foundBuildings = widget.buildings.where((building) {
         final name = building['name'].toLowerCase();
+        final code = building['code'].toLowerCase();
         final searchLower = query.toLowerCase();
-        return name.contains(searchLower);
+        return name.contains(searchLower) || code.contains(searchLower);
       }).toList();
     });
   }
