@@ -173,7 +173,11 @@ class _DevelopmentPageState extends State<DevelopmentPage> {
             floatingActionButton: FloatingActionButton(
               onPressed: () {
                 // TODO: allow users to create a new university
-                _createUniversityDialog();
+                Navigator.pushNamed(
+                  context,
+                  '/create-university',
+                );
+                // _createUniversityDialog();
               },
               child: Icon(Icons.add),
             ),

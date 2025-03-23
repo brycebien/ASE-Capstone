@@ -1,4 +1,5 @@
 import 'package:ase_capstone/pages/auth_page.dart';
+import 'package:ase_capstone/pages/create_university_page.dart';
 import 'package:ase_capstone/pages/development_page.dart';
 import 'package:ase_capstone/pages/edit_university_page.dart';
 import 'package:ase_capstone/pages/forgot_password_page.dart';
@@ -59,6 +60,7 @@ class _MyAppState extends State<MyApp> {
         '/schedule': (context) => SchedulePage(),
         '/development-page': (context) => const DevelopmentPage(),
         '/edit-university': (context) => const EditUniversityPage(),
+        '/create-university': (context) => const CreateUniversityPage(),
       },
     );
   }
