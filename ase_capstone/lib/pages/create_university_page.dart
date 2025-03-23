@@ -466,6 +466,16 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
     }
   }
 
+  void _saveUniversity() {
+    //TODO: save university
+    /**
+     * 1. Save university to firestore (also save location and camera bounds)
+     * 
+     * 2. Save buildings to firestore
+     * 
+     */
+  }
+
   void _zoomToLocation({required LatLng location, double zoom = 14}) {
     _controller?.animateCamera(
       CameraUpdate.newLatLngZoom(
@@ -505,6 +515,7 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                       : CameraTargetBounds.unbounded,
               onLongPress: _createBuilding,
             ),
+            // INSTRUCTIONS FOR USER
             _currentInstructions == null
                 ? Text('')
                 : Padding(
@@ -518,6 +529,21 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                       ),
                     ),
                   ),
+            // SAVE BUTTON
+            _allowSave == true
+                ? Positioned(
+                    top: 10,
+                    right: 10,
+                    child: ElevatedButton(
+                      onPressed: _saveUniversity,
+                      style: ButtonStyle(
+                        elevation: WidgetStateProperty.all(8),
+                      ),
+                      child: Text('Save'),
+                    ),
+                  )
+                : Text(''),
+            // UNIVERSITY LOCATION
             _universityLocation != null
                 ? Positioned(
                     bottom: 10,
@@ -570,6 +596,7 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                                 ),
                               )
                             : Text(''),
+                        // CAMERA BOUNDS
                         _southWestBound != null && _northEastBound != null
                             ? Container(
                                 padding: EdgeInsets.only(left: 10),
