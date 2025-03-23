@@ -1,3 +1,4 @@
+import 'package:ase_capstone/components/search_buildings.dart';
 import 'package:ase_capstone/components/textfield.dart';
 import 'package:ase_capstone/utils/utils.dart';
 import 'package:flutter/material.dart';
@@ -310,13 +311,16 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                           ),
                         );
                         // clear controllers
-                        setState(() {
-                          _buildingNameController.clear();
-                          _buildingCodeController.clear();
-                          _buildingAddressController.clear();
-                        });
+                        _buildingNameController.clear();
+                        _buildingCodeController.clear();
+                        _buildingAddressController.clear();
+                      }
+                      if (_buildings.length == 1) {
+                        _currentInstructions =
+                            'Long press on the map to create another building.\n\nYou can also delete a building by tapping on the pin, then the title of the building.';
                       }
                     });
+                    // set instruction after first building is created
                   },
                   child: const Text('Create'),
                 ),
@@ -366,11 +370,11 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
         });
   }
 
-  void _zoomToLocation({required LatLng location, required double zoom}) {
+  void _zoomToLocation({required LatLng location, double zoom = 14}) {
     _controller?.animateCamera(
       CameraUpdate.newLatLngZoom(
-        _universityLocation!,
-        14,
+        location,
+        zoom,
       ),
     );
   }
@@ -425,6 +429,61 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
+                        _buildings.isNotEmpty
+                            ? Container(
+                                padding: EdgeInsets.only(left: 10),
+                                color: Colors.black,
+                                child: Row(
+                                  children: [
+                                    Text('Buildings: (${_buildings.length})'),
+                                    IconButton(
+                                      //TODO: searchable popup list with all buildings
+                                      onPressed: () async {
+                                        Map<String, dynamic> result =
+                                            await showDialog(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return SearchBuildings(
+                                              buildings: _buildings,
+                                            );
+                                          },
+                                        );
+
+                                        if (result.isNotEmpty) {
+                                          Map<String, dynamic> building =
+                                              result['building'];
+
+                                          print(
+                                              "BUILDING WE ARE WORKING WITH:::::::::: $building");
+
+                                          if (result['callback'] ==
+                                              'zoomToBuilding') {
+                                            _zoomToLocation(
+                                              location: building['address'],
+                                              zoom: 19,
+                                            );
+                                          } else if (result['callback'] ==
+                                              'editBuilding') {
+                                            //TODO: edit building info
+                                          } else if (result['callback'] ==
+                                              'deleteBuilding') {
+                                            //TODO: delete building from db and map
+                                            _deleteBuilding(
+                                                buildingLocation:
+                                                    building['address']);
+                                          }
+                                        }
+                                      },
+                                      icon: Icon(
+                                        Icons.arrow_forward_ios,
+                                        size: 20,
+                                        color: Colors.blue[400],
+                                      ),
+                                    )
+                                  ],
+                                ),
+                              )
+                            : Text(''),
                         _southWestBound != null && _northEastBound != null
                             ? Container(
                                 padding: EdgeInsets.only(left: 10),
