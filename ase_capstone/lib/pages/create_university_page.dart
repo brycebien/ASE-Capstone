@@ -13,6 +13,7 @@ class CreateUniversityPage extends StatefulWidget {
 
 class _CreateUniversityPageState extends State<CreateUniversityPage> {
   GoogleMapController? _controller;
+  bool _allowSave = false;
   final List<Marker> _buildingMarkers = [];
   LatLng? _universityLocation;
   LatLng? _southWestBound;
@@ -287,9 +288,8 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                           'code': _buildingCodeController.text,
                           'address': location
                         });
-                        // TODO: add building to db
-
                         Navigator.of(context).pop();
+
                         // create marker on map for the building
                         _buildingMarkers.add(
                           Marker(
@@ -306,11 +306,13 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                             ),
                           ),
                         );
+
                         // clear controllers
                         _buildingNameController.clear();
                         _buildingCodeController.clear();
                         _buildingAddressController.clear();
                       }
+
                       // set instruction after first building is created
                       if (_currentInstructions != null) {
                         _currentInstructions =
@@ -447,6 +449,23 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
     );
   }
 
+  void _handleBuildingCallBack({required Map<String, dynamic> result}) {
+    if (result.isNotEmpty) {
+      Map<String, dynamic> building = result['building'];
+
+      if (result['callback'] == 'zoomToBuilding') {
+        _zoomToLocation(
+          location: building['address'],
+          zoom: 19,
+        );
+      } else if (result['callback'] == 'editBuilding') {
+        _editBuilding(building: building);
+      } else if (result['callback'] == 'deleteBuilding') {
+        _deleteBuilding(buildingLocation: building['address']);
+      }
+    }
+  }
+
   void _zoomToLocation({required LatLng location, double zoom = 14}) {
     _controller?.animateCamera(
       CameraUpdate.newLatLngZoom(
@@ -525,27 +544,8 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                                           },
                                         );
 
-                                        if (result.isNotEmpty) {
-                                          Map<String, dynamic> building =
-                                              result['building'];
+                                        _handleBuildingCallBack(result: result);
 
-                                          if (result['callback'] ==
-                                              'zoomToBuilding') {
-                                            _zoomToLocation(
-                                              location: building['address'],
-                                              zoom: 19,
-                                            );
-                                          } else if (result['callback'] ==
-                                              'editBuilding') {
-                                            //TODO: edit building info
-                                            _editBuilding(building: building);
-                                          } else if (result['callback'] ==
-                                              'deleteBuilding') {
-                                            _deleteBuilding(
-                                                buildingLocation:
-                                                    building['address']);
-                                          }
-                                        }
                                         // clear instructions for buildings
                                         if (_currentInstructions != null &&
                                             _currentInstructions!.contains(
@@ -556,6 +556,7 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                                                 context: context,
                                                 message:
                                                     'You have successfully completed the tutorial!');
+                                            _allowSave = true;
                                           });
                                         }
                                       },
