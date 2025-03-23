@@ -449,23 +449,6 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
     );
   }
 
-  void _handleBuildingCallBack({required Map<String, dynamic> result}) {
-    if (result.isNotEmpty) {
-      Map<String, dynamic> building = result['building'];
-
-      if (result['callback'] == 'zoomToBuilding') {
-        _zoomToLocation(
-          location: building['address'],
-          zoom: 19,
-        );
-      } else if (result['callback'] == 'editBuilding') {
-        _editBuilding(building: building);
-      } else if (result['callback'] == 'deleteBuilding') {
-        _deleteBuilding(buildingLocation: building['address']);
-      }
-    }
-  }
-
   void _saveUniversity() {
     //TODO: save university
     /**
@@ -483,6 +466,23 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
         zoom,
       ),
     );
+  }
+
+  void _handleBuildingCallBack({required Map<String, dynamic> result}) {
+    if (result.isNotEmpty) {
+      Map<String, dynamic> building = result['building'];
+
+      if (result['callback'] == 'zoomToBuilding') {
+        _zoomToLocation(
+          location: building['address'],
+          zoom: 19,
+        );
+      } else if (result['callback'] == 'editBuilding') {
+        _editBuilding(building: building);
+      } else if (result['callback'] == 'deleteBuilding') {
+        _deleteBuilding(buildingLocation: building['address']);
+      }
+    }
   }
 
   @override
