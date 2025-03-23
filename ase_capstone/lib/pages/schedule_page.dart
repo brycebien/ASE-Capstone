@@ -367,6 +367,7 @@ class _SchedulePageState extends State<SchedulePage> {
                             child: Column(
                               children: classes.map((e) {
                                 return Card(
+                                  elevation: 8,
                                   child: ListTile(
                                     title: Text(
                                       e['name'],
