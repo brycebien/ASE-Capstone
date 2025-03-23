@@ -59,6 +59,15 @@ class FirestoreService {
     });
   }
 
+  // create university
+  Future<void> createUniversity(
+      {required Map<String, dynamic> university}) async {
+    await FirebaseFirestore.instance
+        .collection('universities')
+        .doc(university['name'])
+        .set(university);
+  }
+
   /*
 
     READ

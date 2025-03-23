@@ -1,5 +1,6 @@
 import 'package:ase_capstone/components/search_buildings.dart';
 import 'package:ase_capstone/components/textfield.dart';
+import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:ase_capstone/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -12,6 +13,7 @@ class CreateUniversityPage extends StatefulWidget {
 }
 
 class _CreateUniversityPageState extends State<CreateUniversityPage> {
+  final FirestoreService _firestoreServices = FirestoreService();
   GoogleMapController? _controller;
   bool _allowSave = false;
   final List<Marker> _buildingMarkers = [];
@@ -21,6 +23,10 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
   String? _currentInstructions;
   final TextEditingController _buildingNameController = TextEditingController();
   final TextEditingController _buildingCodeController = TextEditingController();
+  final TextEditingController _universityNameController =
+      TextEditingController();
+  final TextEditingController _universityAbbreviationController =
+      TextEditingController();
   final TextEditingController _buildingAddressController =
       TextEditingController();
   final List<Map<String, dynamic>> _buildings = [];
@@ -457,6 +463,94 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
      * 2. Save buildings to firestore
      * 
      */
+    // ask user for university name and abbreviation
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Save University'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                MyTextField(
+                  controller: _universityNameController,
+                  hintText: 'University Name',
+                  obscureText: false,
+                ),
+                SizedBox(height: 10),
+                MyTextField(
+                  controller: _universityAbbreviationController,
+                  hintText: 'University Abbreviation',
+                  obscureText: false,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _universityAbbreviationController.clear();
+                    _universityNameController.clear();
+                  });
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  if (_universityNameController.text.isEmpty ||
+                      _universityAbbreviationController.text.isEmpty) {
+                    Utils.displayMessage(
+                      context: context,
+                      message: 'Please fill out all fields.',
+                    );
+                  } else {
+                    // convert building addresses to doubles for firestore
+                    setState(() {
+                      for (var building in _buildings) {
+                        if (building['address'] is Map<String, dynamic>) {
+                          // if the address has already been converted skip it
+                          continue;
+                        } else {
+                          LatLng address = building['address'] as LatLng;
+                          building['address'] = {
+                            'latitude': address.latitude.toDouble(),
+                            'longitude': address.longitude.toDouble(),
+                          };
+                        }
+                      }
+                    });
+
+                    // SAVE UNIVERSITY TO FIRESTORE
+                    await _firestoreServices.createUniversity(
+                      university: {
+                        'name': _universityNameController.text,
+                        'abbreviation': _universityAbbreviationController.text,
+                        'location': {
+                          'latitude': _universityLocation!.latitude.toDouble(),
+                          'longitude': _universityLocation!.longitude.toDouble()
+                        },
+                        'southWestBound': {
+                          'latitude': _southWestBound!.latitude.toDouble(),
+                          'longitude': _southWestBound!.longitude.toDouble()
+                        },
+                        'northEastBound': {
+                          'latitude': _northEastBound!.latitude.toDouble(),
+                          'longitude': _northEastBound!.longitude.toDouble()
+                        },
+                        'buildings': _buildings,
+                      },
+                    );
+                    setState(() {
+                      Navigator.pushNamed(context, '/development-page');
+                    });
+                  }
+                },
+                child: const Text('Save'),
+              ),
+            ],
+          );
+        });
   }
 
   void _zoomToLocation({required LatLng location, double zoom = 14}) {
