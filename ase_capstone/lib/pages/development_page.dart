@@ -1,4 +1,3 @@
-import 'package:ase_capstone/components/textfield.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:flutter/material.dart';
 
@@ -15,10 +14,6 @@ class _DevelopmentPageState extends State<DevelopmentPage> {
   List<Map<String, dynamic>> _foundUniversities = [];
 
   final TextEditingController _searchController = TextEditingController();
-  final TextEditingController _newUniversityNameController =
-      TextEditingController();
-  final TextEditingController _newUniversityAbbreviationController =
-      TextEditingController();
 
   @override
   initState() {
@@ -43,67 +38,6 @@ class _DevelopmentPageState extends State<DevelopmentPage> {
         return name.contains(searchLower) || abbreviation.contains(searchLower);
       }).toList();
     });
-  }
-
-  void _createUniversityDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Create A New University'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              MyTextField(
-                controller: _newUniversityNameController,
-                hintText: 'Name',
-                obscureText: false,
-              ),
-              SizedBox(height: 10),
-              MyTextField(
-                controller: _newUniversityAbbreviationController,
-                hintText: 'Abbreviation',
-                obscureText: false,
-              ),
-              /** TODO
-               * lat lng of campus
-               * bounds of campus
-               * buildings
-               * resources?
-               * events?
-               */
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  _newUniversityNameController.clear();
-                  _newUniversityAbbreviationController.clear();
-                });
-              },
-              child: Text('Clear'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                setState(() {
-                  _newUniversityNameController.clear();
-                  _newUniversityAbbreviationController.clear();
-                });
-              },
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                //TODO: add new university to database
-              },
-              child: Text('Add'),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   @override

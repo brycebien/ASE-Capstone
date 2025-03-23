@@ -12,6 +12,8 @@ class CreateUniversityPage extends StatefulWidget {
 class _CreateUniversityPageState extends State<CreateUniversityPage> {
   GoogleMapController? _controller;
   LatLng? _universityLocation;
+  LatLng? _southWestBound;
+  LatLng? _northEastBound;
 
   void _startTutorial(GoogleMapController controller) {
     _controller = controller;
@@ -40,39 +42,84 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
         });
   }
 
-  void _setUniversityLocation(LatLng location) {
-    // user already has a location selected
-
-    setState(() {
-      _universityLocation = location;
-    });
+  void _showSuccessDialog(
+      {required String title, String? message, Function? callBack}) {
     showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: const Text('Location Selected Successfully'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('You have selected a location for the university.'),
-                SizedBox(height: 10),
-                Text(
-                  'Latitude: ${_universityLocation!.latitude}\nLongitude: ${_universityLocation!.longitude}',
-                ),
-              ],
-            ),
+            title: Text(title),
+            content: Text(message ?? ''),
             actions: [
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pop();
-                  _zoomToLocation(location: _universityLocation!, zoom: 14);
-                  // _setUniversityBounds();
+                  if (callBack != null) callBack();
                 },
                 child: const Text('OK'),
               ),
             ],
           );
         });
+  }
+
+  void _setUniversityLocation(LatLng location) {
+    // user already has a location selected
+    if (_universityLocation != null) {
+      if (_southWestBound == null) {
+        // set southwest camera bound
+        setState(() {
+          _southWestBound = location;
+        });
+        _showSuccessDialog(
+          title: 'You successfully set a southwest camera bound',
+          message:
+              'Next, tap the top right corner of the university to set the camera\'s boundary.',
+        );
+      } else if (_southWestBound != null && _northEastBound == null) {
+        // set northeast camera bound
+        setState(() {
+          _northEastBound = location;
+        });
+        _showSuccessDialog(
+          title: 'You successfully set a northeast camera bound',
+          message: 'You have successfully set the camera\'s boundaries.',
+          callBack: _startBuildingTutorial,
+        );
+      }
+    } else {
+      setState(() {
+        _universityLocation = location;
+      });
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Location Selected Successfully'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                      'You have selected a location for the university.'),
+                  SizedBox(height: 10),
+                  Text(
+                    'Latitude: ${_universityLocation!.latitude}\nLongitude: ${_universityLocation!.longitude}',
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _zoomToLocation(location: _universityLocation!, zoom: 14);
+                    _setUniversityBounds();
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          });
+    }
   }
 
   void _deleteUniversityLocation() {
@@ -88,6 +135,8 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                 onPressed: () {
                   setState(() {
                     _universityLocation = null;
+                    _southWestBound = null;
+                    _northEastBound = null;
                   });
                   Navigator.of(context).pop();
                 },
@@ -114,7 +163,9 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Next, tap '),
+                const Text(
+                  'Next, tap the bottom left corner of the university, then the top right corner to set the camperas boundary.',
+                ),
               ],
             ),
             actions: [
@@ -123,6 +174,70 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                   Navigator.of(context).pop();
                 },
                 child: const Text('OK'),
+              ),
+            ],
+          );
+        });
+  }
+
+  void _startBuildingTutorial() {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Set University Buildings'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Next, long press on the map to create a building.',
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        });
+  }
+
+  void _createBuilding(LatLng location) {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Create Building'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                MyTextField(
+                  controller: TextEditingController(),
+                  hintText: 'Building Name',
+                  obscureText: false,
+                ),
+                SizedBox(height: 10),
+                MyTextField(
+                  controller: TextEditingController(),
+                  hintText: 'Building Abbreviation',
+                  obscureText: false,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {},
+                child: const Text('Create'),
               ),
             ],
           );
@@ -155,46 +270,83 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
               ),
               zoomControlsEnabled: false,
               onTap: _setUniversityLocation,
-              onLongPress: (location) {
-                // TODO: setting buildings option
-                print(
-                    '_universityLocation:::::::::::::::::::::::: $_universityLocation');
-              },
+              cameraTargetBounds:
+                  _southWestBound != null && _northEastBound != null
+                      ? CameraTargetBounds(
+                          LatLngBounds(
+                            southwest: _southWestBound!,
+                            northeast: _northEastBound!,
+                          ),
+                        )
+                      : CameraTargetBounds.unbounded,
+              onLongPress: _createBuilding,
             ),
             _universityLocation != null
                 ? Positioned(
                     bottom: 10,
                     right: 10,
-                    child: Container(
-                      color: Colors.black,
-                      child: Row(
-                        children: [
-                          IconButton(
-                              icon: Icon(
-                                Icons.location_on,
-                                color: Colors.blue[400],
-                                size: 20,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        _southWestBound != null && _northEastBound != null
+                            ? Container(
+                                padding: EdgeInsets.only(left: 10),
+                                color: Colors.black,
+                                child: Row(
+                                  children: [
+                                    Text(
+                                      'Camera bounds set',
+                                    ),
+                                    SizedBox(width: 10),
+                                    IconButton(
+                                      icon: Icon(
+                                        Icons.delete,
+                                        color: Colors.red[400],
+                                        size: 20,
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          _southWestBound = null;
+                                          _northEastBound = null;
+                                        });
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : SizedBox(height: 0.0),
+                        Container(
+                          color: Colors.black,
+                          child: Row(
+                            children: [
+                              IconButton(
+                                  icon: Icon(
+                                    Icons.location_on,
+                                    color: Colors.blue[400],
+                                    size: 20,
+                                  ),
+                                  onPressed: () {
+                                    _zoomToLocation(
+                                      location: _universityLocation!,
+                                      zoom: 14,
+                                    );
+                                  }),
+                              Text(
+                                'University Location: ${_universityLocation!.latitude.toStringAsFixed(1)}, ${_universityLocation!.longitude.toStringAsFixed(1)}',
                               ),
-                              onPressed: () {
-                                _zoomToLocation(
-                                  location: _universityLocation!,
-                                  zoom: 14,
-                                );
-                              }),
-                          Text(
-                            'University Location: ${_universityLocation!.latitude.toStringAsFixed(1)}, ${_universityLocation!.longitude.toStringAsFixed(1)}',
+                              SizedBox(width: 10),
+                              IconButton(
+                                icon: Icon(
+                                  Icons.delete,
+                                  color: Colors.red[400],
+                                  size: 20,
+                                ),
+                                onPressed: _deleteUniversityLocation,
+                              )
+                            ],
                           ),
-                          SizedBox(width: 10),
-                          IconButton(
-                            icon: Icon(
-                              Icons.delete,
-                              color: Colors.red[400],
-                              size: 20,
-                            ),
-                            onPressed: _deleteUniversityLocation,
-                          )
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   )
                 : Text(''),
