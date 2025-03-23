@@ -456,13 +456,6 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
   }
 
   void _saveUniversity() {
-    //TODO: save university
-    /**
-     * 1. Save university to firestore (also save location and camera bounds)
-     * 
-     * 2. Save buildings to firestore
-     * 
-     */
     // ask user for university name and abbreviation
     showDialog(
         context: context,
@@ -521,6 +514,8 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                       }
                     });
 
+                    final navigator = Navigator.of(context);
+
                     // SAVE UNIVERSITY TO FIRESTORE
                     await _firestoreServices.createUniversity(
                       university: {
@@ -541,9 +536,9 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                         'buildings': _buildings,
                       },
                     );
-                    setState(() {
-                      Navigator.pushNamed(context, '/development-page');
-                    });
+                    navigator.popUntil(
+                        (route) => route.settings.name == '/development-page');
+                    navigator.pushReplacementNamed('/development-page');
                   }
                 },
                 child: const Text('Save'),
