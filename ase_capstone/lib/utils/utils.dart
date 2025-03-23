@@ -1,3 +1,4 @@
+import 'package:ase_capstone/models/directions_handler.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -59,5 +60,15 @@ class Utils {
             ),
           );
         });
+  }
+
+  static Future<bool> validateAddress({required String address}) async {
+    // validate address using google maps api
+    try {
+      await DirectionsHandler().getDirectionFromAddress(address: address);
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }

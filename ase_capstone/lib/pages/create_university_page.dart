@@ -1,4 +1,5 @@
 import 'package:ase_capstone/components/textfield.dart';
+import 'package:ase_capstone/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -11,10 +12,16 @@ class CreateUniversityPage extends StatefulWidget {
 
 class _CreateUniversityPageState extends State<CreateUniversityPage> {
   GoogleMapController? _controller;
+  final List<Marker> _buildingMarkers = [];
   LatLng? _universityLocation;
   LatLng? _southWestBound;
   LatLng? _northEastBound;
   String? _currentInstructions;
+  final TextEditingController _buildingNameController = TextEditingController();
+  final TextEditingController _buildingCodeController = TextEditingController();
+  final TextEditingController _buildingAddressController =
+      TextEditingController();
+  final List<Map<String, dynamic>> _buildings = [];
 
   void _startTutorial(GoogleMapController controller) {
     _controller = controller;
@@ -243,14 +250,14 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   MyTextField(
-                    controller: TextEditingController(),
+                    controller: _buildingNameController,
                     hintText: 'Building Name',
                     obscureText: false,
                   ),
                   SizedBox(height: 10),
                   MyTextField(
-                    controller: TextEditingController(),
-                    hintText: 'Building Abbreviation',
+                    controller: _buildingCodeController,
+                    hintText: 'Building Code',
                     obscureText: false,
                   ),
                 ],
@@ -258,18 +265,105 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
               actions: [
                 TextButton(
                   onPressed: () {
+                    setState(() {
+                      _buildingNameController.clear();
+                      _buildingCodeController.clear();
+                      _buildingAddressController.clear();
+                    });
                     Navigator.of(context).pop();
                   },
                   child: const Text('Cancel'),
                 ),
                 TextButton(
-                  onPressed: () {},
+                  onPressed: () async {
+                    setState(() {
+                      if (_buildingCodeController.text.isEmpty ||
+                          _buildingNameController.text.isEmpty) {
+                        Utils.displayMessage(
+                          context: context,
+                          message: 'Please fill out all fields.',
+                        );
+                      } else {
+                        // create building locally
+                        _buildings.add({
+                          'name': _buildingNameController.text,
+                          'code': _buildingCodeController.text,
+                          'address': location
+                        });
+                        // TODO: add building to db
+
+                        Navigator.of(context).pop();
+                        // create marker on map for the building
+                        _buildingMarkers.add(
+                          Marker(
+                            markerId: MarkerId(_buildingNameController.text),
+                            position: location,
+                            infoWindow: InfoWindow(
+                              title: _buildingNameController.text,
+                              snippet: _buildingCodeController.text,
+                              onTap: () async {
+                                _deleteBuilding(
+                                  buildingLocation: location,
+                                );
+                              },
+                            ),
+                          ),
+                        );
+                        // clear controllers
+                        setState(() {
+                          _buildingNameController.clear();
+                          _buildingCodeController.clear();
+                          _buildingAddressController.clear();
+                        });
+                      }
+                    });
+                  },
                   child: const Text('Create'),
                 ),
               ],
             );
           });
     }
+  }
+
+  void _deleteBuilding({required LatLng buildingLocation}) {
+    final Map<String, dynamic> building = _buildings.firstWhere(
+      (building) => building['address'] == buildingLocation,
+    );
+
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Delete Building'),
+            content:
+                Text('Are you sure you want to delete ${building['name']}?'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('No'),
+              ),
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _buildingMarkers.removeWhere(
+                      (marker) => marker.markerId == MarkerId(building['name']),
+                    );
+
+                    _buildings.removeWhere(
+                      (building) => building['address'] == buildingLocation,
+                    );
+                  });
+                  // TODO: remove building from db
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Yes'),
+              ),
+            ],
+          );
+        });
   }
 
   void _zoomToLocation({required LatLng location, required double zoom}) {
@@ -296,6 +390,7 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
               initialCameraPosition: CameraPosition(
                 target: LatLng(40, -96),
               ),
+              markers: Set<Marker>.of(_buildingMarkers),
               zoomControlsEnabled: false,
               rotateGesturesEnabled: false,
               onTap: _setUniversityLocation,
