@@ -1,3 +1,4 @@
+import 'package:ase_capstone/components/bottom_dialog.dart';
 import 'package:ase_capstone/components/search_buildings.dart';
 import 'package:ase_capstone/components/textfield.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
@@ -31,35 +32,57 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
       TextEditingController();
   final List<Map<String, dynamic>> _buildings = [];
 
-  void _startTutorial(GoogleMapController controller) {
+  void _onMapCreated(GoogleMapController controller) {
     _controller = controller;
     showDialog(
         context: context,
         builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Tutorial'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Welcome to the Create University Page. This page will help you create a university map. Follow the instructions at the top of the screen to get started!',
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () async {
-                  Navigator.of(context).pop();
-                  setState(() {
-                    _currentInstructions =
-                        'Tap on the map to select a location for the university.';
-                  });
-                },
-                child: const Text('OK'),
-              ),
-            ],
+          return BottomDialog(
+            message: 'Would you like to start the tutorial?',
+            onResponse: _startTutoral,
           );
         });
+
+    // showDialog(
+    //     context: context,
+    //     builder: (BuildContext context) {
+    //       return AlertDialog(
+    //         title: const Text('Tutorial'),
+    //         content: Column(
+    //           mainAxisSize: MainAxisSize.min,
+    //           children: [
+    //             const Text(
+    //               'Welcome to the Create University Page. This page will help you create a university map. Follow the instructions at the top of the screen to get started!',
+    //             ),
+    //           ],
+    //         ),
+    //         actions: [
+    //           TextButton(
+    //             onPressed: () async {
+    //               Navigator.of(context).pop();
+    //               setState(() {
+    //                 _currentInstructions =
+    //                     'Tap on the map to select a location for the university.';
+    //               });
+    //             },
+    //             child: const Text('OK'),
+    //           ),
+    //         ],
+    //       );
+    //     });
+  }
+
+  void _startTutoral(bool start) {
+    if (start) {
+      setState(() {
+        _currentInstructions =
+            'Tap on the map to select a location for the university.';
+      });
+    } else {
+      setState(() {
+        _currentInstructions = null;
+      });
+    }
   }
 
   void _showSuccessDialog(
@@ -585,7 +608,7 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
         child: Stack(
           children: [
             GoogleMap(
-              onMapCreated: _startTutorial,
+              onMapCreated: _onMapCreated,
               initialCameraPosition: CameraPosition(
                 target: LatLng(40, -96),
               ),
