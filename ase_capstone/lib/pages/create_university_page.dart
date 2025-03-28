@@ -592,9 +592,19 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                         'buildings': _buildings,
                       },
                     );
-                    navigator.popUntil(
-                        (route) => route.settings.name == '/development-page');
-                    navigator.pushReplacementNamed('/development-page');
+
+                    // show success dialog
+                    _showSuccessDialog(
+                      title: 'University Created Successfully!',
+                      message:
+                          'Your university has been created successfully. You can now view it on the development page.',
+                      callBack: () {
+                        // send the user back to the development page
+                        navigator.popUntil((route) =>
+                            route.settings.name == '/development-page');
+                        navigator.pushReplacementNamed('/development-page');
+                      },
+                    );
                   }
                 },
                 child: const Text('Save'),
