@@ -16,7 +16,6 @@ class CreateUniversityPage extends StatefulWidget {
 class _CreateUniversityPageState extends State<CreateUniversityPage> {
   final FirestoreService _firestoreServices = FirestoreService();
   GoogleMapController? _controller;
-  bool _allowSave = false;
   final List<Marker> _buildingMarkers = [];
   LatLng? _universityLocation;
   LatLng? _southWestBound;
@@ -89,7 +88,6 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
         _currentInstructions = _tutorialSteps
             .where((step) => step['step'] == _tutorialStep)
             .first['message'];
-        _allowSave = false;
       });
     }
   }
@@ -148,58 +146,69 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
         // set southwest camera bound
         setState(() {
           _southWestBound = location;
-          _tutorialStep++;
-          _currentInstructions = _tutorialSteps
-              .where((step) => step['step'] == _tutorialStep)
-              .first['message'];
+          if (_isTutorial) {
+            _tutorialStep++;
+            _currentInstructions = _tutorialSteps
+                .where((step) => step['step'] == _tutorialStep)
+                .first['message'];
+          }
         });
       } else if (_southWestBound != null && _northEastBound == null) {
         // set northeast camera bound
         setState(() {
           _northEastBound = location;
+          if (_isTutorial) {
+            _tutorialStep++;
+            _currentInstructions = _tutorialSteps
+                .where((step) => step['step'] == _tutorialStep)
+                .first['message'];
+          }
+        });
+        if (_isTutorial) {
+          _showSuccessDialog(
+            title: 'You successfully set the camera bounds for the map!',
+            message: 'You have successfully set the camera\'s boundaries.',
+            callBack: _startBuildingTutorial,
+          );
+        }
+      }
+    } else {
+      if (_isTutorial) {
+        // Setting university location
+        showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text('Location Selected Successfully'),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                        'You have selected a location for the university.'),
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      _zoomToLocation(location: _universityLocation!, zoom: 14);
+                      _setUniversityBounds();
+                    },
+                    child: const Text('OK'),
+                  ),
+                ],
+              );
+            });
+      }
+      setState(() {
+        _universityLocation = location;
+        _zoomToLocation(location: _universityLocation!, zoom: 14);
+        if (_isTutorial) {
           _tutorialStep++;
           _currentInstructions = _tutorialSteps
               .where((step) => step['step'] == _tutorialStep)
               .first['message'];
-        });
-        _showSuccessDialog(
-          title: 'You successfully set the camera bounds for the map!',
-          message: 'You have successfully set the camera\'s boundaries.',
-          callBack: _startBuildingTutorial,
-        );
-      }
-    } else {
-      // Setting university location
-      showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: const Text('Location Selected Successfully'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                      'You have selected a location for the university.'),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    _zoomToLocation(location: _universityLocation!, zoom: 14);
-                    _setUniversityBounds();
-                  },
-                  child: const Text('OK'),
-                ),
-              ],
-            );
-          });
-      setState(() {
-        _universityLocation = location;
-        _tutorialStep++;
-        _currentInstructions = _tutorialSteps
-            .where((step) => step['step'] == _tutorialStep)
-            .first['message'];
+        }
       });
     }
   }
@@ -210,8 +219,8 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
         builder: (BuildContext context) {
           return AlertDialog(
             title: const Text('Delete Location'),
-            content:
-                const Text('Are you sure you want to delete this location?'),
+            content: const Text(
+                'Are you sure you want to delete this location?\n\nThis will also remove the camera bounds you set for the university.\n\nNote: any buildings you have created will not be deleted.'),
             actions: [
               TextButton(
                 onPressed: () {
@@ -219,8 +228,6 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                     _universityLocation = null;
                     _southWestBound = null;
                     _northEastBound = null;
-                    _currentInstructions =
-                        'Tap on the map to select a location for the university.';
                   });
                   Navigator.of(context).pop();
                 },
@@ -247,7 +254,33 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Text(
-                  'Next, tap the bottom left corner of the university, then the top right corner to set the camera\'s boundary.',
+                  'Tap the bottom left corner of the university, then the top right corner to set the camera\'s boundary.',
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        });
+  }
+
+  void _showUniversityLocationHint() {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Set University Location'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Tap the center of the campus to set the university location.\n\nThis will be the center point for your university map.\n\nYou can adjust this later if needed.',
                 ),
               ],
             ),
@@ -374,12 +407,14 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                       }
 
                       // set instruction after first building is created
-                      setState(() {
-                        _tutorialStep++;
-                        _currentInstructions = _tutorialSteps
-                            .where((step) => step['step'] == _tutorialStep)
-                            .first['message'];
-                      });
+                      if (_isTutorial) {
+                        setState(() {
+                          _tutorialStep++;
+                          _currentInstructions = _tutorialSteps
+                              .where((step) => step['step'] == _tutorialStep)
+                              .first['message'];
+                        });
+                      }
                     });
                   },
                   child: const Text('Create'),
@@ -593,17 +628,16 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                       },
                     );
 
+                    // send the user back to the development page
+                    navigator.popUntil(
+                        (route) => route.settings.name == '/development-page');
+                    navigator.pushReplacementNamed('/development-page');
+
                     // show success dialog
                     _showSuccessDialog(
                       title: 'University Created Successfully!',
                       message:
                           'Your university has been created successfully. You can now view it on the development page.',
-                      callBack: () {
-                        // send the user back to the development page
-                        navigator.popUntil((route) =>
-                            route.settings.name == '/development-page');
-                        navigator.pushReplacementNamed('/development-page');
-                      },
                     );
                   }
                 },
@@ -685,7 +719,7 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                     ),
                   ),
             // SAVE BUTTON
-            _allowSave == true
+            _buildings.isNotEmpty
                 ? Positioned(
                     top: 10,
                     right: 10,
@@ -733,7 +767,6 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                                           setState(() {
                                             _tutorialStep++;
                                             _currentInstructions = null;
-                                            _allowSave = true;
                                             _showSuccessDialog(
                                               title:
                                                   'Thank you for completing the tutorial!',
@@ -777,15 +810,39 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                                         setState(() {
                                           _southWestBound = null;
                                           _northEastBound = null;
-                                          _currentInstructions =
-                                              'Tap the bottom left corner of the university';
                                         });
                                       },
                                     ),
                                   ],
                                 ),
                               )
-                            : SizedBox(height: 0.0),
+                            : Container(
+                                padding: EdgeInsets.only(left: 10),
+                                color: Colors.black,
+                                child: Row(
+                                  children: [
+                                    _southWestBound == null &&
+                                            _northEastBound == null
+                                        ? Text('Camera bounds not set yet')
+                                        : _southWestBound != null
+                                            ? Text(
+                                                'Northeast bound not set yet')
+                                            : Text(
+                                                'Southwest bound not set yet'),
+                                    SizedBox(width: 10),
+                                    IconButton(
+                                      icon: Icon(
+                                        Icons.info_outline,
+                                        color: Colors.blue[400],
+                                        size: 20,
+                                      ),
+                                      onPressed: () {
+                                        _setUniversityBounds();
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
                         Container(
                           color: Colors.black,
                           child: Row(
@@ -820,7 +877,30 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                       ],
                     ),
                   )
-                : Text(''),
+                : Positioned(
+                    bottom: 10,
+                    right: 10,
+                    child: Container(
+                      padding: EdgeInsets.only(left: 10),
+                      color: Colors.black,
+                      child: Row(
+                        children: [
+                          Text('University Location not set yet'),
+                          SizedBox(width: 10),
+                          IconButton(
+                            icon: Icon(
+                              Icons.info_outline,
+                              color: Colors.blue[400],
+                              size: 20,
+                            ),
+                            onPressed: () {
+                              _showUniversityLocationHint();
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
           ],
         ),
       ),
