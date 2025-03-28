@@ -37,32 +37,42 @@ class _BottomDialogState extends State<BottomDialog> {
     return Align(
       alignment: Alignment.bottomCenter,
       child: Container(
-        margin: EdgeInsets.only(bottom: 16.0),
+        // margin: EdgeInsets.only(bottom: 16.0),
         padding: EdgeInsets.all(16.0),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primary,
+          color: Theme.of(context).colorScheme.tertiary,
           borderRadius: BorderRadius.circular(8.0),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
+          children: [
             Text(
               widget.message,
-              style: TextStyle(fontSize: 16.0, color: Colors.black),
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16.0,
+                decoration: TextDecoration.none,
+              ),
             ),
             SizedBox(height: 16.0),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: <Widget>[
                 ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey[700],
+                  ),
                   onPressed: () {
-                    widget.onResponse(true);
                     Navigator.of(context).pop();
+                    widget.onResponse(true);
                     _timer?.cancel();
                   },
                   child: Text('Yes'),
                 ),
                 ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey[700],
+                  ),
                   onPressed: () {
                     widget.onResponse(false);
                     Navigator.of(context).pop();

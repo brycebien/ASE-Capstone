@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 class SearchBuildings extends StatefulWidget {
   final List<Map<String, dynamic>> buildings;
-  const SearchBuildings({super.key, required this.buildings});
+  final bool isTutorial;
+  const SearchBuildings(
+      {super.key, required this.buildings, this.isTutorial = false});
 
   @override
   State<SearchBuildings> createState() => _SearchBuildingsState();
@@ -39,6 +41,20 @@ class _SearchBuildingsState extends State<SearchBuildings> {
         padding: const EdgeInsets.all(8.0),
         child: Column(
           children: [
+            widget.isTutorial
+                ? Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: Container(
+                        padding: EdgeInsets.all(8),
+                        color: Colors.black,
+                        child: Text(
+                            'On this page you can edit, delete or zoom to a building.\n\nYou can also search the buildings you have already created using the search bar.\n\nTry zooming to the building you just created to complete the tutorial!'),
+                      ),
+                    ),
+                  )
+                : SizedBox(height: 0),
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: TextField(

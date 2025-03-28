@@ -32,6 +32,40 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
       TextEditingController();
   final List<Map<String, dynamic>> _buildings = [];
 
+  bool _isTutorial = false;
+  var _tutorialStep = 0;
+  final List<Map<String, dynamic>> _tutorialSteps = [
+    {
+      'step': 1,
+      'message': 'Tap on the map to select a location for the university.',
+    },
+    {
+      'step': 2,
+      'message':
+          'Tap the bottom left corner of the university to set the camera\'s south west boundary.',
+    },
+    {
+      'step': 3,
+      'message':
+          'Now, tap the top right corner of the university to set the camera\'s north east boundary.',
+    },
+    {
+      'step': 4,
+      'message':
+          'Long press on the map to create a building. You can also edit or delete buildings by tapping on them.',
+    },
+    {
+      'step': 5,
+      'message':
+          'To see the list of buildings you created press the arrow next to the buildings count on the bottm right of the screen.',
+    },
+    {
+      'step': 6,
+      'message':
+          'You have successfully completed the tutorial! You can now save the university, or continue creating buildings.',
+    }
+  ];
+
   void _onMapCreated(GoogleMapController controller) {
     _controller = controller;
     showDialog(
@@ -42,47 +76,48 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
             onResponse: _startTutoral,
           );
         });
-
-    // showDialog(
-    //     context: context,
-    //     builder: (BuildContext context) {
-    //       return AlertDialog(
-    //         title: const Text('Tutorial'),
-    //         content: Column(
-    //           mainAxisSize: MainAxisSize.min,
-    //           children: [
-    //             const Text(
-    //               'Welcome to the Create University Page. This page will help you create a university map. Follow the instructions at the top of the screen to get started!',
-    //             ),
-    //           ],
-    //         ),
-    //         actions: [
-    //           TextButton(
-    //             onPressed: () async {
-    //               Navigator.of(context).pop();
-    //               setState(() {
-    //                 _currentInstructions =
-    //                     'Tap on the map to select a location for the university.';
-    //               });
-    //             },
-    //             child: const Text('OK'),
-    //           ),
-    //         ],
-    //       );
-    //     });
   }
 
-  void _startTutoral(bool start) {
+  void _startTutoral(bool start) async {
+    setState(() {
+      _isTutorial = start;
+    });
     if (start) {
+      await _showStartTutorialDialog();
       setState(() {
-        _currentInstructions =
-            'Tap on the map to select a location for the university.';
-      });
-    } else {
-      setState(() {
-        _currentInstructions = null;
+        _tutorialStep = 1;
+        _currentInstructions = _tutorialSteps
+            .where((step) => step['step'] == _tutorialStep)
+            .first['message'];
+        _allowSave = false;
       });
     }
+  }
+
+  Future<void> _showStartTutorialDialog() async {
+    return showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Welcome to the Create University Page!'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Welcome to the Create University Page. This page will help you create a university map. Follow the instructions at the top of the screen to get started!',
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        });
   }
 
   void _showSuccessDialog(
@@ -113,34 +148,28 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
         // set southwest camera bound
         setState(() {
           _southWestBound = location;
+          _tutorialStep++;
+          _currentInstructions = _tutorialSteps
+              .where((step) => step['step'] == _tutorialStep)
+              .first['message'];
         });
-        _showSuccessDialog(
-          title: 'You successfully set a southwest camera bound',
-          message:
-              'Next, tap the top right corner of the university to set the camera\'s boundary.',
-          callBack: () {
-            setState(() {
-              _currentInstructions =
-                  'Tap the top right corner of the university';
-            });
-          },
-        );
       } else if (_southWestBound != null && _northEastBound == null) {
         // set northeast camera bound
         setState(() {
           _northEastBound = location;
+          _tutorialStep++;
+          _currentInstructions = _tutorialSteps
+              .where((step) => step['step'] == _tutorialStep)
+              .first['message'];
         });
         _showSuccessDialog(
-          title: 'You successfully set a northeast camera bound',
+          title: 'You successfully set the camera bounds for the map!',
           message: 'You have successfully set the camera\'s boundaries.',
           callBack: _startBuildingTutorial,
         );
       }
     } else {
       // Setting university location
-      setState(() {
-        _universityLocation = location;
-      });
       showDialog(
           context: context,
           builder: (BuildContext context) {
@@ -165,6 +194,13 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
               ],
             );
           });
+      setState(() {
+        _universityLocation = location;
+        _tutorialStep++;
+        _currentInstructions = _tutorialSteps
+            .where((step) => step['step'] == _tutorialStep)
+            .first['message'];
+      });
     }
   }
 
@@ -219,10 +255,6 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pop();
-                  setState(() {
-                    _currentInstructions =
-                        'Tap the bottom left corner of the university';
-                  });
                 },
                 child: const Text('OK'),
               ),
@@ -232,9 +264,6 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
   }
 
   void _startBuildingTutorial() {
-    setState(() {
-      _currentInstructions = 'Long press on the map to create a building.';
-    });
     showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -306,9 +335,11 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                     setState(() {
                       if (_buildingCodeController.text.isEmpty ||
                           _buildingNameController.text.isEmpty) {
+                        Navigator.of(context).pop();
                         Utils.displayMessage(
                           context: context,
-                          message: 'Please fill out all fields.',
+                          message:
+                              'Error creating building: Please fill out all fields.',
                         );
                       } else {
                         // create building locally
@@ -343,10 +374,12 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                       }
 
                       // set instruction after first building is created
-                      if (_currentInstructions != null) {
-                        _currentInstructions =
-                            'To see the list of buildings you created press the arrow next to the buildings count on the bottm right of the screen.\n\nOnce there, you can choose to edit, delete, or zoom to a building.';
-                      }
+                      setState(() {
+                        _tutorialStep++;
+                        _currentInstructions = _tutorialSteps
+                            .where((step) => step['step'] == _tutorialStep)
+                            .first['message'];
+                      });
                     });
                   },
                   child: const Text('Create'),
@@ -678,6 +711,7 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                                           builder: (BuildContext context) {
                                             return SearchBuildings(
                                               buildings: _buildings,
+                                              isTutorial: _isTutorial,
                                             );
                                           },
                                         );
@@ -685,16 +719,20 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                                         _handleBuildingCallBack(result: result);
 
                                         // clear instructions for buildings
-                                        if (_currentInstructions != null &&
-                                            _currentInstructions!.contains(
-                                                'To see the list of buildings you created')) {
+                                        if (_isTutorial) {
                                           setState(() {
+                                            _tutorialStep++;
                                             _currentInstructions = null;
-                                            Utils.displayMessage(
-                                                context: context,
-                                                message:
-                                                    'You have successfully completed the tutorial!');
                                             _allowSave = true;
+                                            _showSuccessDialog(
+                                              title:
+                                                  'Thank you for completing the tutorial!',
+                                              message: _tutorialSteps
+                                                  .where((step) =>
+                                                      step['step'] ==
+                                                      _tutorialStep)
+                                                  .first['message'],
+                                            );
                                           });
                                         }
                                       },
