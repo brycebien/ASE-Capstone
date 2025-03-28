@@ -395,7 +395,7 @@ class _MapPageState extends State<MapPage> {
       drawer: SafeArea(
         child: SettingsDrawer(user: user),
       ),
-      body: _currentLocation == null
+      body: (_currentLocation == null || _hasUniversity == null)
           ? Center(
               child: CircularProgressIndicator(),
             )
