@@ -1,5 +1,5 @@
+import 'package:ase_capstone/components/searchable_list.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
-import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -76,16 +76,26 @@ class SettingsDrawerState extends State<SettingsDrawer> {
             leading: Icon(Icons.school),
             title: Text('Choose Your University'),
             onTap: () async {
-              final String? selectedUniversity =
-                  await Utils.showUniversityDialog(
-                      context: context, firesotreService: _firestoreService);
-
-              if (selectedUniversity != null) {
-                await _firestoreService.updateUserUniversity(
-                  userId: widget.user!.uid,
-                  university: selectedUniversity,
+              List<Map<String, dynamic>> universities =
+                  await _firestoreService.getUniversities();
+              setState(() async {
+                final String? selectedUniversity = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => SearchableList(
+                      items: universities,
+                      listTitle: 'Select a University',
+                    ),
+                  ),
                 );
-              }
+
+                if (selectedUniversity != null) {
+                  await _firestoreService.updateUserUniversity(
+                    userId: widget.user!.uid,
+                    university: selectedUniversity,
+                  );
+                }
+              });
             },
           ),
           if (_isAdmin)

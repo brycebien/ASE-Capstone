@@ -1,3 +1,4 @@
+import 'package:ase_capstone/components/searchable_list.dart';
 import 'package:ase_capstone/components/settings_drawer.dart';
 import 'package:ase_capstone/models/directions.dart';
 import 'package:ase_capstone/models/directions_handler.dart';
@@ -382,6 +383,30 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
+  void _showUniversityPicker() async {
+    List<Map<String, dynamic>> universities =
+        await _firestoreServices.getUniversities();
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SearchableList(
+          items: universities,
+          listTitle: 'Select a University',
+        ),
+      ),
+    );
+
+    if (result != null) {
+      await _firestoreServices.updateUserUniversity(
+        userId: user.uid,
+        university: result,
+      );
+      setState(() {
+        _hasUniversity = true;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -406,19 +431,33 @@ class _MapPageState extends State<MapPage> {
                   actions: [
                     TextButton(
                       onPressed: () async {
-                        String? university = await Utils.showUniversityDialog(
-                          context: context,
-                          firesotreService: _firestoreServices,
-                        );
-                        if (university != null) {
-                          await _firestoreServices.updateUserUniversity(
-                            userId: user.uid,
-                            university: university,
-                          );
-                          setState(() {
-                            _hasUniversity = true;
-                          });
-                        }
+                        _showUniversityPicker();
+
+                        // List<Map<String, dynamic>> universities =
+                        //     await _firestoreServices.getUniversities();
+                        // setState(() {
+                        //   showDialog(
+                        //       context: context,
+                        //       builder: (BuildContext context) {
+                        //         return SearchableList(
+                        //             items: universities,
+                        //             listTitle: 'Select University');
+                        //       });
+                        // });
+
+                        // String? university = await Utils.showUniversityDialog(
+                        //   context: context,
+                        //   firesotreService: _firestoreServices,
+                        // );
+                        // if (university != null) {
+                        //   await _firestoreServices.updateUserUniversity(
+                        //     userId: user.uid,
+                        //     university: university,
+                        //   );
+                        //   setState(() {
+                        //     _hasUniversity = true;
+                        //   });
+                        // }
                       },
                       child: Text('Universities'),
                     ),
