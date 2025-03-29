@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
 class SearchableList extends StatefulWidget {
-  List<Map<String, dynamic>> items = [];
-  String listTitle;
-  SearchableList({super.key, required this.items, required this.listTitle});
+  final List<Map<String, dynamic>> items;
+  final String listTitle;
+  const SearchableList(
+      {super.key, required this.items, required this.listTitle});
 
   @override
   State<SearchableList> createState() => _SearchableListState();
