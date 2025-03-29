@@ -43,6 +43,24 @@ class _MapPageState extends State<MapPage> {
     _checkUserUniversity(); // check that he user has a university chosen
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // detect theme changes to update map style (other widgets change dynamically with the theme so no need to update them here)
+    if (_controller != null) {
+      _updateMapStyle(_controller!);
+    }
+
+    // get args passed to map page via Navigator.pushNamed
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    if (args != null) {
+      setState(() {
+        destination = args['destination'] as LatLng?;
+      });
+    }
+  }
+
   void _checkUserUniversity() async {
     bool hasUniversity =
         await _firestoreServices.getUserUniversity(userId: user.uid) == "";
@@ -159,24 +177,6 @@ class _MapPageState extends State<MapPage> {
           ? _mapStyleString
           : null;
     });
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // detect theme changes to update map style (other widgets change dynamically with the theme so no need to update them here)
-    if (_controller != null) {
-      _updateMapStyle(_controller!);
-    }
-
-    // get args passed to map page via Navigator.pushNamed
-    final args =
-        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-    if (args != null) {
-      setState(() {
-        destination = args['destination'] as LatLng?;
-      });
-    }
   }
 
   void _listenToPins() {
