@@ -28,6 +28,32 @@ class SettingsDrawerState extends State<SettingsDrawer> {
     });
   }
 
+  void _showUniversitySelectionDialog() async {
+    List<Map<String, dynamic>> universities =
+        await _firestoreService.getUniversities();
+    String? selectedUniversity;
+    if (mounted) {
+      selectedUniversity = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SearchableList(
+            items: universities,
+            listTitle: 'Select a University',
+          ),
+        ),
+      );
+    } else {
+      return;
+    }
+
+    if (selectedUniversity != null) {
+      await _firestoreService.updateUserUniversity(
+        userId: widget.user!.uid,
+        university: selectedUniversity,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Drawer(
@@ -75,27 +101,8 @@ class SettingsDrawerState extends State<SettingsDrawer> {
           ListTile(
             leading: Icon(Icons.school),
             title: Text('Choose Your University'),
-            onTap: () async {
-              List<Map<String, dynamic>> universities =
-                  await _firestoreService.getUniversities();
-              setState(() async {
-                final String? selectedUniversity = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => SearchableList(
-                      items: universities,
-                      listTitle: 'Select a University',
-                    ),
-                  ),
-                );
-
-                if (selectedUniversity != null) {
-                  await _firestoreService.updateUserUniversity(
-                    userId: widget.user!.uid,
-                    university: selectedUniversity,
-                  );
-                }
-              });
+            onTap: () {
+              _showUniversitySelectionDialog();
             },
           ),
           if (_isAdmin)

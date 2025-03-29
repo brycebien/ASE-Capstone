@@ -71,7 +71,6 @@ class _SearchableListState extends State<SearchableList> {
                           trailing: IconButton(
                             icon: Icon(Icons.done),
                             onPressed: () {
-                              print("RETURNING: ${_foundItems[index]['name']}");
                               Navigator.of(context)
                                   .pop(_foundItems[index]['name']);
                             },

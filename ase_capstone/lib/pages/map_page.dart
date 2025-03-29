@@ -386,15 +386,20 @@ class _MapPageState extends State<MapPage> {
   void _showUniversityPicker() async {
     List<Map<String, dynamic>> universities =
         await _firestoreServices.getUniversities();
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => SearchableList(
-          items: universities,
-          listTitle: 'Select a University',
+    String? result;
+    if (mounted) {
+      result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SearchableList(
+            items: universities,
+            listTitle: 'Select a University',
+          ),
         ),
-      ),
-    );
+      );
+    } else {
+      return;
+    }
 
     if (result != null) {
       await _firestoreServices.updateUserUniversity(
