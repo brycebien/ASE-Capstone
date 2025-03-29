@@ -31,9 +31,8 @@ class SettingsDrawerState extends State<SettingsDrawer> {
   void _showUniversitySelectionDialog() async {
     List<Map<String, dynamic>> universities =
         await _firestoreService.getUniversities();
-    String? selectedUniversity;
     if (mounted) {
-      selectedUniversity = await Navigator.push(
+      await Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => SearchableList(
@@ -41,16 +40,14 @@ class SettingsDrawerState extends State<SettingsDrawer> {
             listTitle: 'Select a University',
           ),
         ),
-      );
+      ).then((value) {
+        _firestoreService.updateUserUniversity(
+          userId: widget.user!.uid,
+          university: value,
+        );
+      });
     } else {
-      return;
-    }
-
-    if (selectedUniversity != null) {
-      await _firestoreService.updateUserUniversity(
-        userId: widget.user!.uid,
-        university: selectedUniversity,
-      );
+      return; // Return nothing if the widget is not mounted
     }
   }
 

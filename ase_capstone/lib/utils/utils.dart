@@ -2,6 +2,7 @@ import 'package:ase_capstone/models/directions_handler.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class Utils {
   static void displayMessage({required context, required String message}) {
@@ -70,5 +71,17 @@ class Utils {
     } catch (e) {
       return false;
     }
+  }
+
+  static void zoomToLocation(
+      {required LatLng location,
+      required GoogleMapController controller,
+      double zoom = 14}) {
+    controller.animateCamera(
+      CameraUpdate.newLatLngZoom(
+        location,
+        zoom,
+      ),
+    );
   }
 }

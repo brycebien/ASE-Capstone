@@ -28,7 +28,10 @@ class _MapPageState extends State<MapPage> {
   String? _mapStyle;
   LocationData? _currentLocation;
   final Set<Marker> _markers = {};
-  bool? _hasUniversity;
+  bool _hasUniversity = false;
+  String? _userUniversity;
+  CameraPosition? _initialCameraPosition;
+  CameraTargetBounds? _cameraTargetBounds;
 
   final Set<String> _votedPins = {};
   LatLng? destination;
@@ -42,6 +45,7 @@ class _MapPageState extends State<MapPage> {
     _listenToPins(); // check for pins in the database
     _checkExpiredPins(); // check that no pins are expired (older than 24 hrs)
     _checkUserUniversity(); // check that he user has a university chosen
+    // _setInitialCameraPosition(); // set the initial camera position to the user's university
   }
 
   @override
@@ -50,6 +54,11 @@ class _MapPageState extends State<MapPage> {
     // detect theme changes to update map style (other widgets change dynamically with the theme so no need to update them here)
     if (_controller != null) {
       _updateMapStyle(_controller!);
+    }
+
+    // detect changes to user university
+    if (_hasUniversity == true) {
+      _checkUserUniversity();
     }
 
     // get args passed to map page via Navigator.pushNamed
@@ -62,12 +71,68 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
-  void _checkUserUniversity() async {
-    bool hasUniversity =
-        await _firestoreServices.getUserUniversity(userId: user.uid) == "";
-    setState(() {
-      _hasUniversity = !hasUniversity;
+  void _setInitialCameraPosition() async {
+    // get the user's university location
+    final String universityName =
+        await _firestoreServices.getUserUniversity(userId: user.uid);
+
+    if (universityName == "") {
+      return;
+    }
+    _firestoreServices.getUniversityByName(name: universityName).then((value) {
+      setState(() {
+        _initialCameraPosition = CameraPosition(
+          target: LatLng(
+            value['location']['latitude'],
+            value['location']['longitude'],
+          ),
+          zoom: 15.5,
+          tilt: 0,
+        );
+
+        _cameraTargetBounds = CameraTargetBounds(
+          LatLngBounds(
+            southwest: LatLng(
+              value['southWestBound']['latitude'],
+              value['southWestBound']['longitude'],
+            ),
+            northeast: LatLng(
+              value['northEastBound']['latitude'],
+              value['northEastBound']['longitude'],
+            ),
+          ),
+        );
+      });
+
+      if (_controller != null) {
+        Utils.zoomToLocation(
+          location: LatLng(
+            value['location']['latitude'],
+            value['location']['longitude'],
+          ),
+          controller: _controller!,
+        );
+      }
     });
+  }
+
+  void _checkUserUniversity() async {
+    String universityName =
+        await _firestoreServices.getUserUniversity(userId: user.uid);
+
+    if (universityName != _userUniversity) {
+      setState(() {
+        if (universityName == "") {
+          _hasUniversity = false;
+        } else {
+          _hasUniversity = true;
+          _userUniversity = universityName;
+        }
+      });
+      _setInitialCameraPosition();
+    } else {
+      return; // do nothing if the user hasn't changed their university
+    }
   }
 
   void _checkForDirections() async {
@@ -408,7 +473,9 @@ class _MapPageState extends State<MapPage> {
       );
       setState(() {
         _hasUniversity = true;
+        _userUniversity = result;
       });
+      _setInitialCameraPosition();
     }
   }
 
@@ -425,11 +492,11 @@ class _MapPageState extends State<MapPage> {
       drawer: SafeArea(
         child: SettingsDrawer(user: user),
       ),
-      body: (_currentLocation == null || _hasUniversity == null)
+      body: _currentLocation == null
           ? Center(
               child: CircularProgressIndicator(),
             )
-          : !_hasUniversity!
+          : !_hasUniversity
               ? AlertDialog(
                   title: Text('No University Selected'),
                   content: Text('Please select a university to use the map.'),
@@ -445,54 +512,61 @@ class _MapPageState extends State<MapPage> {
               : Stack(
                   alignment: Alignment.center,
                   children: [
-                    GoogleMap(
-                      onMapCreated: _onMapCreated,
-                      style: _mapStyle,
-                      initialCameraPosition: CameraPosition(
-                        target: LatLng(
-                          _currentLocation!.latitude!,
-                          _currentLocation!.longitude!,
-                        ),
-                        zoom: 15.5,
-                        tilt: 0,
-                      ),
-                      rotateGesturesEnabled: true,
-                      myLocationButtonEnabled: true,
-                      zoomControlsEnabled:
-                          false, // Disable zoom controls (+/- buttons)
-                      myLocationEnabled: true,
-                      cameraTargetBounds: CameraTargetBounds(
-                        LatLngBounds(
-                          southwest: LatLng(39.028, -84.467),
-                          northeast: LatLng(39.038, -84.459),
-                        ),
-                      ),
-                      minMaxZoomPreference: MinMaxZoomPreference(15.0, 20.0),
-                      polylines: {
-                        if (_info != null)
-                          Polyline(
-                            polylineId: PolylineId('route'),
-                            points: _info!.polylineCoordinates
-                                .map((e) => LatLng(e.latitude, e.longitude))
-                                .toList(),
-                            color: Colors.yellow,
-                            width: 5,
+                    (_initialCameraPosition == null ||
+                            _cameraTargetBounds == null)
+                        ? Center(child: CircularProgressIndicator())
+                        : GoogleMap(
+                            onMapCreated: _onMapCreated,
+                            style: _mapStyle,
+                            initialCameraPosition: _initialCameraPosition!,
+                            // initialCameraPosition: CameraPosition(
+                            //   target: LatLng(
+                            //     _currentLocation!.latitude!,
+                            //     _currentLocation!.longitude!,
+                            //   ),
+                            //   zoom: 15.5,
+                            //   tilt: 0,
+                            // ),
+                            rotateGesturesEnabled: true,
+                            myLocationButtonEnabled: true,
+                            zoomControlsEnabled:
+                                false, // Disable zoom controls (+/- buttons)
+                            myLocationEnabled: true,
+                            cameraTargetBounds: _cameraTargetBounds!,
+                            // cameraTargetBounds: CameraTargetBounds(
+                            //   LatLngBounds(
+                            //     southwest: LatLng(39.028, -84.467),
+                            //     northeast: LatLng(39.038, -84.459),
+                            //   ),
+                            // ),
+                            minMaxZoomPreference:
+                                MinMaxZoomPreference(15.0, 20.0),
+                            polylines: {
+                              if (_info != null)
+                                Polyline(
+                                  polylineId: PolylineId('route'),
+                                  points: _info!.polylineCoordinates
+                                      .map((e) =>
+                                          LatLng(e.latitude, e.longitude))
+                                      .toList(),
+                                  color: Colors.yellow,
+                                  width: 5,
+                                ),
+                            },
+                            markers: _markers,
+                            onLongPress: (LatLng tappedPoint) {
+                              _getDirections(destination: tappedPoint);
+                              _markers.add(
+                                Marker(
+                                  markerId: MarkerId('destinationMarker'),
+                                  position: tappedPoint,
+                                  icon: BitmapDescriptor.defaultMarkerWithHue(
+                                    BitmapDescriptor.hueViolet,
+                                  ),
+                                ),
+                              );
+                            },
                           ),
-                      },
-                      markers: _markers,
-                      onLongPress: (LatLng tappedPoint) {
-                        _getDirections(destination: tappedPoint);
-                        _markers.add(
-                          Marker(
-                            markerId: MarkerId('destinationMarker'),
-                            position: tappedPoint,
-                            icon: BitmapDescriptor.defaultMarkerWithHue(
-                              BitmapDescriptor.hueViolet,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
                     // Report event button
                     Positioned(
                       bottom: 25,

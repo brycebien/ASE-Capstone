@@ -94,7 +94,8 @@ class FirestoreService {
   }
 
   // get university by name
-  Future<Map<String, dynamic>> getUniversityByName(String name) async {
+  Future<Map<String, dynamic>> getUniversityByName(
+      {required String name}) async {
     try {
       final QuerySnapshot university = await FirebaseFirestore.instance
           .collection('universities')
@@ -158,9 +159,12 @@ class FirestoreService {
   // check if the user is an adimin
   Future<bool> isAdmin({required String userId}) async {
     final DocumentSnapshot userDoc = await _usersCollection.doc(userId).get();
-    final bool? isAdmin = userDoc.get('isAdmin');
-
-    return isAdmin ?? false;
+    try {
+      final bool? isAdmin = userDoc.get('isAdmin');
+      return isAdmin ?? false;
+    } catch (e) {
+      return false; // Return false if the field doesn't exist
+    }
   }
 
   /*
