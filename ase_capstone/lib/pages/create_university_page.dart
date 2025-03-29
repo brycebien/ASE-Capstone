@@ -191,7 +191,10 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                   TextButton(
                     onPressed: () {
                       Navigator.of(context).pop();
-                      _zoomToLocation(location: _universityLocation!, zoom: 14);
+                      Utils.zoomToLocation(
+                          location: _universityLocation!,
+                          controller: _controller!,
+                          zoom: 14);
                       _setUniversityBounds();
                     },
                     child: const Text('OK'),
@@ -202,7 +205,11 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
       }
       setState(() {
         _universityLocation = location;
-        _zoomToLocation(location: _universityLocation!, zoom: 14);
+        Utils.zoomToLocation(
+          location: _universityLocation!,
+          controller: _controller!,
+          zoom: 14,
+        );
         if (_isTutorial) {
           _tutorialStep++;
           _currentInstructions = _tutorialSteps
@@ -648,22 +655,14 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
         });
   }
 
-  void _zoomToLocation({required LatLng location, double zoom = 14}) {
-    _controller?.animateCamera(
-      CameraUpdate.newLatLngZoom(
-        location,
-        zoom,
-      ),
-    );
-  }
-
   void _handleBuildingCallBack({required Map<String, dynamic> result}) {
     if (result.isNotEmpty) {
       Map<String, dynamic> building = result['building'];
 
       if (result['callback'] == 'zoomToBuilding') {
-        _zoomToLocation(
+        Utils.zoomToLocation(
           location: building['address'],
+          controller: _controller!,
           zoom: 19,
         );
       } else if (result['callback'] == 'editBuilding') {
@@ -854,8 +853,9 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                                     size: 20,
                                   ),
                                   onPressed: () {
-                                    _zoomToLocation(
+                                    Utils.zoomToLocation(
                                       location: _universityLocation!,
+                                      controller: _controller!,
                                       zoom: 14,
                                     );
                                   }),
