@@ -437,32 +437,6 @@ class _MapPageState extends State<MapPage> {
                     TextButton(
                       onPressed: () async {
                         _showUniversityPicker();
-
-                        // List<Map<String, dynamic>> universities =
-                        //     await _firestoreServices.getUniversities();
-                        // setState(() {
-                        //   showDialog(
-                        //       context: context,
-                        //       builder: (BuildContext context) {
-                        //         return SearchableList(
-                        //             items: universities,
-                        //             listTitle: 'Select University');
-                        //       });
-                        // });
-
-                        // String? university = await Utils.showUniversityDialog(
-                        //   context: context,
-                        //   firesotreService: _firestoreServices,
-                        // );
-                        // if (university != null) {
-                        //   await _firestoreServices.updateUserUniversity(
-                        //     userId: user.uid,
-                        //     university: university,
-                        //   );
-                        //   setState(() {
-                        //     _hasUniversity = true;
-                        //   });
-                        // }
                       },
                       child: Text('Universities'),
                     ),
