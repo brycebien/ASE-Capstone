@@ -25,7 +25,7 @@ class _DevelopmentPageState extends State<DevelopmentPage> {
     final universities = await _firestoreServices.getUniversities();
     setState(() {
       _universities = universities;
-      _foundUniversities = _universities;
+      _foundUniversities = universities;
     });
   }
 
@@ -42,7 +42,7 @@ class _DevelopmentPageState extends State<DevelopmentPage> {
 
   @override
   Widget build(BuildContext context) {
-    return _foundUniversities.isEmpty
+    return _universities.isEmpty
         ? const Center(
             child: CircularProgressIndicator(),
           )
