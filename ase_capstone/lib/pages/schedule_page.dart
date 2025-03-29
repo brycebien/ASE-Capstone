@@ -386,11 +386,25 @@ class _SchedulePageState extends State<SchedulePage> {
                                                     Colors.blue),
                                           ),
                                           onPressed: () async {
-                                            // get destination from building address
-                                            final LatLng destination =
-                                                await DirectionsHandler()
-                                                    .getDirectionFromAddress(
-                                                        address: e['address']);
+                                            LatLng destination;
+                                            // check wether the address is latlng or address
+                                            if (e['address'] is Map &&
+                                                e['address']['latitude'] !=
+                                                    null &&
+                                                e['address']['longitude'] !=
+                                                    null) {
+                                              destination = LatLng(
+                                                  e['address']['latitude'],
+                                                  e['address']['longitude']);
+                                            } else {
+                                              // get destination from building address
+                                              destination =
+                                                  await DirectionsHandler()
+                                                      .getDirectionFromAddress(
+                                                          address:
+                                                              e['address']);
+                                            }
+
                                             setState(() {
                                               Navigator.pushNamed(
                                                 context,
