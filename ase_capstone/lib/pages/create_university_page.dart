@@ -755,118 +755,117 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                     ),
                   )
                 : Text(''),
-            // UNIVERSITY LOCATION
-            _universityLocation != null
-                ? Positioned(
-                    bottom: 10,
-                    right: 10,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        _buildings.isNotEmpty
-                            ? Container(
-                                padding: EdgeInsets.only(left: 10),
-                                color: Colors.black,
-                                child: Row(
-                                  children: [
-                                    Text('Buildings: (${_buildings.length})'),
-                                    IconButton(
-                                      onPressed: () async {
-                                        Map<String, dynamic> result =
-                                            await showDialog(
-                                          context: context,
-                                          builder: (BuildContext context) {
-                                            return SearchBuildings(
-                                              buildings: _buildings,
-                                              isTutorial: _isTutorial,
-                                            );
-                                          },
-                                        );
+            Positioned(
+              bottom: 10,
+              right: 10,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  _buildings.isNotEmpty
+                      ? Container(
+                          padding: EdgeInsets.only(left: 10),
+                          color: Colors.black,
+                          child: Row(
+                            children: [
+                              Text('Buildings: (${_buildings.length})'),
+                              IconButton(
+                                onPressed: () async {
+                                  Map<String, dynamic> result =
+                                      await showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return SearchBuildings(
+                                        buildings: _buildings,
+                                        isTutorial: _isTutorial,
+                                      );
+                                    },
+                                  );
 
-                                        _handleBuildingCallBack(result: result);
+                                  _handleBuildingCallBack(result: result);
 
-                                        // clear instructions for buildings
-                                        if (_isTutorial) {
-                                          setState(() {
-                                            _tutorialStep++;
-                                            _currentInstructions = null;
-                                            _showSuccessDialog(
-                                              title:
-                                                  'Thank you for completing the tutorial!',
-                                              message: _tutorialSteps
-                                                  .where((step) =>
-                                                      step['step'] ==
-                                                      _tutorialStep)
-                                                  .first['message'],
-                                            );
-                                          });
-                                        }
-                                      },
-                                      icon: Icon(
-                                        Icons.arrow_forward_ios,
-                                        size: 20,
-                                        color: Colors.blue[400],
-                                      ),
-                                    )
-                                  ],
+                                  // clear instructions for buildings
+                                  if (_isTutorial) {
+                                    setState(() {
+                                      _tutorialStep++;
+                                      _currentInstructions = null;
+                                      _showSuccessDialog(
+                                        title:
+                                            'Thank you for completing the tutorial!',
+                                        message: _tutorialSteps
+                                            .where((step) =>
+                                                step['step'] == _tutorialStep)
+                                            .first['message'],
+                                      );
+                                    });
+                                  }
+                                },
+                                icon: Icon(
+                                  Icons.arrow_forward_ios,
+                                  size: 20,
+                                  color: Colors.blue[400],
                                 ),
                               )
-                            : Text(''),
-                        // CAMERA BOUNDS
-                        _southWestBound != null && _northEastBound != null
-                            ? Container(
-                                padding: EdgeInsets.only(left: 10),
-                                color: Colors.black,
-                                child: Row(
-                                  children: [
-                                    Text(
-                                      'Camera bounds set',
-                                    ),
-                                    SizedBox(width: 10),
-                                    IconButton(
-                                      icon: Icon(
-                                        Icons.delete,
-                                        color: Colors.red[400],
-                                        size: 20,
-                                      ),
-                                      onPressed: () {
-                                        setState(() {
-                                          _southWestBound = null;
-                                          _northEastBound = null;
-                                        });
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              )
-                            : Container(
-                                padding: EdgeInsets.only(left: 10),
-                                color: Colors.black,
-                                child: Row(
-                                  children: [
-                                    _southWestBound == null &&
-                                            _northEastBound == null
-                                        ? Text('Camera bounds not set yet')
-                                        : _southWestBound != null
-                                            ? Text(
-                                                'Northeast bound not set yet')
-                                            : Text(
-                                                'Southwest bound not set yet'),
-                                    SizedBox(width: 10),
-                                    IconButton(
-                                      icon: Icon(
-                                        Icons.info_outline,
-                                        color: Colors.blue[400],
-                                        size: 20,
-                                      ),
-                                      onPressed: () {
-                                        _setUniversityBounds();
-                                      },
-                                    ),
-                                  ],
-                                ),
+                            ],
+                          ),
+                        )
+                      : Text(''),
+                  // CAMERA BOUNDS
+                  _southWestBound != null && _northEastBound != null
+                      ? Container(
+                          padding: EdgeInsets.only(left: 10),
+                          color: Colors.black,
+                          child: Row(
+                            children: [
+                              Text(
+                                'Camera bounds set',
                               ),
-                        Container(
+                              SizedBox(width: 10),
+                              IconButton(
+                                icon: Icon(
+                                  Icons.delete,
+                                  color: Colors.red[400],
+                                  size: 20,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _southWestBound = null;
+                                    _northEastBound = null;
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        )
+                      : _universityLocation != null
+                          ? Container(
+                              padding: EdgeInsets.only(left: 10),
+                              color: Colors.black,
+                              child: Row(
+                                children: [
+                                  _southWestBound == null &&
+                                          _northEastBound == null
+                                      ? Text('Camera bounds not set yet')
+                                      : _southWestBound != null
+                                          ? Text('Northeast bound not set yet')
+                                          : Text('Southwest bound not set yet'),
+                                  SizedBox(width: 10),
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.info_outline,
+                                      color: Colors.blue[400],
+                                      size: 20,
+                                    ),
+                                    onPressed: () {
+                                      _setUniversityBounds();
+                                    },
+                                  ),
+                                ],
+                              ),
+                            )
+                          : SizedBox(height: 0.0),
+                  // UNIVERSITY LOCATION
+                  _universityLocation != null
+                      ? Container(
                           color: Colors.black,
                           child: Row(
                             children: [
@@ -897,34 +896,30 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                               )
                             ],
                           ),
-                        ),
-                      ],
-                    ),
-                  )
-                : Positioned(
-                    bottom: 10,
-                    right: 10,
-                    child: Container(
-                      padding: EdgeInsets.only(left: 10),
-                      color: Colors.black,
-                      child: Row(
-                        children: [
-                          Text('University Location not set yet'),
-                          SizedBox(width: 10),
-                          IconButton(
-                            icon: Icon(
-                              Icons.info_outline,
-                              color: Colors.blue[400],
-                              size: 20,
-                            ),
-                            onPressed: () {
-                              _showUniversityLocationHint();
-                            },
+                        )
+                      : Container(
+                          padding: EdgeInsets.only(left: 10),
+                          color: Colors.black,
+                          child: Row(
+                            children: [
+                              Text('University Location not set yet'),
+                              SizedBox(width: 10),
+                              IconButton(
+                                icon: Icon(
+                                  Icons.info_outline,
+                                  color: Colors.blue[400],
+                                  size: 20,
+                                ),
+                                onPressed: () {
+                                  _showUniversityLocationHint();
+                                },
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
+                        ),
+                ],
+              ),
+            )
           ],
         ),
       ),
