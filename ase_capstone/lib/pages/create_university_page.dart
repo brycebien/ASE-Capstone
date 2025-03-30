@@ -154,6 +154,16 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
           }
         });
       } else if (_southWestBound != null && _northEastBound == null) {
+        // check to make sure north east bound is north and east of south west bound
+        if (location.latitude < _southWestBound!.latitude ||
+            location.longitude < _southWestBound!.longitude) {
+          Utils.displayMessage(
+            context: context,
+            message:
+                'Error setting camera bounds: Please make sure the northeast bound is north and east of the southwest bound.',
+          );
+          return;
+        }
         // set northeast camera bound
         setState(() {
           _northEastBound = location;
@@ -615,25 +625,39 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                     final navigator = Navigator.of(context);
 
                     // SAVE UNIVERSITY TO FIRESTORE
-                    await _firestoreServices.createUniversity(
-                      university: {
-                        'name': _universityNameController.text,
-                        'abbreviation': _universityAbbreviationController.text,
-                        'location': {
-                          'latitude': _universityLocation!.latitude.toDouble(),
-                          'longitude': _universityLocation!.longitude.toDouble()
+                    try {
+                      await _firestoreServices.createUniversity(
+                        university: {
+                          'name': _universityNameController.text,
+                          'abbreviation':
+                              _universityAbbreviationController.text,
+                          'location': {
+                            'latitude':
+                                _universityLocation!.latitude.toDouble(),
+                            'longitude':
+                                _universityLocation!.longitude.toDouble()
+                          },
+                          'southWestBound': {
+                            'latitude': _southWestBound!.latitude.toDouble(),
+                            'longitude': _southWestBound!.longitude.toDouble()
+                          },
+                          'northEastBound': {
+                            'latitude': _northEastBound!.latitude.toDouble(),
+                            'longitude': _northEastBound!.longitude.toDouble()
+                          },
+                          'buildings': _buildings,
                         },
-                        'southWestBound': {
-                          'latitude': _southWestBound!.latitude.toDouble(),
-                          'longitude': _southWestBound!.longitude.toDouble()
-                        },
-                        'northEastBound': {
-                          'latitude': _northEastBound!.latitude.toDouble(),
-                          'longitude': _northEastBound!.longitude.toDouble()
-                        },
-                        'buildings': _buildings,
-                      },
-                    );
+                      );
+                    } catch (e) {
+                      navigator.pop();
+                      setState(() {
+                        Utils.displayMessage(
+                          context: context,
+                          message: 'Error creating university: ${e.toString()}',
+                        );
+                      });
+                      return;
+                    }
 
                     // send the user back to the development page
                     navigator.popUntil(

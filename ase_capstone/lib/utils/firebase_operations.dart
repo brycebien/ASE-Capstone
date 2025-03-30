@@ -62,6 +62,18 @@ class FirestoreService {
   // create university
   Future<void> createUniversity(
       {required Map<String, dynamic> university}) async {
+    // Check if the university already exists
+    final QuerySnapshot existingUniversity = await FirebaseFirestore.instance
+        .collection('universities')
+        .where('name', isEqualTo: university['name'])
+        .get();
+
+    if (existingUniversity.docs.isNotEmpty) {
+      // University already exists, do not create it again
+      throw Exception('University name already exists');
+    }
+
+    // Create the university document
     await FirebaseFirestore.instance
         .collection('universities')
         .doc(university['name'])
