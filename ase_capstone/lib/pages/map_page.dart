@@ -459,6 +459,7 @@ class _MapPageState extends State<MapPage> {
           builder: (context) => SearchableList(
             items: universities,
             listTitle: 'Select a University',
+            keys: ['name', 'abbreviation'],
           ),
         ),
       );

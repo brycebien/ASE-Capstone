@@ -38,6 +38,7 @@ class SettingsDrawerState extends State<SettingsDrawer> {
           builder: (context) => SearchableList(
             items: universities,
             listTitle: 'Select a University',
+            keys: ['name', 'abbreviation'],
           ),
         ),
       ).then((value) {
