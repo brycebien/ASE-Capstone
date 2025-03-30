@@ -118,6 +118,12 @@ class _SchedulePageState extends State<SchedulePage> {
         selectedDays.clear();
       });
       Navigator.of(context).pop();
+    } else {
+      Navigator.of(context).pop();
+      Utils.displayMessage(
+        context: context,
+        message: 'Error creating class. Please fill all fields.',
+      );
     }
   }
 
