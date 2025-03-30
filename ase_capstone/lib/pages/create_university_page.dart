@@ -146,6 +146,17 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
         // set southwest camera bound
         setState(() {
           _southWestBound = location;
+          // add marker for the southwest bound
+          _buildingMarkers.add(
+            Marker(
+              markerId: MarkerId('southwest-bound'),
+              position: location,
+              infoWindow: InfoWindow(
+                title: 'Southwest Bound',
+                snippet: 'Southwest Bound',
+              ),
+            ),
+          );
           if (_isTutorial) {
             _tutorialStep++;
             _currentInstructions = _tutorialSteps
@@ -167,6 +178,10 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
         // set northeast camera bound
         setState(() {
           _northEastBound = location;
+          // remove southwest bound marker
+          _buildingMarkers.removeWhere(
+            (marker) => marker.markerId == MarkerId('southwest-bound'),
+          );
           if (_isTutorial) {
             _tutorialStep++;
             _currentInstructions = _tutorialSteps
@@ -846,9 +861,33 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                                           _northEastBound == null
                                       ? Text('Camera bounds not set yet')
                                       : _southWestBound != null
-                                          ? Text('Northeast bound not set yet')
+                                          ? Row(
+                                              children: [
+                                                Text(
+                                                    'Northeast bound not set yet'),
+                                                SizedBox(width: 10),
+                                                IconButton(
+                                                  onPressed: () {
+                                                    setState(() {
+                                                      _southWestBound = null;
+                                                      _buildingMarkers
+                                                          .removeWhere(
+                                                        (marker) =>
+                                                            marker.markerId ==
+                                                            MarkerId(
+                                                                'southwest-bound'),
+                                                      );
+                                                    });
+                                                  },
+                                                  icon: Icon(
+                                                    Icons.restart_alt,
+                                                    color: Colors.red[400],
+                                                    size: 20,
+                                                  ),
+                                                ),
+                                              ],
+                                            )
                                           : Text('Southwest bound not set yet'),
-                                  SizedBox(width: 10),
                                   IconButton(
                                     icon: Icon(
                                       Icons.info_outline,
