@@ -1,3 +1,4 @@
+import 'package:ase_capstone/components/searchable_list.dart';
 import 'package:ase_capstone/components/textfield.dart';
 import 'package:ase_capstone/models/directions_handler.dart';
 import 'package:ase_capstone/utils/utils.dart';
@@ -17,7 +18,8 @@ class _SchedulePageState extends State<SchedulePage> {
   bool _isLoading = false;
   FirestoreService firestoreService = FirestoreService();
   User? currentUser = FirebaseAuth.instance.currentUser;
-  late List<dynamic> buildings;
+  // late List<dynamic> buildings;
+  late List<Map<String, dynamic>> buildings;
   TimeOfDay? startTime;
   TimeOfDay? endTime;
   String? building;
@@ -59,7 +61,7 @@ class _SchedulePageState extends State<SchedulePage> {
       List<dynamic> result =
           await firestoreService.getBuildings(userId: currentUser!.uid);
       setState(() {
-        buildings = result;
+        buildings = result.cast<Map<String, dynamic>>();
       });
     } catch (e) {
       setState(() {
@@ -120,6 +122,7 @@ class _SchedulePageState extends State<SchedulePage> {
       Navigator.of(context).pop();
     } else {
       Navigator.of(context).pop();
+      print("ERROR:::::::::::: {buildings: ${building != null}}");
       Utils.displayMessage(
         context: context,
         message: 'Error creating class. Please fill all fields.',
@@ -141,27 +144,56 @@ class _SchedulePageState extends State<SchedulePage> {
 
   Future<String?> _buildingsMenu() async {
     String? selectedBuilding;
-    await showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Select a Building'),
-          content: SingleChildScrollView(
-            child: Column(
-              children: buildings.map((e) {
-                return ListTile(
-                  title: Text(e['name']),
-                  onTap: () {
-                    selectedBuilding = e['name'];
-                    Navigator.of(context).pop();
-                  },
-                );
-              }).toList(),
-            ),
+    if (mounted) {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SearchableList(
+            items: buildings,
+            listTitle: 'Select a Building',
+            keys: ['name', 'code'],
           ),
-        );
-      },
-    );
+        ),
+      ).then((value) {
+        setState(() {
+          print("RETURNING SELECTED: $value");
+          selectedBuilding = value;
+        });
+      });
+    } else {
+      return null; // Return nothing if the widget is not mounted
+    }
+
+    // await showDialog(
+    //   context: context,
+    //   builder: (context) {
+    //     return AlertDialog(
+    //       title: Text('Select a Building'),
+    //       content: SearchableList(
+    //         items: buildings,
+    //         listTitle: 'Buildings',
+    //         keys: ['name', 'code'],
+    //       ),
+    //     );
+
+    // return AlertDialog(
+    //   title: Text('Select a Building'),
+    //   content: SingleChildScrollView(
+    //     child: Column(
+    //       children: buildings.map((e) {
+    //         return ListTile(
+    //           title: Text(e['name']),
+    //           onTap: () {
+    //             selectedBuilding = e['name'];
+    //             Navigator.of(context).pop();
+    //           },
+    //         );
+    //       }).toList(),
+    //     ),
+    //   ),
+    // );
+    print(
+        "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::");
     return selectedBuilding;
   }
 
@@ -252,14 +284,18 @@ class _SchedulePageState extends State<SchedulePage> {
                           SizedBox(width: 10),
                           GestureDetector(
                             onTap: () async {
-                              final selectedBuilding = await _buildingsMenu();
+                              final String? selectedBuilding =
+                                  await _buildingsMenu();
                               setState(() {
                                 building = selectedBuilding;
-                                buildingCode = buildings.firstWhere((element) =>
-                                    element['name'] == building)['code'];
+                                if (building != null) {
+                                  buildingCode = buildings.firstWhere(
+                                      (element) =>
+                                          element['name'] == building)['code'];
+                                }
                               });
                             },
-                            child: (buildingCode?.isEmpty ?? true)
+                            child: (building == null)
                                 ? Icon(Icons.location_on, size: 20)
                                 : Text(
                                     buildingCode!,
