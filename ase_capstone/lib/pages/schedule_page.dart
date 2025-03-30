@@ -314,7 +314,7 @@ class _SchedulePageState extends State<SchedulePage> {
                       endTime = null;
                       building = null;
                       buildingCode = null;
-                      //   selectedDays.clear();
+                      selectedDays = [];
                       _roomController.clear();
                     });
                   },
