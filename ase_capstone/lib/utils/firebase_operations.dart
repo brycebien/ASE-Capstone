@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-// ignore: unused_import
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:location/location.dart';
 
 class FirestoreService {
   final CollectionReference _usersCollection =
@@ -16,7 +16,9 @@ class FirestoreService {
   }
 
   /*
+  
     CREATE
+    
   */
 
   // create user
@@ -41,10 +43,47 @@ class FirestoreService {
     });
   }
 
-  Future<void> addResource(
+  // create pin
+  Future<void> createPin({
+    required LocationData currentLocation,
+    required String markerTitle,
+    required double markerColor,
+  }) async {
+    await FirebaseFirestore.instance.collection('pins').add({
+      'latitude': currentLocation.latitude,
+      'longitude': currentLocation.longitude,
+      'title': markerTitle,
+      'color': markerColor.toDouble(), // Ensure color is stored as double
+      'timestamp': FieldValue.serverTimestamp(),
+      'yesVotes': 0,
+      'noVotes': 0,
+    });
+  }
+
+  // create university
+  Future<void> createUniversity(
+      {required Map<String, dynamic> university}) async {
+    // Check if the university already exists
+    final QuerySnapshot existingUniversity = await FirebaseFirestore.instance
+        .collection('universities')
+        .where('name', isEqualTo: university['name'])
+        .get();
+
+    if (existingUniversity.docs.isNotEmpty) {
+      // University already exists, do not create it again
+      throw Exception('University name already exists');
+    }
+
+    // Create the university document
+    await FirebaseFirestore.instance
+        .collection('universities')
+        .doc(university['name'])
+        .set(university);
+  }
+
+Future<void> addResource(
       {required Map<String, dynamic> resource, required String uid}) async {
     final DocumentSnapshot userDoc = await _usersCollection.doc(uid).get();
-
     if (!userDoc.exists) {
       throw Exception('User not found');
     }
@@ -60,7 +99,9 @@ class FirestoreService {
   }
 
   /*
+  
     READ
+    
   */
 
   // get universities
@@ -70,6 +111,35 @@ class FirestoreService {
     return universities.docs
         .map((DocumentSnapshot doc) => doc.data() as Map<String, dynamic>)
         .toList();
+  }
+
+  // get user's university
+  Future<String> getUserUniversity({required String userId}) async {
+    try {
+      final DocumentSnapshot userDoc = await _usersCollection.doc(userId).get();
+      return userDoc.get('university');
+    } catch (e) {
+      return "";
+    }
+  }
+
+  // get university by name
+  Future<Map<String, dynamic>> getUniversityByName(
+      {required String name}) async {
+    try {
+      final QuerySnapshot university = await FirebaseFirestore.instance
+          .collection('universities')
+          .where('name', isEqualTo: name)
+          .get();
+      return university.docs.first.data() as Map<String, dynamic>;
+    } catch (e) {
+      // return empty university if not found
+      return {
+        'name': '',
+        'abbreviation': '',
+        'buildings': [],
+      };
+    }
   }
 
   // get buildings
@@ -116,11 +186,20 @@ class FirestoreService {
     final String profilePicture = userDoc.get('profilePicture');
     return profilePicture;
   }
-
-  // get resources from university collection if exists
+  
+  // check if the user is an adimin
+  Future<bool> isAdmin({required String userId}) async {
+    final DocumentSnapshot userDoc = await _usersCollection.doc(userId).get();
+    try {
+      final bool? isAdmin = userDoc.get('isAdmin');
+      return isAdmin ?? false;
+    } catch (e) {
+      return false; // Return false if the field doesn't exist
+    }
+  }
+// get resources from university collection if exists
   Future<List<dynamic>> getResources({String? universityId}) async {
     if (universityId == null || universityId.isEmpty) return [];
-
     final snapshot = await FirebaseFirestore.instance
         .collection('universities')
         .doc(universityId)
@@ -130,7 +209,9 @@ class FirestoreService {
   }
 
   /*
+  
     UPDATE
+    
   */
 
   // update user password
@@ -163,8 +244,44 @@ class FirestoreService {
     });
   }
 
+  // update pins
+  Future<void> updatePins({
+    required String markerId,
+    required bool isYesVote,
+  }) async {
+    DocumentReference docRef =
+        FirebaseFirestore.instance.collection('pins').doc(markerId);
+    FirebaseFirestore.instance.runTransaction((transaction) async {
+      DocumentSnapshot snapshot = await transaction.get(docRef);
+      if (!snapshot.exists) {
+        throw Exception("Marker does not exist!");
+      }
+
+      int newYesVotes = snapshot['yesVotes'];
+      int newNoVotes = snapshot['noVotes'];
+
+      if (isYesVote) {
+        newYesVotes += 1;
+      } else {
+        newNoVotes += 1;
+      }
+
+      if (newNoVotes > 5) {
+        transaction.delete(docRef);
+      } else {
+        transaction.update(docRef, {
+          'yesVotes': newYesVotes,
+          'noVotes': newNoVotes,
+          'lastActivity': FieldValue.serverTimestamp()
+        });
+      }
+    });
+  }
+
   /*
+  
     DELETE
+    
   */
 
   Future<void> deleteClassFromDatabase({
@@ -176,8 +293,23 @@ class FirestoreService {
     });
   }
 
-  // DELETE USER
+  // delete user data
   Future<void> deleteUserData(String userId) async {
     await _usersCollection.doc(userId).delete();
+  }
+
+  // delete expired pins
+  Future<void> deleteExpiredPins({required DateTime expirationTime}) async {
+    FirebaseFirestore.instance
+        .collection('pins')
+        .where('lastActivity', isLessThan: expirationTime)
+        .get()
+        .then((snapshot) {
+      for (var doc in snapshot.docs) {
+        doc.reference.delete();
+      }
+    }).catchError((error) {
+      throw Exception('Error deleting expired pins: $error');
+    });
   }
 }

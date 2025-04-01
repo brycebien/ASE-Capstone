@@ -24,7 +24,7 @@ class University {
   }
 
   Map<String, dynamic> toJson() {
-    // convert the University object to json data
+    // convert the University object to json data for storing in db
     return {
       'name': name,
       'location': {
