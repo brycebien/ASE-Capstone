@@ -1,4 +1,6 @@
+import 'package:ase_capstone/components/searchable_list.dart';
 import 'package:ase_capstone/components/textfield.dart';
+import 'package:ase_capstone/models/directions_handler.dart';
 import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -16,7 +18,8 @@ class _SchedulePageState extends State<SchedulePage> {
   bool _isLoading = false;
   FirestoreService firestoreService = FirestoreService();
   User? currentUser = FirebaseAuth.instance.currentUser;
-  late List<dynamic> buildings;
+  // late List<dynamic> buildings;
+  late List<Map<String, dynamic>> buildings;
   TimeOfDay? startTime;
   TimeOfDay? endTime;
   String? building;
@@ -58,7 +61,7 @@ class _SchedulePageState extends State<SchedulePage> {
       List<dynamic> result =
           await firestoreService.getBuildings(userId: currentUser!.uid);
       setState(() {
-        buildings = result;
+        buildings = result.cast<Map<String, dynamic>>();
       });
     } catch (e) {
       setState(() {
@@ -92,6 +95,8 @@ class _SchedulePageState extends State<SchedulePage> {
         'startTime': startTime!.format(context),
         'endTime': endTime!.format(context),
         'building': building,
+        'address': buildings
+            .firstWhere((element) => element['name'] == building)['address'],
         'code': buildingCode,
         'room': _roomController.text,
         'days': selectedDays,
@@ -115,6 +120,13 @@ class _SchedulePageState extends State<SchedulePage> {
         selectedDays.clear();
       });
       Navigator.of(context).pop();
+    } else {
+      Navigator.of(context).pop();
+      print("ERROR:::::::::::: {buildings: ${building != null}}");
+      Utils.displayMessage(
+        context: context,
+        message: 'Error creating class. Please fill all fields.',
+      );
     }
   }
 
@@ -132,27 +144,56 @@ class _SchedulePageState extends State<SchedulePage> {
 
   Future<String?> _buildingsMenu() async {
     String? selectedBuilding;
-    await showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Select a Building'),
-          content: SingleChildScrollView(
-            child: Column(
-              children: buildings.map((e) {
-                return ListTile(
-                  title: Text(e['name']),
-                  onTap: () {
-                    selectedBuilding = e['name'];
-                    Navigator.of(context).pop();
-                  },
-                );
-              }).toList(),
-            ),
+    if (mounted) {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SearchableList(
+            items: buildings,
+            listTitle: 'Select a Building',
+            keys: ['name', 'code'],
           ),
-        );
-      },
-    );
+        ),
+      ).then((value) {
+        setState(() {
+          print("RETURNING SELECTED: $value");
+          selectedBuilding = value;
+        });
+      });
+    } else {
+      return null; // Return nothing if the widget is not mounted
+    }
+
+    // await showDialog(
+    //   context: context,
+    //   builder: (context) {
+    //     return AlertDialog(
+    //       title: Text('Select a Building'),
+    //       content: SearchableList(
+    //         items: buildings,
+    //         listTitle: 'Buildings',
+    //         keys: ['name', 'code'],
+    //       ),
+    //     );
+
+    // return AlertDialog(
+    //   title: Text('Select a Building'),
+    //   content: SingleChildScrollView(
+    //     child: Column(
+    //       children: buildings.map((e) {
+    //         return ListTile(
+    //           title: Text(e['name']),
+    //           onTap: () {
+    //             selectedBuilding = e['name'];
+    //             Navigator.of(context).pop();
+    //           },
+    //         );
+    //       }).toList(),
+    //     ),
+    //   ),
+    // );
+    print(
+        "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::");
     return selectedBuilding;
   }
 
@@ -243,14 +284,18 @@ class _SchedulePageState extends State<SchedulePage> {
                           SizedBox(width: 10),
                           GestureDetector(
                             onTap: () async {
-                              final selectedBuilding = await _buildingsMenu();
+                              final String? selectedBuilding =
+                                  await _buildingsMenu();
                               setState(() {
                                 building = selectedBuilding;
-                                buildingCode = buildings.firstWhere((element) =>
-                                    element['name'] == building)['code'];
+                                if (building != null) {
+                                  buildingCode = buildings.firstWhere(
+                                      (element) =>
+                                          element['name'] == building)['code'];
+                                }
                               });
                             },
-                            child: (buildingCode?.isEmpty ?? true)
+                            child: (building == null)
                                 ? Icon(Icons.location_on, size: 20)
                                 : Text(
                                     buildingCode!,
@@ -305,7 +350,7 @@ class _SchedulePageState extends State<SchedulePage> {
                       endTime = null;
                       building = null;
                       buildingCode = null;
-                      //   selectedDays.clear();
+                      selectedDays = [];
                       _roomController.clear();
                     });
                   },
@@ -340,7 +385,7 @@ class _SchedulePageState extends State<SchedulePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Campus Compass'),
+        title: Text('Classes'),
       ),
       body: _isLoading
           ? Center(
@@ -364,6 +409,7 @@ class _SchedulePageState extends State<SchedulePage> {
                             child: Column(
                               children: classes.map((e) {
                                 return Card(
+                                  elevation: 8,
                                   child: ListTile(
                                     title: Text(
                                       e['name'],
@@ -381,16 +427,36 @@ class _SchedulePageState extends State<SchedulePage> {
                                                 WidgetStateProperty.all(
                                                     Colors.blue),
                                           ),
-                                          onPressed: () {
-                                            // TODO: implement Navigation functionality
-                                            Navigator.pushNamed(
-                                              context,
-                                              '/map',
-                                              arguments: {
-                                                'destination': LatLng(
-                                                    39.030430, -84.462659),
-                                              },
-                                            );
+                                          onPressed: () async {
+                                            LatLng destination;
+                                            // check wether the address is latlng or address
+                                            if (e['address'] is Map &&
+                                                e['address']['latitude'] !=
+                                                    null &&
+                                                e['address']['longitude'] !=
+                                                    null) {
+                                              destination = LatLng(
+                                                  e['address']['latitude'],
+                                                  e['address']['longitude']);
+                                            } else {
+                                              // get destination from building address
+                                              destination =
+                                                  await DirectionsHandler()
+                                                      .getDirectionFromAddress(
+                                                          address:
+                                                              e['address']);
+                                            }
+
+                                            setState(() {
+                                              Navigator.pushNamed(
+                                                context,
+                                                '/map',
+                                                arguments: {
+                                                  // pass building latlng to map page for directions
+                                                  'destination': destination,
+                                                },
+                                              );
+                                            });
                                           },
                                         ),
                                         IconButton(

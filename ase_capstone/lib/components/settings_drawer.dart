@@ -1,5 +1,5 @@
+import 'package:ase_capstone/components/searchable_list.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
-import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -13,6 +13,45 @@ class SettingsDrawer extends StatefulWidget {
 
 class SettingsDrawerState extends State<SettingsDrawer> {
   final FirestoreService _firestoreService = FirestoreService();
+  bool _isAdmin = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkIfAdmin();
+  }
+
+  Future<void> _checkIfAdmin() async {
+    bool isAdmin = await _firestoreService.isAdmin(userId: widget.user!.uid);
+    setState(() {
+      _isAdmin = isAdmin;
+    });
+  }
+
+  void _showUniversitySelectionDialog() async {
+    List<Map<String, dynamic>> universities =
+        await _firestoreService.getUniversities();
+    if (mounted) {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SearchableList(
+            items: universities,
+            listTitle: 'Select a University',
+            keys: ['name', 'abbreviation'],
+          ),
+        ),
+      ).then((value) {
+        _firestoreService.updateUserUniversity(
+          userId: widget.user!.uid,
+          university: value,
+        );
+      });
+    } else {
+      return; // Return nothing if the widget is not mounted
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Drawer(
@@ -60,17 +99,8 @@ class SettingsDrawerState extends State<SettingsDrawer> {
           ListTile(
             leading: Icon(Icons.school),
             title: Text('Choose Your University'),
-            onTap: () async {
-              final String? selectedUniversity =
-                  await Utils.showUniversityDialog(
-                      context: context, firesotreService: _firestoreService);
-
-              if (selectedUniversity != null) {
-                await _firestoreService.updateUserUniversity(
-                  userId: widget.user!.uid,
-                  university: selectedUniversity,
-                );
-              }
+            onTap: () {
+              _showUniversitySelectionDialog();
             },
           ),
           ListTile(
@@ -83,6 +113,17 @@ class SettingsDrawerState extends State<SettingsDrawer> {
               );
             },
           ),
+          if (_isAdmin)
+            ListTile(
+              leading: Icon(Icons.admin_panel_settings),
+              title: Text('Map Development Page'),
+              onTap: () {
+                Navigator.pushNamed(
+                  context,
+                  '/development-page',
+                );
+              },
+            ),
         ],
       ),
     );
