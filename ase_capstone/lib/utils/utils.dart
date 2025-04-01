@@ -12,6 +12,27 @@ class Utils {
     );
   }
 
+  static TimeOfDay parseTimeOfDay(String time) {
+    final parts = time.split(':');
+    final hour = int.parse(parts[0]);
+    final minute = int.parse(parts[1].split(' ')[0]);
+    final isPM = time.contains('PM');
+    return TimeOfDay(hour: isPM && hour != 12 ? hour + 12 : hour, minute: minute);
+  }
+
+  static TimeOfDay subtractMinutesFromTimeOfDay(TimeOfDay time, int minutes) {
+    final totalMinutes = time.hour * 60 + time.minute - minutes;
+    final newHour = (totalMinutes ~/ 60) % 24;
+    final newMinute = totalMinutes % 60;
+    return TimeOfDay(hour: newHour, minute: newMinute);
+  }
+
+  static bool isTimeInFuture(TimeOfDay now, TimeOfDay time) {
+    final nowMinutes = now.hour * 60 + now.minute;
+    final timeMinutes = time.hour * 60 + time.minute;
+    return timeMinutes > nowMinutes;
+  }
+
   static String authErrorHandler({required FirebaseAuthException e}) {
     switch (e.code) {
       case 'invalid-email':

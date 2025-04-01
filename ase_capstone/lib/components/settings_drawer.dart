@@ -72,7 +72,17 @@ class SettingsDrawerState extends State<SettingsDrawer> {
                 );
               }
             },
-          )
+          ),
+          ListTile(
+            leading: Icon(Icons.inbox),
+            title: Text('Inbox'),
+            onTap: () {
+              Navigator.pushNamed(
+                context,
+                '/inbox',
+              );
+            },
+          ),
         ],
       ),
     );
