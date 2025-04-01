@@ -568,27 +568,11 @@ class _MapPageState extends State<MapPage> {
                               );
                             },
                           ),
-                    // Report event button
-                    Positioned(
-                      bottom: 25,
-                      right: 16,
-                      child: FloatingActionButton(
-                        onPressed: () {
-                          if (_currentLocation != null) {
-                            _addEventMarker(LatLng(
-                              _currentLocation!.latitude!,
-                              _currentLocation!.longitude!,
-                            ));
-                          }
-                        },
-                        backgroundColor: Theme.of(context).colorScheme.primary,
-                        child: Icon(Icons.add_location_alt),
-                      ),
-                    ),
+
                     // Cancel directions button
                     if (_info != null)
                       Positioned(
-                        bottom: 25,
+                        bottom: 16,
                         left: 16,
                         child: FloatingActionButton(
                           onPressed: () {
@@ -605,42 +589,39 @@ class _MapPageState extends State<MapPage> {
                           child: Icon(Icons.delete),
                         ),
                       ),
-                  },
-                  markers: _markers,
-                ),
-                Positioned(
-                  bottom: 16,
-                  right: 16,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      // Resources Button
-                      FloatingActionButton(
-                        heroTag: 'resourcesBtn',
-                        onPressed: () {
-                          Navigator.pushNamed(context, '/resources');
-                        },
-                        child: Icon(Icons.menu_book),
-                        tooltip: 'View Campus Resources',
+                    Positioned(
+                      bottom: 16,
+                      right: 16,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        // crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          // Resources Button
+                          FloatingActionButton(
+                            heroTag: 'resourcesBtn',
+                            onPressed: () {
+                              Navigator.pushNamed(context, '/resources');
+                            },
+                            tooltip: 'View Campus Resources',
+                            child: Icon(Icons.menu_book),
+                          ),
+                          SizedBox(height: 12), // space between buttons
+                          FloatingActionButton(
+                            heroTag: 'eventBtn',
+                            onPressed: () {
+                              if (_currentLocation != null) {
+                                _addEventMarker(LatLng(
+                                  _currentLocation!.latitude!,
+                                  _currentLocation!.longitude!,
+                                ));
+                              }
+                            },
+                            tooltip: 'Report Event',
+                            child: Icon(Icons.add_location_alt),
+                          ),
+                        ],
                       ),
-                      SizedBox(height: 12), // space between buttons
-
-                      FloatingActionButton(
-                        heroTag: 'eventBtn',
-                        onPressed: () {
-                          if (_currentLocation != null) {
-                            _addEventMarker(LatLng(
-                              _currentLocation!.latitude!,
-                              _currentLocation!.longitude!,
-                            ));
-                          }
-                        },
-                        child: Icon(Icons.add_location_alt),
-                        tooltip: 'Report Event',
-                      ),
-                    ],
-                  ),
+                    ),
                     if (_info != null)
                       // Display distance and time
                       Positioned(
