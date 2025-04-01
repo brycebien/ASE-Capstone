@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:ase_capstone/components/textfield.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ResourcesPage extends StatefulWidget {
   const ResourcesPage({super.key});
@@ -11,25 +12,51 @@ class ResourcesPage extends StatefulWidget {
 }
 
 class _ResourcesPageState extends State<ResourcesPage> {
+  User? currentUser = FirebaseAuth.instance.currentUser;
   final FirestoreService _firestoreService = FirestoreService();
-  List<Map<String, dynamic>> _resources = [];
-  List<Map<String, dynamic>> _filteredResources = [];
+  List<dynamic> _resources = [];
+  List<dynamic> _filteredResources = [];
 
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _newTitleController = TextEditingController();
   final TextEditingController _newTypeController = TextEditingController();
 
+  String? _universityId;
+  bool isLoading = false;
+
   @override
   void initState() {
     super.initState();
-    _getResources();
+    _loadUniversityAndResources();
   }
 
-  Future<void> _getResources() async {
-    final resources = await _firestoreService.getResources();
+  Future<void> _loadUniversityAndResources() async {
+    setState(() => isLoading = true);
+
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      print("No user signed in.");
+      setState(() => isLoading = false);
+      return;
+    }
+
+    final user = await _firestoreService.getUser(userId: uid);
+    final universityId = user['university'] as String?;
+
+    if (universityId == null) {
+      print(" User has no university set.");
+      setState(() => isLoading = false);
+      return;
+    }
+
+    List<dynamic> resources =
+        await _firestoreService.getResources(universityId: universityId);
+
     setState(() {
       _resources = resources;
-      _filteredResources = _resources;
+      _filteredResources = resources;
+      isLoading = false;
+      _universityId = universityId;
     });
   }
 
@@ -84,15 +111,26 @@ class _ResourcesPageState extends State<ResourcesPage> {
             ),
             TextButton(
               onPressed: () async {
-                await _firestoreService.addResource({
+                if (_universityId == null) return;
+
+                final newFieldValue = {
                   'title': _newTitleController.text,
                   'type': _newTypeController.text,
                   'timestamp': DateTime.now(),
-                });
+                };
+
+                // await FirebaseFirestore.instance
+                //     .collection('universities')
+                //     .doc(_universityId)
+                //     .update({newFieldKey: newFieldValue});
+
+                _firestoreService.addResource(
+                    resource: newFieldValue, uid: currentUser!.uid);
+
                 Navigator.of(context).pop();
                 _newTitleController.clear();
                 _newTypeController.clear();
-                _getResources();
+                _loadUniversityAndResources();
               },
               child: Text('Add'),
             ),
@@ -104,13 +142,13 @@ class _ResourcesPageState extends State<ResourcesPage> {
 
   @override
   Widget build(BuildContext context) {
-    return _filteredResources.isEmpty
-        ? const Center(child: CircularProgressIndicator())
-        : Scaffold(
-            appBar: AppBar(
-              title: const Text('Campus Resources'),
-            ),
-            body: Column(
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Campus Resources'),
+      ),
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : Column(
               children: [
                 Padding(
                   padding: const EdgeInsets.all(8.0),
@@ -124,30 +162,32 @@ class _ResourcesPageState extends State<ResourcesPage> {
                   ),
                 ),
                 Expanded(
-                  child: ListView.builder(
-                    itemCount: _filteredResources.length,
-                    itemBuilder: (context, index) {
-                      final resource = _filteredResources[index];
-                      return Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Card(
-                          elevation: 6,
-                          child: ListTile(
-                            title: Text(resource['title']),
-                            subtitle: Text('Type: ${resource['type']}'),
-                          ),
+                  child: _filteredResources.isEmpty
+                      ? Center(child: Text("No resources available."))
+                      : ListView.builder(
+                          itemCount: _filteredResources.length,
+                          itemBuilder: (context, index) {
+                            final resource = _filteredResources[index];
+                            return Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Card(
+                                elevation: 6,
+                                child: ListTile(
+                                  title: Text(resource['title']),
+                                  subtitle: Text('Type: ${resource['type']}'),
+                                ),
+                              ),
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
                 ),
               ],
             ),
-            floatingActionButton: FloatingActionButton(
-              onPressed: _createResourceDialog,
-              child: Icon(Icons.add),
-              tooltip: 'Add Resource',
-            ),
-          );
+      floatingActionButton: FloatingActionButton(
+        onPressed: _createResourceDialog,
+        child: Icon(Icons.add),
+        tooltip: 'Add Resource',
+      ),
+    );
   }
 }

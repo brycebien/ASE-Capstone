@@ -16,9 +16,7 @@ class FirestoreService {
   }
 
   /*
-  
     CREATE
-
   */
 
   // create user
@@ -43,10 +41,26 @@ class FirestoreService {
     });
   }
 
+  Future<void> addResource(
+      {required Map<String, dynamic> resource, required String uid}) async {
+    final DocumentSnapshot userDoc = await _usersCollection.doc(uid).get();
+
+    if (!userDoc.exists) {
+      throw Exception('User not found');
+    }
+
+    final String university = userDoc.get('university');
+
+    await FirebaseFirestore.instance
+        .collection('universities')
+        .doc(university)
+        .update({
+      'resources': FieldValue.arrayUnion([resource])
+    });
+  }
+
   /*
-
     READ
-
   */
 
   // get universities
@@ -83,8 +97,9 @@ class FirestoreService {
   }
 
   // get classes
-  Future<Map<String, dynamic>> getClassesFromDatabase(
-      {required String userId}) async {
+  Future<Map<String, dynamic>> getClassesFromDatabase({
+    required String userId,
+  }) async {
     final DocumentSnapshot userDoc = await _usersCollection.doc(userId).get();
     return userDoc.data() as Map<String, dynamic>;
   }
@@ -102,10 +117,20 @@ class FirestoreService {
     return profilePicture;
   }
 
+  // get resources from university collection if exists
+  Future<List<dynamic>> getResources({String? universityId}) async {
+    if (universityId == null || universityId.isEmpty) return [];
+
+    final snapshot = await FirebaseFirestore.instance
+        .collection('universities')
+        .doc(universityId)
+        .get();
+
+    return snapshot["resources"];
+  }
+
   /*
-
     UPDATE
-
   */
 
   // update user password
@@ -139,9 +164,7 @@ class FirestoreService {
   }
 
   /*
-
-    // DELETE
-
+    DELETE
   */
 
   Future<void> deleteClassFromDatabase({
@@ -157,8 +180,4 @@ class FirestoreService {
   Future<void> deleteUserData(String userId) async {
     await _usersCollection.doc(userId).delete();
   }
-
-  getResources() {}
-
-  addResource(Map<String, Object> map) {}
 }
