@@ -10,6 +10,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'firebase_options.dart';
 import 'package:ase_capstone/themes/light_theme.dart';
 import 'package:ase_capstone/themes/dark_theme.dart';
+import 'package:ase_capstone/pages/resources_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -55,6 +56,7 @@ class _MyAppState extends State<MyApp> {
             ),
         '/map': (context) => const MapPage(),
         '/schedule': (context) => SchedulePage(),
+        '/resources': (context) => ResourcesPage(),
       },
     );
   }

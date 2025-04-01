@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+// ignore: unused_import
+import 'package:firebase_auth/firebase_auth.dart';
 
 class FirestoreService {
   final CollectionReference _usersCollection =
@@ -155,4 +157,8 @@ class FirestoreService {
   Future<void> deleteUserData(String userId) async {
     await _usersCollection.doc(userId).delete();
   }
+
+  getResources() {}
+
+  addResource(Map<String, Object> map) {}
 }
