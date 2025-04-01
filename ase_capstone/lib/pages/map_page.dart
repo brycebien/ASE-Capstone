@@ -1,6 +1,8 @@
+import 'package:ase_capstone/components/searchable_list.dart';
 import 'package:ase_capstone/components/settings_drawer.dart';
 import 'package:ase_capstone/models/directions.dart';
 import 'package:ase_capstone/models/directions_handler.dart';
+import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -18,6 +20,7 @@ class MapPage extends StatefulWidget {
 }
 
 class _MapPageState extends State<MapPage> {
+  final FirestoreService _firestoreServices = FirestoreService();
   final user = FirebaseAuth.instance.currentUser!;
   GoogleMapController? _controller;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -25,6 +28,10 @@ class _MapPageState extends State<MapPage> {
   String? _mapStyle;
   LocationData? _currentLocation;
   final Set<Marker> _markers = {};
+  bool _hasUniversity = false;
+  String? _userUniversity;
+  CameraPosition? _initialCameraPosition;
+  CameraTargetBounds? _cameraTargetBounds;
 
   final Set<String> _votedPins = {};
   LatLng? destination;
@@ -35,8 +42,97 @@ class _MapPageState extends State<MapPage> {
     super.initState();
     _getCurrentLocation(); // get the user's location
     _loadMapStyle(); // load the map's color theme (light or dark mode)
-    _listenToPins();
-    _checkExpiredPins();
+    _listenToPins(); // check for pins in the database
+    _checkExpiredPins(); // check that no pins are expired (older than 24 hrs)
+    _checkUserUniversity(); // check that he user has a university chosen
+    // _setInitialCameraPosition(); // set the initial camera position to the user's university
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // detect theme changes to update map style (other widgets change dynamically with the theme so no need to update them here)
+    if (_controller != null) {
+      _updateMapStyle(_controller!);
+    }
+
+    // detect changes to user university
+    if (_hasUniversity == true) {
+      _checkUserUniversity();
+    }
+
+    // get args passed to map page via Navigator.pushNamed
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    if (args != null) {
+      setState(() {
+        destination = args['destination'] as LatLng?;
+      });
+    }
+  }
+
+  void _setInitialCameraPosition() async {
+    // get the user's university location
+    final String universityName =
+        await _firestoreServices.getUserUniversity(userId: user.uid);
+
+    if (universityName == "") {
+      return;
+    }
+    _firestoreServices.getUniversityByName(name: universityName).then((value) {
+      setState(() {
+        _initialCameraPosition = CameraPosition(
+          target: LatLng(
+            value['location']['latitude'],
+            value['location']['longitude'],
+          ),
+          zoom: 15.5,
+          tilt: 0,
+        );
+
+        _cameraTargetBounds = CameraTargetBounds(
+          LatLngBounds(
+            southwest: LatLng(
+              value['southWestBound']['latitude'],
+              value['southWestBound']['longitude'],
+            ),
+            northeast: LatLng(
+              value['northEastBound']['latitude'],
+              value['northEastBound']['longitude'],
+            ),
+          ),
+        );
+      });
+
+      if (_controller != null) {
+        Utils.zoomToLocation(
+          location: LatLng(
+            value['location']['latitude'],
+            value['location']['longitude'],
+          ),
+          controller: _controller!,
+        );
+      }
+    });
+  }
+
+  void _checkUserUniversity() async {
+    String universityName =
+        await _firestoreServices.getUserUniversity(userId: user.uid);
+
+    if (universityName != _userUniversity) {
+      setState(() {
+        if (universityName == "") {
+          _hasUniversity = false;
+        } else {
+          _hasUniversity = true;
+          _userUniversity = universityName;
+        }
+      });
+      _setInitialCameraPosition();
+    } else {
+      return; // do nothing if the user hasn't changed their university
+    }
   }
 
   void _checkForDirections() async {
@@ -50,6 +146,13 @@ class _MapPageState extends State<MapPage> {
       );
       setState(() {
         _info = directions;
+        _markers.add(Marker(
+          markerId: MarkerId('destinationMarker'),
+          position: destination!,
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueViolet,
+          ),
+        ));
       });
     } else {
       // no destination provided
@@ -88,7 +191,9 @@ class _MapPageState extends State<MapPage> {
     try {
       // set current location to the user's location when the app starts
       location.getLocation().then((value) {
-        _currentLocation = value;
+        setState(() {
+          _currentLocation = value;
+        });
       });
 
       // update the current location when the user moves
@@ -140,29 +245,13 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
-  // detect theme changes to update map style (other widgets change dynamically with the theme so no need to update them here)
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_controller != null) {
-      _updateMapStyle(_controller!);
-    }
-
-    final args =
-        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-    if (args != null) {
-      setState(() {
-        destination = args['destination'] as LatLng?;
-      });
-      _checkForDirections();
-    }
-  }
-
   void _listenToPins() {
     FirebaseFirestore.instance.collection('pins').snapshots().listen(
       (snapshot) {
         setState(() {
-          _markers.clear(); // Clear existing markers before updating
+          _markers.removeWhere((element) =>
+              element.markerId.value !=
+              'destinationMarker'); // Clear existing markers before updating
           for (var doc in snapshot.docs) {
             final data = doc.data();
             if (data.containsKey('latitude') &&
@@ -191,10 +280,12 @@ class _MapPageState extends State<MapPage> {
         });
       },
       onError: (error) {
-        Utils.displayMessage(
-          context: context,
-          message: 'Error loading pins: $error',
-        );
+        setState(() {
+          Utils.displayMessage(
+            context: context,
+            message: 'Error loading pins: $error',
+          );
+        });
       },
     );
   }
@@ -256,16 +347,11 @@ class _MapPageState extends State<MapPage> {
                 if (nameController.text.isNotEmpty) {
                   markerTitle = nameController.text;
                 }
-                FirebaseFirestore.instance.collection('pins').add({
-                  'latitude': _currentLocation!.latitude,
-                  'longitude': _currentLocation!.longitude,
-                  'title': markerTitle,
-                  'color': markerColor
-                      .toDouble(), // Ensure color is stored as double
-                  'timestamp': FieldValue.serverTimestamp(),
-                  'yesVotes': 0,
-                  'noVotes': 0,
-                });
+                _firestoreServices.createPin(
+                  currentLocation: _currentLocation!,
+                  markerTitle: markerTitle,
+                  markerColor: markerColor,
+                );
                 Navigator.pop(context);
               },
               child: Text("Save"),
@@ -293,18 +379,28 @@ class _MapPageState extends State<MapPage> {
           content: Text("Yes: $yesVotes No: $noVotes"),
           actions: [
             TextButton(
-              onPressed: () {
-                _updateVotes(markerId, true);
+              onPressed: () async {
+                await _firestoreServices.updatePins(
+                  markerId: markerId,
+                  isYesVote: true,
+                );
                 _votedPins.add(markerId);
-                Navigator.pop(context);
+                setState(() {
+                  Navigator.pop(context);
+                });
               },
               child: Text("Yes"),
             ),
             TextButton(
-              onPressed: () {
-                _updateVotes(markerId, false);
+              onPressed: () async {
+                await _firestoreServices.updatePins(
+                  markerId: markerId,
+                  isYesVote: false,
+                );
                 _votedPins.add(markerId);
-                Navigator.pop(context);
+                setState(() {
+                  Navigator.pop(context);
+                });
               },
               child: Text("No"),
             ),
@@ -314,49 +410,21 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  void _updateVotes(String markerId, bool isYesVote) async {
-    DocumentReference docRef =
-        FirebaseFirestore.instance.collection('pins').doc(markerId);
-    FirebaseFirestore.instance.runTransaction((transaction) async {
-      DocumentSnapshot snapshot = await transaction.get(docRef);
-      if (!snapshot.exists) {
-        throw Exception("Marker does not exist!");
-      }
-
-      int newYesVotes = snapshot['yesVotes'];
-      int newNoVotes = snapshot['noVotes'];
-
-      if (isYesVote) {
-        newYesVotes += 1;
-      } else {
-        newNoVotes += 1;
-      }
-
-      if (newNoVotes > 5) {
-        transaction.delete(docRef);
-      } else {
-        transaction.update(docRef, {
-          'yesVotes': newYesVotes,
-          'noVotes': newNoVotes,
-          'lastActivity': FieldValue.serverTimestamp()
-        });
-      }
-    });
-  }
-
   void _checkExpiredPins() async {
     final now = DateTime.now();
     final expirationTime = now.subtract(Duration(hours: 24));
 
-    FirebaseFirestore.instance
-        .collection('pins')
-        .where('lastActivity', isLessThan: expirationTime)
-        .get()
-        .then((snapshot) {
-      for (var doc in snapshot.docs) {
-        doc.reference.delete();
-      }
-    }).catchError((error) {});
+    try {
+      await _firestoreServices.deleteExpiredPins(
+          expirationTime: expirationTime);
+    } catch (e) {
+      setState(() {
+        Utils.displayMessage(
+          context: context,
+          message: e.toString(),
+        );
+      });
+    }
   }
 
   void signUserOut() async {
@@ -366,6 +434,50 @@ class _MapPageState extends State<MapPage> {
     setState(() {
       Navigator.of(context).pushReplacementNamed('/');
     });
+  }
+
+  void _getDirections({required LatLng destination}) async {
+    final directions = await DirectionsHandler().getDirections(
+        origin: LatLng(
+          _currentLocation!.latitude!,
+          _currentLocation!.longitude!,
+        ),
+        destination: destination);
+    setState(() {
+      _info = directions;
+    });
+  }
+
+  void _showUniversityPicker() async {
+    List<Map<String, dynamic>> universities =
+        await _firestoreServices.getUniversities();
+    String? result;
+    if (mounted) {
+      result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SearchableList(
+            items: universities,
+            listTitle: 'Select a University',
+            keys: ['name', 'abbreviation'],
+          ),
+        ),
+      );
+    } else {
+      return;
+    }
+
+    if (result != null) {
+      await _firestoreServices.updateUserUniversity(
+        userId: user.uid,
+        university: result,
+      );
+      setState(() {
+        _hasUniversity = true;
+        _userUniversity = result;
+      });
+      _setInitialCameraPosition();
+    }
   }
 
   @override
@@ -385,62 +497,143 @@ class _MapPageState extends State<MapPage> {
           ? Center(
               child: CircularProgressIndicator(),
             )
-          : Stack(
-              children: [
-                GoogleMap(
-                  onMapCreated: _onMapCreated,
-                  style: _mapStyle,
-                  initialCameraPosition: CameraPosition(
-                    target: LatLng(
-                      _currentLocation!.latitude!,
-                      _currentLocation!.longitude!,
+          : !_hasUniversity
+              ? AlertDialog(
+                  title: Text('No University Selected'),
+                  content: Text('Please select a university to use the map.'),
+                  actions: [
+                    TextButton(
+                      onPressed: () async {
+                        _showUniversityPicker();
+                      },
+                      child: Text('Universities'),
                     ),
-                    zoom: 15.5,
-                    tilt: 0,
-                  ),
-                  rotateGesturesEnabled: true,
-                  myLocationButtonEnabled: true,
-                  zoomControlsEnabled:
-                      false, // Disable zoom controls (+/- buttons)
-                  myLocationEnabled: true,
-                  cameraTargetBounds: CameraTargetBounds(
-                    LatLngBounds(
-                      southwest: LatLng(39.028, -84.467),
-                      northeast: LatLng(39.038, -84.459),
-                    ),
-                  ),
-                  minMaxZoomPreference: MinMaxZoomPreference(15.0, 20.0),
-                  polylines: {
-                    if (_info != null)
-                      Polyline(
-                        polylineId: PolylineId('route'),
-                        points: _info!.polylineCoordinates
-                            .map((e) => LatLng(e.latitude, e.longitude))
-                            .toList(),
-                        color: Colors.yellow,
-                        width: 5,
+                  ],
+                )
+              : Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    (_initialCameraPosition == null ||
+                            _cameraTargetBounds == null)
+                        ? Center(child: CircularProgressIndicator())
+                        : GoogleMap(
+                            onMapCreated: _onMapCreated,
+                            style: _mapStyle,
+                            initialCameraPosition: _initialCameraPosition!,
+                            // initialCameraPosition: CameraPosition(
+                            //   target: LatLng(
+                            //     _currentLocation!.latitude!,
+                            //     _currentLocation!.longitude!,
+                            //   ),
+                            //   zoom: 15.5,
+                            //   tilt: 0,
+                            // ),
+                            rotateGesturesEnabled: true,
+                            myLocationButtonEnabled: true,
+                            zoomControlsEnabled:
+                                false, // Disable zoom controls (+/- buttons)
+                            myLocationEnabled: true,
+                            cameraTargetBounds: _cameraTargetBounds!,
+                            // cameraTargetBounds: CameraTargetBounds(
+                            //   LatLngBounds(
+                            //     southwest: LatLng(39.028, -84.467),
+                            //     northeast: LatLng(39.038, -84.459),
+                            //   ),
+                            // ),
+                            minMaxZoomPreference:
+                                MinMaxZoomPreference(15.0, 20.0),
+                            polylines: {
+                              if (_info != null)
+                                Polyline(
+                                  polylineId: PolylineId('route'),
+                                  points: _info!.polylineCoordinates
+                                      .map((e) =>
+                                          LatLng(e.latitude, e.longitude))
+                                      .toList(),
+                                  color: Colors.yellow,
+                                  width: 5,
+                                ),
+                            },
+                            markers: _markers,
+                            onLongPress: (LatLng tappedPoint) {
+                              _getDirections(destination: tappedPoint);
+                              _markers.add(
+                                Marker(
+                                  markerId: MarkerId('destinationMarker'),
+                                  position: tappedPoint,
+                                  icon: BitmapDescriptor.defaultMarkerWithHue(
+                                    BitmapDescriptor.hueViolet,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                    // Report event button
+                    Positioned(
+                      bottom: 25,
+                      right: 16,
+                      child: FloatingActionButton(
+                        onPressed: () {
+                          if (_currentLocation != null) {
+                            _addEventMarker(LatLng(
+                              _currentLocation!.latitude!,
+                              _currentLocation!.longitude!,
+                            ));
+                          }
+                        },
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        child: Icon(Icons.add_location_alt),
                       ),
-                  },
-                  markers: _markers,
+                    ),
+                    // Cancel directions button
+                    if (_info != null)
+                      Positioned(
+                        bottom: 25,
+                        left: 16,
+                        child: FloatingActionButton(
+                          onPressed: () {
+                            setState(() {
+                              _info = null;
+                              destination = null;
+                              _markers.removeWhere((element) =>
+                                  element.markerId.value ==
+                                  'destinationMarker');
+                            });
+                          },
+                          backgroundColor:
+                              Theme.of(context).colorScheme.primary,
+                          child: Icon(Icons.delete),
+                        ),
+                      ),
+                    if (_info != null)
+                      // Display distance and time
+                      Positioned(
+                        top: 20,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                              vertical: 10, horizontal: 20),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primary,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 1),
+                                blurRadius: 6,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            'Distance: ${_info!.totalDistance}\nTime: ${_info!.totalDuration}',
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
-                Positioned(
-                  bottom: 16,
-                  right: 16,
-                  child: FloatingActionButton(
-                    onPressed: () {
-                      if (_currentLocation != null) {
-                        _addEventMarker(LatLng(
-                          _currentLocation!.latitude!,
-                          _currentLocation!.longitude!,
-                        ));
-                      }
-                    },
-                    backgroundColor: Colors.orange,
-                    child: Icon(Icons.add_location_alt),
-                  ),
-                ),
-              ],
-            ),
     );
   }
 }
