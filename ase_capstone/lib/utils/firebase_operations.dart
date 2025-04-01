@@ -43,6 +43,9 @@ class FirestoreService {
     });
   }
 
+  // add Resources
+  addResource(Map<String, Object> map) {}
+
   /*
 
     READ
@@ -102,6 +105,9 @@ class FirestoreService {
     return profilePicture;
   }
 
+  // get resources
+  getResources() {}
+
   /*
 
     UPDATE
@@ -157,8 +163,4 @@ class FirestoreService {
   Future<void> deleteUserData(String userId) async {
     await _usersCollection.doc(userId).delete();
   }
-
-  getResources() {}
-
-  addResource(Map<String, Object> map) {}
 }

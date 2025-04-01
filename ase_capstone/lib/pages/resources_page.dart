@@ -26,9 +26,10 @@ class _ResourcesPageState extends State<ResourcesPage> {
   }
 
   Future<void> _getResources() async {
-    final resources = await _firestoreService.getResources();
+    // final resources = await _firestoreService.getResources();
     setState(() {
-      _resources = resources;
+      // _resources = resources;
+      _resources.add({'title': 'world', 'type': 'hello'});
       _filteredResources = _resources;
     });
   }
@@ -104,7 +105,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
 
   @override
   Widget build(BuildContext context) {
-    return _filteredResources.isEmpty
+    return _resources.isEmpty
         ? const Center(child: CircularProgressIndicator())
         : Scaffold(
             appBar: AppBar(
