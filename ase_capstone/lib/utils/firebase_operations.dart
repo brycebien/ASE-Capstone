@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:location/location.dart';
 
 class FirestoreService {
@@ -17,7 +18,7 @@ class FirestoreService {
   /*
   
     CREATE
-
+    
   */
 
   // create user
@@ -80,10 +81,27 @@ class FirestoreService {
         .set(university);
   }
 
+Future<void> addResource(
+      {required Map<String, dynamic> resource, required String uid}) async {
+    final DocumentSnapshot userDoc = await _usersCollection.doc(uid).get();
+    if (!userDoc.exists) {
+      throw Exception('User not found');
+    }
+
+    final String university = userDoc.get('university');
+
+    await FirebaseFirestore.instance
+        .collection('universities')
+        .doc(university)
+        .update({
+      'resources': FieldValue.arrayUnion([resource])
+    });
+  }
+
   /*
-
+  
     READ
-
+    
   */
 
   // get universities
@@ -149,8 +167,9 @@ class FirestoreService {
   }
 
   // get classes
-  Future<Map<String, dynamic>> getClassesFromDatabase(
-      {required String userId}) async {
+  Future<Map<String, dynamic>> getClassesFromDatabase({
+    required String userId,
+  }) async {
     final DocumentSnapshot userDoc = await _usersCollection.doc(userId).get();
     return userDoc.data() as Map<String, dynamic>;
   }
@@ -167,7 +186,7 @@ class FirestoreService {
     final String profilePicture = userDoc.get('profilePicture');
     return profilePicture;
   }
-
+  
   // check if the user is an adimin
   Future<bool> isAdmin({required String userId}) async {
     final DocumentSnapshot userDoc = await _usersCollection.doc(userId).get();
@@ -178,11 +197,21 @@ class FirestoreService {
       return false; // Return false if the field doesn't exist
     }
   }
+// get resources from university collection if exists
+  Future<List<dynamic>> getResources({String? universityId}) async {
+    if (universityId == null || universityId.isEmpty) return [];
+    final snapshot = await FirebaseFirestore.instance
+        .collection('universities')
+        .doc(universityId)
+        .get();
+
+    return snapshot["resources"];
+  }
 
   /*
-
+  
     UPDATE
-
+    
   */
 
   // update user password
@@ -250,9 +279,9 @@ class FirestoreService {
   }
 
   /*
-
-    // DELETE
-
+  
+    DELETE
+    
   */
 
   Future<void> deleteClassFromDatabase({

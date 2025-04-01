@@ -605,6 +605,42 @@ class _MapPageState extends State<MapPage> {
                           child: Icon(Icons.delete),
                         ),
                       ),
+                  },
+                  markers: _markers,
+                ),
+                Positioned(
+                  bottom: 16,
+                  right: 16,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      // Resources Button
+                      FloatingActionButton(
+                        heroTag: 'resourcesBtn',
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/resources');
+                        },
+                        child: Icon(Icons.menu_book),
+                        tooltip: 'View Campus Resources',
+                      ),
+                      SizedBox(height: 12), // space between buttons
+
+                      FloatingActionButton(
+                        heroTag: 'eventBtn',
+                        onPressed: () {
+                          if (_currentLocation != null) {
+                            _addEventMarker(LatLng(
+                              _currentLocation!.latitude!,
+                              _currentLocation!.longitude!,
+                            ));
+                          }
+                        },
+                        child: Icon(Icons.add_location_alt),
+                        tooltip: 'Report Event',
+                      ),
+                    ],
+                  ),
                     if (_info != null)
                       // Display distance and time
                       Positioned(
