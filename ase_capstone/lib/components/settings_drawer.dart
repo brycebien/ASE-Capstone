@@ -103,6 +103,16 @@ class SettingsDrawerState extends State<SettingsDrawer> {
               _showUniversitySelectionDialog();
             },
           ),
+          ListTile(
+            leading: Icon(Icons.inbox),
+            title: Text('Inbox'),
+            onTap: () {
+              Navigator.pushNamed(
+                context,
+                '/inbox',
+              );
+            },
+          ),
           if (_isAdmin)
             ListTile(
               leading: Icon(Icons.admin_panel_settings),
