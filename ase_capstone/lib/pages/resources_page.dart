@@ -35,7 +35,6 @@ class _ResourcesPageState extends State<ResourcesPage> {
 
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
-      print("No user signed in.");
       setState(() => isLoading = false);
       return;
     }
@@ -44,7 +43,6 @@ class _ResourcesPageState extends State<ResourcesPage> {
     final universityId = user['university'] as String?;
 
     if (universityId == null) {
-      print(" User has no university set.");
       setState(() => isLoading = false);
       return;
     }
@@ -185,8 +183,8 @@ class _ResourcesPageState extends State<ResourcesPage> {
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: _createResourceDialog,
-        child: Icon(Icons.add),
         tooltip: 'Add Resource',
+        child: Icon(Icons.add),
       ),
     );
   }

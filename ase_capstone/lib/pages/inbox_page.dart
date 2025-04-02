@@ -30,13 +30,16 @@ class _InboxPageState extends State<InboxPage> {
     final List<Map<String, dynamic>> upcomingNotifications = [];
     for (var userClass in userClasses['classes'] ?? []) {
       final startTime = Utils.parseTimeOfDay(userClass['startTime']);
-      final notificationTime = Utils.subtractMinutesFromTimeOfDay(startTime, 10);
+      final notificationTime =
+          Utils.subtractMinutesFromTimeOfDay(startTime, 10);
 
       if (Utils.isTimeInFuture(now, notificationTime)) {
-        upcomingNotifications.add({
-          'title': userClass['name'],
-          'time': notificationTime.format(context),
-          'details': '${userClass['building']} - ${userClass['room']}',
+        setState(() {
+          upcomingNotifications.add({
+            'title': userClass['name'],
+            'time': notificationTime.format(context),
+            'details': '${userClass['building']} - ${userClass['room']}',
+          });
         });
       }
     }
