@@ -584,13 +584,21 @@ class _MapEditorState extends State<MapEditor> {
 
   @override
   Widget build(BuildContext context) {
-    return _isLoading
-        ? const Center(child: CircularProgressIndicator())
-        : Scaffold(
-            appBar: AppBar(
-              title: Text('Editing: ${_university?['abbreviation'] ?? ''}'),
-            ),
-            body: Padding(
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Editing: ${_university?['abbreviation'] ?? ''}'),
+      ),
+      body: _isLoading
+          ? const Center(
+              child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 20),
+                Text('Loading university assets... this may take some time')
+              ],
+            ))
+          : Padding(
               padding: const EdgeInsets.fromLTRB(8, 20, 8, 8),
               child: Stack(
                 children: [
@@ -822,6 +830,6 @@ class _MapEditorState extends State<MapEditor> {
                 ],
               ),
             ),
-          );
+    );
   }
 }
