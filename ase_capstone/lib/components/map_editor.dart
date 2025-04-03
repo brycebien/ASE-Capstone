@@ -555,8 +555,7 @@ class _MapEditorState extends State<MapEditor> {
     // show success dialog
     _showSuccessDialog(
       title: '${_university!['name']} Updated Successfully!',
-      message:
-          '${_university!['name']} has been updated successfully.\n\nYou can edit this university again in the future.',
+      message: '${_university!['name']} has been updated successfully!',
     );
   }
 
