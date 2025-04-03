@@ -96,10 +96,12 @@ class _SearchableListState extends State<SearchableList> {
                           child: ListTile(
                             title: Text(_foundItems[index][widget.keys[0]]),
                             subtitle: Text(_getItemsSubtitle(index: index)),
-                            // subtitle: Text(_foundItems[index][widget.keys[1]]),
                             trailing: widget.trailing ??
                                 IconButton(
-                                  icon: const Icon(Icons.done),
+                                  icon: Icon(
+                                    Icons.arrow_forward_ios,
+                                    color: Colors.blue[400],
+                                  ),
                                   onPressed: () {
                                     Navigator.of(context).pop(
                                         _foundItems[index][widget.keys[0]]);
