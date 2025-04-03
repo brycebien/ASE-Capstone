@@ -30,10 +30,6 @@ class _MapEditorState extends State<MapEditor> {
   String? _currentInstructions;
   final TextEditingController _buildingNameController = TextEditingController();
   final TextEditingController _buildingCodeController = TextEditingController();
-  final TextEditingController _universityNameController =
-      TextEditingController();
-  final TextEditingController _universityAbbreviationController =
-      TextEditingController();
   final TextEditingController _buildingAddressController =
       TextEditingController();
   List<dynamic> _buildings = [];
@@ -500,72 +496,6 @@ class _MapEditorState extends State<MapEditor> {
   }
 
   void _saveUniversity() async {
-    // ask user for university name and abbreviation
-    // showDialog(
-    //     context: context,
-    //     builder: (BuildContext context) {
-    //       return AlertDialog(
-    //         title: const Text('Save University'),
-    //         content: Column(
-    //           mainAxisSize: MainAxisSize.min,
-    //           children: [
-    //             MyTextField(
-    //               controller: _universityNameController,
-    //               hintText: 'University Name',
-    //               obscureText: false,
-    //             ),
-    //             SizedBox(height: 10),
-    //             MyTextField(
-    //               controller: _universityAbbreviationController,
-    //               hintText: 'University Abbreviation',
-    //               obscureText: false,
-    //             ),
-    //           ],
-    //         ),
-    //         actions: [
-    //           TextButton(
-    //             onPressed: () {
-    //               setState(() {
-    //                 _universityAbbreviationController.clear();
-    //                 _universityNameController.clear();
-    //               });
-    //               Navigator.of(context).pop();
-    //             },
-    //             child: const Text('Cancel'),
-    //           ),
-    //           TextButton(
-    //             onPressed: () async {
-    //               if (_universityNameController.text.isEmpty ||
-    //                   _universityAbbreviationController.text.isEmpty) {
-    //                 Utils.displayMessage(
-    //                   context: context,
-    //                   message: 'Please fill out all fields.',
-    //                 );
-    //               } else {
-    //                 // convert building addresses to doubles for firestore
-    //                 setState(() {
-    //                   for (var building in _buildings) {
-    //                     if (building['address'] is Map<String, dynamic>) {
-    //                       // if the address has already been converted skip it
-    //                       continue;
-    //                     } else {
-    //                       LatLng address = building['address'] as LatLng;
-    //                       building['address'] = {
-    //                         'latitude': address.latitude.toDouble(),
-    //                         'longitude': address.longitude.toDouble(),
-    //                       };
-    //                     }
-    //                   }
-    //                 });
-
-    //               }
-    //             },
-    //             child: const Text('Save'),
-    //           ),
-    //         ],
-    //       );
-    //     });
-
     final navigator = Navigator.of(context);
 
     // SAVE UNIVERSITY TO FIRESTORE
