@@ -50,7 +50,10 @@ class _SearchableListState extends State<SearchableList> {
     String subtitle = "";
     if (widget.keys.length > 1) {
       for (var i = 1; i < widget.keys.length; i++) {
-        subtitle += '${_foundItems[index][widget.keys[i]]}\n';
+        subtitle += '${_foundItems[index][widget.keys[i]]}';
+        if (i + 1 != widget.keys.length) {
+          subtitle += '\n'; // add a new line if not the last key
+        }
       }
       return subtitle;
     } else {
