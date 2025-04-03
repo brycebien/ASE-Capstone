@@ -278,6 +278,17 @@ class FirestoreService {
     });
   }
 
+  // update university
+  Future<void> updateUniversity({
+    required String name,
+    required Map<String, dynamic> university,
+  }) async {
+    await FirebaseFirestore.instance
+        .collection('universities')
+        .doc(name)
+        .update(university);
+  }
+
   /*
   
     DELETE
