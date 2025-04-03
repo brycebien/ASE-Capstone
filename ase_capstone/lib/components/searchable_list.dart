@@ -46,6 +46,18 @@ class _SearchableListState extends State<SearchableList> {
     });
   }
 
+  String _getItemsSubtitle({required int index}) {
+    String subtitle = "";
+    if (widget.keys.length > 1) {
+      for (var i = 1; i < widget.keys.length; i++) {
+        subtitle += '${_foundItems[index][widget.keys[i]]}\n';
+      }
+      return subtitle;
+    } else {
+      return ''; // return empty string if there is only 1 key per item
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -80,7 +92,8 @@ class _SearchableListState extends State<SearchableList> {
                           elevation: 8,
                           child: ListTile(
                             title: Text(_foundItems[index][widget.keys[0]]),
-                            subtitle: Text(_foundItems[index][widget.keys[1]]),
+                            subtitle: Text(_getItemsSubtitle(index: index)),
+                            // subtitle: Text(_foundItems[index][widget.keys[1]]),
                             trailing: widget.trailing ??
                                 IconButton(
                                   icon: const Icon(Icons.done),

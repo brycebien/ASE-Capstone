@@ -785,7 +785,7 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                               Text('Buildings: (${_buildings.length})'),
                               IconButton(
                                 onPressed: () async {
-                                  Map<String, dynamic> result =
+                                  Map<String, dynamic>? result =
                                       await showDialog(
                                     context: context,
                                     builder: (BuildContext context) {
@@ -795,8 +795,9 @@ class _CreateUniversityPageState extends State<CreateUniversityPage> {
                                       );
                                     },
                                   );
-
-                                  _handleBuildingCallBack(result: result);
+                                  if (result != null) {
+                                    _handleBuildingCallBack(result: result);
+                                  }
 
                                   // clear instructions for buildings
                                   if (_isTutorial) {

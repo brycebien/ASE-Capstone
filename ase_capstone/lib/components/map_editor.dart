@@ -667,7 +667,7 @@ class _MapEditorState extends State<MapEditor> {
                                     Text('Buildings: (${_buildings.length})'),
                                     IconButton(
                                       onPressed: () async {
-                                        Map<String, dynamic> result =
+                                        Map<String, dynamic>? result =
                                             await showDialog(
                                           context: context,
                                           builder: (BuildContext context) {
@@ -676,7 +676,11 @@ class _MapEditorState extends State<MapEditor> {
                                             );
                                           },
                                         );
-                                        _handleBuildingCallBack(result: result);
+                                        if (result != null) {
+                                          _handleBuildingCallBack(
+                                            result: result,
+                                          );
+                                        }
                                       },
                                       icon: Icon(
                                         Icons.arrow_forward_ios,
