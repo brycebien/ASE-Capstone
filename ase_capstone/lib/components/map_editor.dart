@@ -1,3 +1,4 @@
+import 'package:ase_capstone/components/bottom_dialog.dart';
 import 'package:ase_capstone/components/search_buildings.dart';
 import 'package:ase_capstone/components/textfield.dart';
 import 'package:ase_capstone/models/directions_handler.dart';
@@ -7,11 +8,11 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class MapEditor extends StatefulWidget {
-  final Map<String, dynamic> university;
+  final Map<String, dynamic>? university;
 
   const MapEditor({
     super.key,
-    required this.university,
+    this.university,
   });
 
   @override
@@ -22,25 +23,82 @@ class _MapEditorState extends State<MapEditor> {
   final FirestoreService _firestoreServices = FirestoreService();
   GoogleMapController? _controller;
   bool _isLoading = true;
-  final List<Marker> _buildingMarkers = [];
+
+  // university variables
   Map<String, dynamic>? _university;
   LatLng? _universityLocation;
   LatLng? _southWestBound;
   LatLng? _northEastBound;
   String? _currentInstructions;
+
+  // new building controllers
   final TextEditingController _buildingNameController = TextEditingController();
   final TextEditingController _buildingCodeController = TextEditingController();
   final TextEditingController _buildingAddressController =
       TextEditingController();
+
   List<dynamic> _buildings = [];
+  final List<Marker> _buildingMarkers = [];
   MinMaxZoomPreference? _zoomPreference;
+
+  // VARIABLES FOR CREATING A NEW UNIVERSITY
+  late bool _isCreate;
+  bool _isTutorial = false;
+  int _tutorialStep = 0;
+  final List<Map<String, dynamic>> _tutorialSteps = [
+    {
+      'step': 1,
+      'message': 'Tap on the map to select a location for the university.',
+    },
+    {
+      'step': 2,
+      'message':
+          'Tap the bottom left corner of the university to set the camera\'s south west boundary.',
+    },
+    {
+      'step': 3,
+      'message':
+          'Now, tap the top right corner of the university to set the camera\'s north east boundary.',
+    },
+    {
+      'step': 4,
+      'message':
+          'Long press on the map to create a building. You can also edit or delete buildings by tapping on them.',
+    },
+    {
+      'step': 5,
+      'message':
+          'To see the list of buildings you created press the arrow next to the buildings count on the bottm right of the screen.',
+    },
+    {
+      'step': 6,
+      'message':
+          'You have successfully completed the tutorial! You can now save the university, or continue creating buildings.',
+    }
+  ];
+  // save university controllers
+  final TextEditingController _universityNameController =
+      TextEditingController();
+  final TextEditingController _universityAbbrevController =
+      TextEditingController();
 
   @override
   void initState() {
     setState(() {
       _university = widget.university;
+      if (_university == null) {
+        _isCreate = true;
+      } else {
+        _isCreate = false;
+      }
     });
-    _setUniversityVariables();
+    if (!_isCreate) {
+      _setUniversityVariables();
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+    }
     super.initState();
   }
 
@@ -111,11 +169,98 @@ class _MapEditorState extends State<MapEditor> {
 
   void _onMapCreated(GoogleMapController controller) {
     _controller = controller;
-    Utils.zoomToLocation(
-      location: _universityLocation!,
-      controller: controller,
-    );
+    if (!_isCreate) {
+      Utils.zoomToLocation(
+        location: _universityLocation!,
+        controller: controller,
+      );
+    } else {
+      if (mounted) {
+        showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return BottomDialog(
+                message: 'Would you like to start the tutorial?',
+                onResponse: _startTutoral,
+              );
+            });
+      }
+    }
   }
+
+  ////////////////////////////////////
+  ///       TUTORIAL FUNCTIONS    ///
+  ////////////////////////////////////
+  void _startTutoral(bool start) async {
+    setState(() {
+      _isTutorial = start;
+    });
+    if (start) {
+      await _showStartTutorialDialog();
+      setState(() {
+        _tutorialStep = 1;
+        _currentInstructions = _tutorialSteps
+            .where((step) => step['step'] == _tutorialStep)
+            .first['message'];
+      });
+    }
+  }
+
+  Future<void> _showStartTutorialDialog() async {
+    return showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Welcome to the Create University Page!'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Welcome to the Create University Page. This page will help you create a university map. Follow the instructions at the top of the screen to get started!',
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        });
+  }
+
+  void _startBuildingTutorial() {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Set University Buildings'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Next, long press on the map to create a building.',
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        });
+  }
+
+  //////////////////////////////////
+  ///   END TUTORIAL FUNCTIONS   ///
+  //////////////////////////////////
 
   void _showSuccessDialog({
     required String title,
@@ -159,6 +304,12 @@ class _MapEditorState extends State<MapEditor> {
               ),
             ),
           );
+          if (_isTutorial) {
+            _tutorialStep++;
+            _currentInstructions = _tutorialSteps
+                .where((step) => step['step'] == _tutorialStep)
+                .first['message'];
+          }
         });
       } else if (_southWestBound != null && _northEastBound == null) {
         // check to make sure north east bound is north and east of south west bound
@@ -178,9 +329,54 @@ class _MapEditorState extends State<MapEditor> {
           _buildingMarkers.removeWhere(
             (marker) => marker.markerId == MarkerId('southwest-bound'),
           );
+          if (_isTutorial) {
+            _tutorialStep++;
+            _currentInstructions = _tutorialSteps
+                .where((step) => step['step'] == _tutorialStep)
+                .first['message'];
+          }
         });
+        if (_isTutorial) {
+          _showSuccessDialog(
+            title: 'You successfully set the camera bounds for the map!',
+            message: 'You have successfully set the camera\'s boundaries.',
+            callBack: _startBuildingTutorial,
+          );
+        }
       }
     } else {
+      if (_isTutorial) {
+        // Setting university location
+        showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text('Location Selected Successfully'),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                        'You have selected a location for the university.'),
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Utils.zoomToLocation(
+                          location: _universityLocation!,
+                          controller: _controller!,
+                          zoom: 14);
+                      _setUniversityBounds();
+                    },
+                    child: const Text('OK'),
+                  ),
+                ],
+              );
+            });
+      }
+
+      // set and zoom to university location
       setState(() {
         _universityLocation = location;
         Utils.zoomToLocation(
@@ -188,6 +384,13 @@ class _MapEditorState extends State<MapEditor> {
           controller: _controller!,
           zoom: 14,
         );
+
+        if (_isTutorial) {
+          _tutorialStep++;
+          _currentInstructions = _tutorialSteps
+              .where((step) => step['step'] == _tutorialStep)
+              .first['message'];
+        }
       });
     }
   }
@@ -358,6 +561,16 @@ class _MapEditorState extends State<MapEditor> {
                         _buildingCodeController.clear();
                         _buildingAddressController.clear();
                       }
+
+                      // set instruction after first building is created
+                      if (_isTutorial) {
+                        setState(() {
+                          _tutorialStep++;
+                          _currentInstructions = _tutorialSteps
+                              .where((step) => step['step'] == _tutorialStep)
+                              .first['message'];
+                        });
+                      }
                     });
                   },
                   child: const Text('Create'),
@@ -497,25 +710,172 @@ class _MapEditorState extends State<MapEditor> {
 
   void _saveUniversity() async {
     final navigator = Navigator.of(context);
+    if (_isCreate) {
+      // ask user for university name and abbreviation
+      await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Save University'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  MyTextField(
+                    controller: _universityNameController,
+                    hintText: 'University Name',
+                    obscureText: false,
+                  ),
+                  SizedBox(height: 10),
+                  MyTextField(
+                    controller: _universityAbbrevController,
+                    hintText: 'University Abbreviation',
+                    obscureText: false,
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _universityAbbrevController.clear();
+                      _universityNameController.clear();
+                    });
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    if (_universityNameController.text.isEmpty ||
+                        _universityAbbrevController.text.isEmpty) {
+                      Utils.displayMessage(
+                        context: context,
+                        message: 'Please fill out all fields.',
+                      );
+                    } else {
+                      Navigator.of(context).pop();
+                      // convert building addresses to doubles for firestore
+                      // setState(() {
+                      //   for (var building in _buildings) {
+                      //     if (building['address'] is Map<String, dynamic>) {
+                      //       // if the address has already been converted skip it
+                      //       continue;
+                      //     } else {
+                      //       LatLng address = building['address'] as LatLng;
+                      //       building['address'] = {
+                      //         'latitude': address.latitude.toDouble(),
+                      //         'longitude': address.longitude.toDouble(),
+                      //       };
+                      //     }
+                      //   }
+                      // });
+
+                      // final navigator = Navigator.of(context);
+
+                      // // SAVE UNIVERSITY TO FIRESTORE
+                      // try {
+                      //   await _firestoreServices.createUniversity(
+                      //     university: {
+                      //       'name': _universityNameController.text,
+                      //       'abbreviation': _universityAbbrevController.text,
+                      //       'location': {
+                      //         'latitude':
+                      //             _universityLocation!.latitude.toDouble(),
+                      //         'longitude':
+                      //             _universityLocation!.longitude.toDouble()
+                      //       },
+                      //       'southWestBound': {
+                      //         'latitude': _southWestBound!.latitude.toDouble(),
+                      //         'longitude': _southWestBound!.longitude.toDouble()
+                      //       },
+                      //       'northEastBound': {
+                      //         'latitude': _northEastBound!.latitude.toDouble(),
+                      //         'longitude': _northEastBound!.longitude.toDouble()
+                      //       },
+                      //       'buildings': _buildings,
+                      //     },
+                      //   );
+                      // } catch (e) {
+                      //   navigator.pop();
+                      //   setState(() {
+                      //     Utils.displayMessage(
+                      //       context: context,
+                      //       message: 'Error creating university: ${e.toString()}',
+                      //     );
+                      //   });
+                      //   return;
+                      // }
+
+                      // // send the user back to the development page
+                      // navigator.popUntil(
+                      //     (route) => route.settings.name == '/development-page');
+                      // navigator.pushReplacementNamed('/development-page');
+
+                      // // show success dialog
+                      // _showSuccessDialog(
+                      //   title: 'University Created Successfully!',
+                      //   message:
+                      //       'Your university has been created successfully. You can now view it on the development page.',
+                      // );
+                    }
+                  },
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          });
+    } else {
+      // show confirm dialog
+    }
 
     // SAVE UNIVERSITY TO FIRESTORE
-    if (_university != null) {
-      // convert building addresses to doubles for firestore
-      setState(() {
-        for (var building in _buildings) {
-          if (building['address'] is Map<String, dynamic>) {
-            // if the address has already been converted skip it
-            continue;
-          } else {
-            LatLng address = building['address'] as LatLng;
-            building['address'] = {
-              'latitude': address.latitude.toDouble(),
-              'longitude': address.longitude.toDouble(),
-            };
-          }
+    // convert building addresses to doubles for firestore
+    setState(() {
+      for (var building in _buildings) {
+        if (building['address'] is Map<String, dynamic>) {
+          // if the address has already been converted skip it
+          continue;
+        } else {
+          LatLng address = building['address'] as LatLng;
+          building['address'] = {
+            'latitude': address.latitude.toDouble(),
+            'longitude': address.longitude.toDouble(),
+          };
         }
-      });
-
+      }
+    });
+    if (_isCreate) {
+      try {
+        await _firestoreServices.createUniversity(
+          university: {
+            'name': _universityNameController.text,
+            'abbreviation': _universityAbbrevController.text,
+            'location': {
+              'latitude': _universityLocation!.latitude.toDouble(),
+              'longitude': _universityLocation!.longitude.toDouble()
+            },
+            'southWestBound': {
+              'latitude': _southWestBound!.latitude.toDouble(),
+              'longitude': _southWestBound!.longitude.toDouble()
+            },
+            'northEastBound': {
+              'latitude': _northEastBound!.latitude.toDouble(),
+              'longitude': _northEastBound!.longitude.toDouble()
+            },
+            'buildings': _buildings,
+          },
+        );
+      } catch (e) {
+        navigator.pop();
+        setState(() {
+          Utils.displayMessage(
+            context: context,
+            message: 'Error creating university: ${e.toString()}',
+          );
+        });
+        return;
+      }
+    } else {
       try {
         await _firestoreServices.updateUniversity(
           name: _university!['name'],
@@ -541,7 +901,7 @@ class _MapEditorState extends State<MapEditor> {
         setState(() {
           Utils.displayMessage(
             context: context,
-            message: 'Error creating university: ${e.toString()}',
+            message: 'Error saving university: ${e.toString()}',
           );
         });
         return;
@@ -552,11 +912,20 @@ class _MapEditorState extends State<MapEditor> {
     navigator.popUntil((route) => route.settings.name == '/development-page');
     navigator.pushReplacementNamed('/development-page');
 
-    // show success dialog
-    _showSuccessDialog(
-      title: '${_university!['name']} Updated Successfully!',
-      message: '${_university!['name']} has been updated successfully!',
-    );
+    if (_isCreate) {
+      // show create success dialog
+      _showSuccessDialog(
+        title: 'University Created Successfully!',
+        message:
+            'Your university has been created successfully. You can now view it on the development page.',
+      );
+    } else {
+      // show edit success dialog
+      _showSuccessDialog(
+        title: '${_university!['name']} Updated Successfully!',
+        message: '${_university!['name']} has been updated successfully!',
+      );
+    }
   }
 
   void _handleBuildingCallBack({required Map<String, dynamic> result}) {
@@ -586,7 +955,9 @@ class _MapEditorState extends State<MapEditor> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Editing: ${_university?['abbreviation'] ?? ''}'),
+        title: _isCreate
+            ? Text('Create Unversity')
+            : Text('Editing: ${_university?['abbreviation'] ?? ''}'),
       ),
       body: _isLoading
           ? const Center(
@@ -639,7 +1010,7 @@ class _MapEditorState extends State<MapEditor> {
                           ),
                         ),
                   // SAVE BUTTON
-                  _buildings.isNotEmpty
+                  _buildings.isNotEmpty && !_isTutorial
                       ? Positioned(
                           top: 10,
                           right: 10,
@@ -673,6 +1044,7 @@ class _MapEditorState extends State<MapEditor> {
                                           builder: (BuildContext context) {
                                             return SearchBuildings(
                                               buildings: _buildings,
+                                              isTutorial: _isTutorial,
                                             );
                                           },
                                         );
@@ -680,6 +1052,24 @@ class _MapEditorState extends State<MapEditor> {
                                           _handleBuildingCallBack(
                                             result: result,
                                           );
+                                        }
+
+                                        // clear instructions for buildings
+                                        if (_isTutorial) {
+                                          setState(() {
+                                            _tutorialStep++;
+                                            _currentInstructions = null;
+                                            _showSuccessDialog(
+                                              title:
+                                                  'Thank you for completing the tutorial!',
+                                              message: _tutorialSteps
+                                                  .where((step) =>
+                                                      step['step'] ==
+                                                      _tutorialStep)
+                                                  .first['message'],
+                                            );
+                                            _isTutorial = false;
+                                          });
                                         }
                                       },
                                       icon: Icon(
