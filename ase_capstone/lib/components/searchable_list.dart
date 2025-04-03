@@ -4,11 +4,13 @@ class SearchableList extends StatefulWidget {
   final List<Map<String, dynamic>> items;
   final String listTitle;
   final List<String> keys;
+  final Widget? trailing;
   const SearchableList({
     super.key,
     required this.items,
     required this.listTitle,
     required this.keys,
+    this.trailing,
   });
 
   @override
@@ -40,10 +42,6 @@ class _SearchableListState extends State<SearchableList> {
           }
         }
         return false;
-        // final name = item['name'].toLowerCase();
-        // final abbreviation = item['abbreviation'].toLowerCase();
-        // final searchLower = query.toLowerCase();
-        // return name.contains(searchLower) || abbreviation.contains(searchLower);
       }).toList();
     });
   }
@@ -83,31 +81,16 @@ class _SearchableListState extends State<SearchableList> {
                           child: ListTile(
                             title: Text(_foundItems[index][widget.keys[0]]),
                             subtitle: Text(_foundItems[index][widget.keys[1]]),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.done),
-                              onPressed: () {
-                                Navigator.of(context)
-                                    .pop(_foundItems[index][widget.keys[0]]);
-                              },
-                            ),
+                            trailing: widget.trailing ??
+                                IconButton(
+                                  icon: const Icon(Icons.done),
+                                  onPressed: () {
+                                    Navigator.of(context).pop(
+                                        _foundItems[index][widget.keys[0]]);
+                                  },
+                                ),
                           ),
-                        )
-                        // child: Card(
-                        //   key: ValueKey(_foundItems[index]['name']),
-                        //   elevation: 8,
-                        //   child: ListTile(
-                        //     title: Text(_foundItems[index]['name']),
-                        //     subtitle: Text(_foundItems[index]['abbreviation']),
-                        //     trailing: IconButton(
-                        //       icon: Icon(Icons.done),
-                        //       onPressed: () {
-                        //         Navigator.of(context)
-                        //             .pop(_foundItems[index]['name']);
-                        //       },
-                        //     ),
-                        //   ),
-                        // ),
-                        ),
+                        )),
                     SizedBox(height: 10)
                   ],
                 );

@@ -42,11 +42,14 @@ class SettingsDrawerState extends State<SettingsDrawer> {
           ),
         ),
       ).then((value) {
-        _firestoreService.updateUserUniversity(
-          userId: widget.user!.uid,
-          university: value,
-        );
+        if (value != null) {
+          _firestoreService.updateUserUniversity(
+            userId: widget.user!.uid,
+            university: value,
+          );
+        }
       });
+      return;
     } else {
       return; // Return nothing if the widget is not mounted
     }
