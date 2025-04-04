@@ -754,69 +754,6 @@ class _MapEditorState extends State<MapEditor> {
                       );
                     } else {
                       Navigator.of(context).pop();
-                      // convert building addresses to doubles for firestore
-                      // setState(() {
-                      //   for (var building in _buildings) {
-                      //     if (building['address'] is Map<String, dynamic>) {
-                      //       // if the address has already been converted skip it
-                      //       continue;
-                      //     } else {
-                      //       LatLng address = building['address'] as LatLng;
-                      //       building['address'] = {
-                      //         'latitude': address.latitude.toDouble(),
-                      //         'longitude': address.longitude.toDouble(),
-                      //       };
-                      //     }
-                      //   }
-                      // });
-
-                      // final navigator = Navigator.of(context);
-
-                      // // SAVE UNIVERSITY TO FIRESTORE
-                      // try {
-                      //   await _firestoreServices.createUniversity(
-                      //     university: {
-                      //       'name': _universityNameController.text,
-                      //       'abbreviation': _universityAbbrevController.text,
-                      //       'location': {
-                      //         'latitude':
-                      //             _universityLocation!.latitude.toDouble(),
-                      //         'longitude':
-                      //             _universityLocation!.longitude.toDouble()
-                      //       },
-                      //       'southWestBound': {
-                      //         'latitude': _southWestBound!.latitude.toDouble(),
-                      //         'longitude': _southWestBound!.longitude.toDouble()
-                      //       },
-                      //       'northEastBound': {
-                      //         'latitude': _northEastBound!.latitude.toDouble(),
-                      //         'longitude': _northEastBound!.longitude.toDouble()
-                      //       },
-                      //       'buildings': _buildings,
-                      //     },
-                      //   );
-                      // } catch (e) {
-                      //   navigator.pop();
-                      //   setState(() {
-                      //     Utils.displayMessage(
-                      //       context: context,
-                      //       message: 'Error creating university: ${e.toString()}',
-                      //     );
-                      //   });
-                      //   return;
-                      // }
-
-                      // // send the user back to the development page
-                      // navigator.popUntil(
-                      //     (route) => route.settings.name == '/development-page');
-                      // navigator.pushReplacementNamed('/development-page');
-
-                      // // show success dialog
-                      // _showSuccessDialog(
-                      //   title: 'University Created Successfully!',
-                      //   message:
-                      //       'Your university has been created successfully. You can now view it on the development page.',
-                      // );
                     }
                   },
                   child: const Text('Save'),

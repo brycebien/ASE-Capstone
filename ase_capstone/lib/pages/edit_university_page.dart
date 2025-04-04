@@ -32,11 +32,12 @@ class _EditUniversityPageState extends State<EditUniversityPage> {
   Future<void> _getUniversity() async {
     Map<String, dynamic> university =
         await _firestoreServices.getUniversityByName(name: _name);
-
-    setState(() {
-      _university = university;
-      _isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _university = university;
+        _isLoading = false;
+      });
+    }
   }
 
   @override
