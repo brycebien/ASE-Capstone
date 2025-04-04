@@ -524,26 +524,12 @@ class _MapPageState extends State<MapPage> {
                             onMapCreated: _onMapCreated,
                             style: _mapStyle,
                             initialCameraPosition: _initialCameraPosition!,
-                            // initialCameraPosition: CameraPosition(
-                            //   target: LatLng(
-                            //     _currentLocation!.latitude!,
-                            //     _currentLocation!.longitude!,
-                            //   ),
-                            //   zoom: 15.5,
-                            //   tilt: 0,
-                            // ),
                             rotateGesturesEnabled: true,
                             myLocationButtonEnabled: true,
                             zoomControlsEnabled:
                                 false, // Disable zoom controls (+/- buttons)
                             myLocationEnabled: true,
                             cameraTargetBounds: _cameraTargetBounds!,
-                            // cameraTargetBounds: CameraTargetBounds(
-                            //   LatLngBounds(
-                            //     southwest: LatLng(39.028, -84.467),
-                            //     northeast: LatLng(39.038, -84.459),
-                            //   ),
-                            // ),
                             minMaxZoomPreference:
                                 MinMaxZoomPreference(15.0, 20.0),
                             polylines: {
