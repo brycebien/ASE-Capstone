@@ -1,5 +1,6 @@
 // lib/pages/resources_page.dart
 import 'package:ase_capstone/components/searchable_list.dart';
+import 'package:ase_capstone/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:ase_capstone/components/textfield.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
@@ -50,14 +51,23 @@ class _ResourcesPageState extends State<ResourcesPage> {
       return;
     }
 
-    List<Map<String, dynamic>> resources =
-        await _firestoreService.getResources(universityId: universityId);
-
-    setState(() {
-      _resources = resources;
-      isLoading = false;
-      _universityId = universityId;
-    });
+    try {
+      List<Map<String, dynamic>> resources =
+          await _firestoreService.getResources(universityId: universityId);
+      setState(() {
+        _resources = resources;
+        isLoading = false;
+        _universityId = universityId;
+      });
+    } catch (e) {
+      setState(() {
+        Utils.displayMessage(
+          context: context,
+          message: 'Error loading resources, please try again later',
+        );
+        isLoading = false;
+      });
+    }
   }
 
   void _createResourceDialog() {

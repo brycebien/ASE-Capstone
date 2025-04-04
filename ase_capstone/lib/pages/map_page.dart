@@ -45,7 +45,6 @@ class _MapPageState extends State<MapPage> {
     _listenToPins(); // check for pins in the database
     _checkExpiredPins(); // check that no pins are expired (older than 24 hrs)
     _checkUserUniversity(); // check that he user has a university chosen
-    // _setInitialCameraPosition(); // set the initial camera position to the user's university
   }
 
   @override

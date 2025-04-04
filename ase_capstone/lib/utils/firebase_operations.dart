@@ -206,6 +206,10 @@ class FirestoreService {
         .doc(universityId)
         .get();
 
+    if (snapshot['resources'].isEmpty) {
+      throw Exception('The university does not have any resources yet');
+    }
+
     return (snapshot["resources"] as List<dynamic>)
         .map((e) => e as Map<String, dynamic>)
         .toList();
