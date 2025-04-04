@@ -29,6 +29,7 @@ class _MapPageState extends State<MapPage> {
   LocationData? _currentLocation;
   final Set<Marker> _markers = {};
   bool _hasUniversity = false;
+  bool _isLoading = true;
   String? _userUniversity;
   CameraPosition? _initialCameraPosition;
   CameraTargetBounds? _cameraTargetBounds;
@@ -201,6 +202,9 @@ class _MapPageState extends State<MapPage> {
   }
 
   void _getCurrentLocation() async {
+    setState(() {
+      _isLoading = true;
+    });
     Location location = Location();
 
     // check if location services are enabled and ask user to enable location permissions if not
@@ -254,6 +258,9 @@ class _MapPageState extends State<MapPage> {
             ),
           ),
         ));
+      });
+      setState(() {
+        _isLoading = false;
       });
     } catch (e) {
       setState(() {
@@ -557,8 +564,7 @@ class _MapPageState extends State<MapPage> {
               : Stack(
                   alignment: Alignment.center,
                   children: [
-                    (_initialCameraPosition == null ||
-                            _cameraTargetBounds == null)
+                    _isLoading
                         ? Center(child: CircularProgressIndicator())
                         : GoogleMap(
                             onMapCreated: _onMapCreated,
