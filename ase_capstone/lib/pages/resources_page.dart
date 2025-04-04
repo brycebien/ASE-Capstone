@@ -31,7 +31,9 @@ class _ResourcesPageState extends State<ResourcesPage> {
   }
 
   Future<void> _loadUniversityAndResources() async {
-    setState(() => isLoading = true);
+    setState(() {
+      isLoading = true;
+    });
 
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
@@ -43,7 +45,9 @@ class _ResourcesPageState extends State<ResourcesPage> {
     final universityId = user['university'] as String?;
 
     if (universityId == null) {
-      setState(() => isLoading = false);
+      setState(() {
+        isLoading = false;
+      });
       return;
     }
 
@@ -102,8 +106,6 @@ class _ResourcesPageState extends State<ResourcesPage> {
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                _newTitleController.clear();
-                _newTypeController.clear();
               },
               child: Text('Cancel'),
             ),
@@ -116,11 +118,6 @@ class _ResourcesPageState extends State<ResourcesPage> {
                   'type': _newTypeController.text,
                   'timestamp': DateTime.now(),
                 };
-
-                // await FirebaseFirestore.instance
-                //     .collection('universities')
-                //     .doc(_universityId)
-                //     .update({newFieldKey: newFieldValue});
 
                 _firestoreService.addResource(
                     resource: newFieldValue, uid: currentUser!.uid);
