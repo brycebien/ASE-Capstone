@@ -1,3 +1,4 @@
+import 'package:ase_capstone/components/building_info.dart';
 import 'package:ase_capstone/components/searchable_list.dart';
 import 'package:ase_capstone/components/settings_drawer.dart';
 import 'package:ase_capstone/models/directions.dart';
@@ -29,7 +30,7 @@ class _MapPageState extends State<MapPage> {
   LocationData? _currentLocation;
   final Set<Marker> _markers = {};
   bool _hasUniversity = false;
-  bool _isLoading = true;
+  bool isLoadingBuildingMarkers = true;
   String? _userUniversity;
   CameraPosition? _initialCameraPosition;
   CameraTargetBounds? _cameraTargetBounds;
@@ -59,7 +60,6 @@ class _MapPageState extends State<MapPage> {
     // detect changes to user university
     if (_hasUniversity == true) {
       _checkUserUniversity();
-      _setBuildingMarkers(university: _userUniversity!);
     }
 
     // get args passed to map page via Navigator.pushNamed
@@ -130,43 +130,74 @@ class _MapPageState extends State<MapPage> {
           _userUniversity = universityName;
         }
       });
-      _setInitialCameraPosition();
+      _setInitialCameraPosition(); // set the camera position to the new university
       _setBuildingMarkers(
         university: universityName,
-      );
+      ); // generate building markers for the new university
     } else {
       return; // do nothing if the user hasn't changed their university
     }
   }
 
   void _setBuildingMarkers({required String university}) async {
+    setState(() {
+      isLoadingBuildingMarkers = true;
+    });
+
+    // delete any existing building markers
+    _markers
+        .removeWhere((element) => element.markerId.value.contains('building-'));
+
+    // get the university's buildings and add them to the map
     Map<String, dynamic> userUniversity =
         await _firestoreServices.getUniversityByName(name: university);
     BitmapDescriptor customIcon = await _customIcon();
     LatLng? address;
     for (var building in userUniversity['buildings']) {
       if (building['address'] is String) {
-        // convert the address to a LatLng object
-        address = await DirectionsHandler()
+        LatLng newAddress = await DirectionsHandler()
             .getDirectionFromAddress(address: building['address']);
+        // convert the address to a LatLng object
+        setState(() {
+          address = newAddress;
+        });
       } else {
-        address = LatLng(
-          building['address']['latitude'],
-          building['address']['longitude'],
-        );
+        setState(() {
+          address = LatLng(
+            building['address']['latitude'],
+            building['address']['longitude'],
+          );
+        });
       }
       _markers.add(
         Marker(
-          markerId: MarkerId('building'),
-          position: address,
+          markerId: MarkerId('building-${building['name']}'),
+          position: address!,
           icon: customIcon,
-          onTap: () {
-            //TODO: add function to show building info (name, resources, get direction button)
-            _getDirections(destination: address!);
+          onTap: () async {
+            //TODO: open building info page
+            var action = await showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return BuildingInfo(
+                  university: _userUniversity!,
+                  building: building['name'],
+                );
+              },
+            );
+            _getDirections(
+                destination: _markers
+                    .firstWhere((element) =>
+                        element.markerId.value ==
+                        'building-${building['name']}')
+                    .position);
           },
         ),
       );
     }
+    setState(() {
+      isLoadingBuildingMarkers = false;
+    });
   }
 
   Future<BitmapDescriptor> _customIcon() async {
@@ -202,9 +233,6 @@ class _MapPageState extends State<MapPage> {
   }
 
   void _getCurrentLocation() async {
-    setState(() {
-      _isLoading = true;
-    });
     Location location = Location();
 
     // check if location services are enabled and ask user to enable location permissions if not
@@ -258,9 +286,6 @@ class _MapPageState extends State<MapPage> {
             ),
           ),
         ));
-      });
-      setState(() {
-        _isLoading = false;
       });
     } catch (e) {
       setState(() {
@@ -485,11 +510,21 @@ class _MapPageState extends State<MapPage> {
 
   void _getDirections({required LatLng destination}) async {
     final directions = await DirectionsHandler().getDirections(
-        origin: LatLng(
-          _currentLocation!.latitude!,
-          _currentLocation!.longitude!,
+      origin: LatLng(
+        _currentLocation!.latitude!,
+        _currentLocation!.longitude!,
+      ),
+      destination: destination,
+    );
+    _markers.add(
+      Marker(
+        markerId: MarkerId('destinationMarker'),
+        position: destination,
+        icon: BitmapDescriptor.defaultMarkerWithHue(
+          BitmapDescriptor.hueViolet,
         ),
-        destination: destination);
+      ),
+    );
     setState(() {
       _info = directions;
     });
@@ -527,7 +562,7 @@ class _MapPageState extends State<MapPage> {
         _hasUniversity = true;
         _userUniversity = result;
       });
-      _setInitialCameraPosition();
+      _checkUserUniversity(); // check that the user has a university and update the map based on the new university
     }
   }
 
@@ -564,7 +599,9 @@ class _MapPageState extends State<MapPage> {
               : Stack(
                   alignment: Alignment.center,
                   children: [
-                    _isLoading
+                    (_initialCameraPosition == null ||
+                            _cameraTargetBounds == null ||
+                            isLoadingBuildingMarkers)
                         ? Center(child: CircularProgressIndicator())
                         : GoogleMap(
                             onMapCreated: _onMapCreated,
@@ -593,15 +630,6 @@ class _MapPageState extends State<MapPage> {
                             markers: _markers,
                             onLongPress: (LatLng tappedPoint) {
                               _getDirections(destination: tappedPoint);
-                              _markers.add(
-                                Marker(
-                                  markerId: MarkerId('destinationMarker'),
-                                  position: tappedPoint,
-                                  icon: BitmapDescriptor.defaultMarkerWithHue(
-                                    BitmapDescriptor.hueViolet,
-                                  ),
-                                ),
-                              );
                             },
                           ),
 
