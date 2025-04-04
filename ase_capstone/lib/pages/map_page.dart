@@ -58,6 +58,7 @@ class _MapPageState extends State<MapPage> {
     // detect changes to user university
     if (_hasUniversity == true) {
       _checkUserUniversity();
+      _setBuildingMarkers(university: _userUniversity!);
     }
 
     // get args passed to map page via Navigator.pushNamed
@@ -129,9 +130,49 @@ class _MapPageState extends State<MapPage> {
         }
       });
       _setInitialCameraPosition();
+      _setBuildingMarkers(
+        university: universityName,
+      );
     } else {
       return; // do nothing if the user hasn't changed their university
     }
+  }
+
+  void _setBuildingMarkers({required String university}) async {
+    Map<String, dynamic> userUniversity =
+        await _firestoreServices.getUniversityByName(name: university);
+    BitmapDescriptor customIcon = await _customIcon();
+    LatLng? address;
+    for (var building in userUniversity['buildings']) {
+      if (building['address'] is String) {
+        // convert the address to a LatLng object
+        address = await DirectionsHandler()
+            .getDirectionFromAddress(address: building['address']);
+      } else {
+        address = LatLng(
+          building['address']['latitude'],
+          building['address']['longitude'],
+        );
+      }
+      _markers.add(
+        Marker(
+          markerId: MarkerId('building'),
+          position: address,
+          icon: customIcon,
+          onTap: () {
+            //TODO: add function to show building info (name, resources, get direction button)
+            _getDirections(destination: address!);
+          },
+        ),
+      );
+    }
+  }
+
+  Future<BitmapDescriptor> _customIcon() async {
+    return await BitmapDescriptor.asset(
+      ImageConfiguration(size: Size(24, 24)),
+      'assets/images/building.png',
+    );
   }
 
   void _checkForDirections() async {
