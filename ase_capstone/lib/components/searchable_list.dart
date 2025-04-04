@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 
 class SearchableList extends StatefulWidget {
   final List<Map<String, dynamic>> items;
-  final String listTitle;
   final List<String> keys;
   final Widget? trailing;
   const SearchableList({
     super.key,
     required this.items,
-    required this.listTitle,
     required this.keys,
     this.trailing,
   });
@@ -63,60 +61,53 @@ class _SearchableListState extends State<SearchableList> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.listTitle),
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: TextField(
-              controller: _searchController,
-              decoration: const InputDecoration(
-                labelText: 'Search',
-                suffixIcon: Icon(Icons.search),
-              ),
-              onChanged: (value) {
-                _searchList(value);
-              },
-            ),
+    return Column(children: [
+      Padding(
+        padding: const EdgeInsets.all(8),
+        child: TextField(
+          controller: _searchController,
+          decoration: const InputDecoration(
+            labelText: 'Search',
+            suffixIcon: Icon(Icons.search),
           ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _foundItems.length,
-              itemBuilder: (context, index) {
-                return Column(
-                  children: [
-                    Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Card(
-                          key: ValueKey(_foundItems[index][widget.keys[0]]),
-                          elevation: 8,
-                          child: ListTile(
-                            title: Text(_foundItems[index][widget.keys[0]]),
-                            subtitle: Text(_getItemsSubtitle(index: index)),
-                            trailing: widget.trailing ??
-                                IconButton(
-                                  icon: Icon(
-                                    Icons.arrow_forward_ios,
-                                    color: Colors.blue[400],
-                                  ),
-                                  onPressed: () {
-                                    Navigator.of(context).pop(
-                                        _foundItems[index][widget.keys[0]]);
-                                  },
-                                ),
-                          ),
-                        )),
-                    SizedBox(height: 10)
-                  ],
-                );
-              },
-            ),
-          ),
-        ],
+          onChanged: (value) {
+            _searchList(value);
+          },
+        ),
       ),
-    );
+      Expanded(
+        child: ListView.builder(
+          itemCount: _foundItems.length,
+          itemBuilder: (context, index) {
+            return Column(
+              children: [
+                Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Card(
+                      key: ValueKey(_foundItems[index][widget.keys[0]]),
+                      elevation: 8,
+                      child: ListTile(
+                        title: Text(_foundItems[index][widget.keys[0]]),
+                        subtitle: Text(_getItemsSubtitle(index: index)),
+                        trailing: widget.trailing ??
+                            IconButton(
+                              icon: Icon(
+                                Icons.arrow_forward_ios,
+                                color: Colors.blue[400],
+                              ),
+                              onPressed: () {
+                                Navigator.of(context)
+                                    .pop(_foundItems[index][widget.keys[0]]);
+                              },
+                            ),
+                      ),
+                    )),
+                SizedBox(height: 10)
+              ],
+            );
+          },
+        ),
+      )
+    ]);
   }
 }

@@ -456,10 +456,14 @@ class _MapPageState extends State<MapPage> {
       result = await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => SearchableList(
-            items: universities,
-            listTitle: 'Select a University',
-            keys: ['name', 'abbreviation'],
+          builder: (context) => Scaffold(
+            appBar: AppBar(
+              title: Text('Select a University'),
+            ),
+            body: SearchableList(
+              items: universities,
+              keys: ['name', 'abbreviation'],
+            ),
           ),
         ),
       );

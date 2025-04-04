@@ -147,10 +147,14 @@ class _SchedulePageState extends State<SchedulePage> {
       await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => SearchableList(
-            items: buildings,
-            listTitle: 'Select a Building',
-            keys: ['name', 'code'],
+          builder: (context) => Scaffold(
+            appBar: AppBar(
+              title: Text('Select a Building'),
+            ),
+            body: SearchableList(
+              items: buildings,
+              keys: ['name', 'code'],
+            ),
           ),
         ),
       ).then((value) {
