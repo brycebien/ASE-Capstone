@@ -4,11 +4,13 @@ class SearchableList extends StatefulWidget {
   final List<Map<String, dynamic>> items;
   final List<String> keys;
   final Widget? trailing;
+  final String? prependSubtitle;
   const SearchableList({
     super.key,
     required this.items,
     required this.keys,
     this.trailing,
+    this.prependSubtitle,
   });
 
   @override
@@ -88,7 +90,8 @@ class _SearchableListState extends State<SearchableList> {
                       elevation: 8,
                       child: ListTile(
                         title: Text(_foundItems[index][widget.keys[0]]),
-                        subtitle: Text(_getItemsSubtitle(index: index)),
+                        subtitle: Text(
+                            '${widget.prependSubtitle ?? ''} ${_getItemsSubtitle(index: index)}'),
                         trailing: widget.trailing ??
                             IconButton(
                               icon: Icon(

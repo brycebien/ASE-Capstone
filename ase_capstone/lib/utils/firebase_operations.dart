@@ -198,14 +198,17 @@ class FirestoreService {
   }
 
 // get resources from university collection if exists
-  Future<List<dynamic>> getResources({String? universityId}) async {
+  Future<List<Map<String, dynamic>>> getResources(
+      {String? universityId}) async {
     if (universityId == null || universityId.isEmpty) return [];
     final snapshot = await FirebaseFirestore.instance
         .collection('universities')
         .doc(universityId)
         .get();
 
-    return snapshot["resources"];
+    return (snapshot["resources"] as List<dynamic>)
+        .map((e) => e as Map<String, dynamic>)
+        .toList();
   }
 
   /*
