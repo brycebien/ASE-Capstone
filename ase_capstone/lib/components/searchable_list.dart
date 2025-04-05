@@ -1,16 +1,21 @@
+import 'package:ase_capstone/utils/firebase_operations.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class SearchableList extends StatefulWidget {
   final List<Map<String, dynamic>> items;
   final List<String> keys;
   final Widget? trailing;
+  final bool includePriorityBuildings;
   final String? prependSubtitle;
   final Function? onSelected;
+
   const SearchableList({
     super.key,
     required this.items,
     required this.keys,
     this.trailing,
+    this.includePriorityBuildings = false,
     this.prependSubtitle,
     this.onSelected,
   });
@@ -20,7 +25,10 @@ class SearchableList extends StatefulWidget {
 }
 
 class _SearchableListState extends State<SearchableList> {
+  final FirestoreService _firestoreServices = FirestoreService();
+  final user = FirebaseAuth.instance.currentUser!;
   List _foundItems = [];
+  List _favoriteItems = [];
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -29,6 +37,23 @@ class _SearchableListState extends State<SearchableList> {
     setState(() {
       _foundItems = widget.items;
     });
+    if (widget.includePriorityBuildings) {
+      _getFavoriteBuildings();
+    }
+  }
+
+  void _getFavoriteBuildings() async {
+    try {
+      await _firestoreServices.getFavorite(userId: user.uid).then(
+        (value) {
+          setState(() {
+            _favoriteItems = value;
+          });
+        },
+      );
+    } catch (e) {
+      return;
+    }
   }
 
   void _searchList(String query) {
@@ -79,6 +104,32 @@ class _SearchableListState extends State<SearchableList> {
           },
         ),
       ),
+
+      // PRIORITY ITEMS EXPANSION TILE
+      if (widget.includePriorityBuildings)
+        ExpansionTile(
+          title: const Text('Favorite Buildings'),
+          children: _favoriteItems.map((item) {
+            return ListTile(
+              title: Text(item),
+              onTap: () {
+                if (widget.onSelected != null) {
+                  widget.onSelected!(widget.items.firstWhere((element) {
+                    return element[widget.keys[0]] == item;
+                  }));
+                } else {
+                  setState(() {
+                    _foundItems = widget.items.where((element) {
+                      return element[widget.keys[0]] == item;
+                    }).toList();
+                  });
+                }
+              },
+            );
+          }).toList(),
+        ),
+
+      // SEARCHABLE LIST
       Expanded(
         child: ListView.builder(
           itemCount: _foundItems.length,

@@ -46,7 +46,7 @@ class _BuildingInfoState extends State<BuildingInfo> {
       );
 
       await _firestoreServices
-          .isFavorite(
+          .getFavorite(
         userId: user.uid,
         building: widget.building,
       )

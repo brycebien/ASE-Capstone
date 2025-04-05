@@ -124,7 +124,7 @@ class FirestoreService {
   }
 
   // get user favorites
-  Future<bool> isFavorite({
+  Future<dynamic> getFavorite({
     required String userId,
     String? building,
   }) async {
@@ -134,13 +134,20 @@ class FirestoreService {
     }
 
     final data = userDoc.data() as Map<String, dynamic>?;
-    if (data == null || !data.containsKey('favorite-buildings')) {
-      return false;
+
+    // get buildings
+    if (building != null) {
+      if (data == null || !data.containsKey('favorite-buildings')) {
+        return false;
+      }
+
+      final List<dynamic> favorites = userDoc.get('favorite-buildings') ?? [];
+
+      return favorites.contains(building);
+    } else {
+      // return all favorites
+      return data?['favorite-buildings'] ?? [];
     }
-
-    final List<dynamic> favorites = userDoc.get('favorite-buildings') ?? [];
-
-    return favorites.contains(building);
   }
 
   // get user's university

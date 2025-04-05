@@ -667,6 +667,7 @@ class _MapPageState extends State<MapPage> {
                                     body: SearchableList(
                                       items: _buildings,
                                       keys: ['name', 'code'],
+                                      includePriorityBuildings: true,
                                       onSelected: (building) {
                                         // show building info when selected
                                         setState(() {
