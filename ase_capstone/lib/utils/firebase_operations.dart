@@ -32,6 +32,17 @@ class FirestoreService {
     });
   }
 
+  Future<void> addToFavorites({
+    required String userId,
+    String? building,
+  }) async {
+    if (building != null) {
+      await _usersCollection.doc(userId).update({
+        'favorite-buildings': FieldValue.arrayUnion([building])
+      });
+    }
+  }
+
   // upload profile picture
   Future<void> uploadProfilePicture({
     required String userId,
@@ -110,6 +121,21 @@ class FirestoreService {
     return universities.docs
         .map((DocumentSnapshot doc) => doc.data() as Map<String, dynamic>)
         .toList();
+  }
+
+  // get user favorites
+  Future<bool> isFavorite({
+    required String userId,
+    String? building,
+  }) async {
+    final DocumentSnapshot userDoc = await _usersCollection.doc(userId).get();
+    if (!userDoc.exists) {
+      throw Exception('User not found');
+    }
+
+    final List<dynamic> favorites = userDoc.get('favorite-buildings') ?? [];
+
+    return favorites.contains(building);
   }
 
   // get user's university
@@ -301,6 +327,15 @@ class FirestoreService {
     DELETE
     
   */
+
+  Future<void> removeFavorite(
+      {required String userId, String? building}) async {
+    if (building != null) {
+      await _usersCollection.doc(userId).update({
+        'favorite-buildings': FieldValue.arrayRemove([building])
+      });
+    }
+  }
 
   Future<void> deleteClassFromDatabase({
     required String userId,

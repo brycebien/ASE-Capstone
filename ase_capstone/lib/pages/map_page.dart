@@ -818,7 +818,7 @@ class _MapPageState extends State<MapPage> {
                         ),
                       ),
 
-                    if (_info != null)
+                    if (_info != null && !_showBuildingInfo)
                       // Display distance and time
                       Positioned(
                         top: 20,
