@@ -625,6 +625,13 @@ class _MapPageState extends State<MapPage> {
                                 ),
                             },
                             markers: _markers,
+                            onTap: (location) {
+                              if (_showBuildingInfo) {
+                                setState(() {
+                                  _showBuildingInfo = false;
+                                });
+                              }
+                            },
                             onLongPress: (LatLng tappedPoint) {
                               _getDirections(destination: tappedPoint);
                             },
@@ -669,19 +676,31 @@ class _MapPageState extends State<MapPage> {
                       AnimatedPositioned(
                         duration: Duration(milliseconds: 100),
                         curve: Curves.easeInOut,
-                        top: 0,
-                        bottom: 0,
+                        top: 10,
+                        bottom: 10,
                         right: 0,
                         left: _showBuildingInfo
                             ? MediaQuery.of(context).size.width * 0.25
                             : MediaQuery.of(context).size.width,
                         child: Container(
                           width: MediaQuery.of(context).size.width * 0.75,
-                          color: Colors.black87,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(20),
+                              bottomLeft: Radius.circular(20),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                blurRadius: 10,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                            color: Theme.of(context).colorScheme.surface,
+                          ),
                           child: !_showBuildingInfo
                               ? SizedBox(width: 0.0)
                               : Padding(
-                                  padding: const EdgeInsets.all(8.0),
+                                  padding: const EdgeInsets.all(20.0),
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.stretch,
