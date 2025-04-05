@@ -106,27 +106,39 @@ class _SearchableListState extends State<SearchableList> {
       ),
 
       // PRIORITY ITEMS EXPANSION TILE
-      if (widget.includePriorityBuildings)
+      if (widget.includePriorityBuildings && _favoriteItems.isNotEmpty)
+        SizedBox(height: 10),
+      if (widget.includePriorityBuildings && _favoriteItems.isNotEmpty)
         ExpansionTile(
           title: const Text('Favorite Buildings'),
-          children: _favoriteItems.map((item) {
-            return ListTile(
-              title: Text(item),
-              onTap: () {
-                if (widget.onSelected != null) {
-                  widget.onSelected!(widget.items.firstWhere((element) {
-                    return element[widget.keys[0]] == item;
-                  }));
-                } else {
-                  setState(() {
-                    _foundItems = widget.items.where((element) {
-                      return element[widget.keys[0]] == item;
-                    }).toList();
-                  });
-                }
-              },
-            );
-          }).toList(),
+          children: [
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.3,
+              ),
+              child: ListView(
+                shrinkWrap: true,
+                children: _favoriteItems.map((item) {
+                  return ListTile(
+                    title: Text(item),
+                    onTap: () {
+                      if (widget.onSelected != null) {
+                        widget.onSelected!(widget.items.firstWhere((element) {
+                          return element[widget.keys[0]] == item;
+                        }));
+                      } else {
+                        setState(() {
+                          _foundItems = widget.items.where((element) {
+                            return element[widget.keys[0]] == item;
+                          }).toList();
+                        });
+                      }
+                    },
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
         ),
 
       // SEARCHABLE LIST
