@@ -680,48 +680,52 @@ class _MapPageState extends State<MapPage> {
                           color: Colors.black54,
                           child: !_showBuildingInfo
                               ? SizedBox(width: 0.0)
-                              : Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Expanded(
-                                          child: Center(
-                                            child: Text(
-                                              _selectedBuilding!,
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 20,
+                              : Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Expanded(
+                                            child: Center(
+                                              child: Text(
+                                                _selectedBuilding!,
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 20,
+                                                ),
                                               ),
                                             ),
                                           ),
-                                        ),
-                                        IconButton(
-                                          icon: Icon(
-                                            Icons.close,
-                                            color: Colors.red,
-                                            size: 20,
+                                          IconButton(
+                                            icon: Icon(
+                                              Icons.close,
+                                              color: Colors.red,
+                                              size: 20,
+                                            ),
+                                            onPressed: () {
+                                              setState(() {
+                                                _showBuildingInfo = false;
+                                              });
+                                            },
                                           ),
-                                          onPressed: () {
-                                            setState(() {
-                                              _showBuildingInfo = false;
-                                            });
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                    Divider(thickness: 1, color: Colors.white),
-                                    SizedBox(height: 10),
-                                    Center(
-                                      child: BuildingInfo(
-                                        university: _userUniversity!,
-                                        building: _selectedBuilding!,
+                                        ],
                                       ),
-                                    ),
-                                  ],
+                                      Divider(
+                                          thickness: 1, color: Colors.white),
+                                      SizedBox(height: 10),
+                                      Center(
+                                        child: BuildingInfo(
+                                          university: _userUniversity!,
+                                          building: _selectedBuilding!,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                         ),
                       ),
