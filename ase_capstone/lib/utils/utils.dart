@@ -19,7 +19,8 @@ class Utils {
     final hour = int.parse(parts[0]);
     final minute = int.parse(parts[1].split(' ')[0]);
     final isPM = time.contains('PM');
-    return TimeOfDay(hour: isPM && hour != 12 ? hour + 12 : hour, minute: minute);
+    return TimeOfDay(
+        hour: isPM && hour != 12 ? hour + 12 : hour, minute: minute);
   }
 
   static TimeOfDay subtractMinutesFromTimeOfDay(TimeOfDay time, int minutes) {
@@ -104,5 +105,10 @@ class Utils {
         zoom,
       ),
     );
+  }
+
+  static Future<LatLng> convertAddressToLatLng(
+      {required String address}) async {
+    return await DirectionsHandler().getDirectionFromAddress(address: address);
   }
 }

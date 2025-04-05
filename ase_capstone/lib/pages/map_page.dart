@@ -65,12 +65,22 @@ class _MapPageState extends State<MapPage> {
     }
 
     // get args passed to map page via Navigator.pushNamed
+    print("ARGS::::::::::::: ${ModalRoute.of(context)?.settings.arguments}");
     final args =
         ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     if (args != null) {
-      setState(() {
-        destination = args['destination'] as LatLng?;
-      });
+      if (args['destination'] is String) {
+        Utils.convertAddressToLatLng(address: args['destination'])
+            .then((value) {
+          setState(() {
+            destination = value;
+          });
+        });
+      } else {
+        setState(() {
+          destination = args['destination'] as LatLng?;
+        });
+      }
     }
   }
 
@@ -733,6 +743,12 @@ class _MapPageState extends State<MapPage> {
                                       BuildingInfo(
                                         university: _userUniversity!,
                                         building: _selectedBuilding!,
+                                        onNavigateToBuilding: (location) {
+                                          _getDirections(destination: location);
+                                          setState(() {
+                                            _showBuildingInfo = false;
+                                          });
+                                        },
                                       ),
                                     ],
                                   ),

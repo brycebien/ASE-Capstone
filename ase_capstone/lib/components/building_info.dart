@@ -1,12 +1,19 @@
+import 'package:ase_capstone/utils/firebase_operations.dart';
+import 'package:ase_capstone/utils/utils.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class BuildingInfo extends StatefulWidget {
   final String university;
   final String building;
+  final Function(LatLng) onNavigateToBuilding;
+
   const BuildingInfo({
     super.key,
     required this.university,
     required this.building,
+    required this.onNavigateToBuilding,
   });
 
   @override
@@ -14,7 +21,46 @@ class BuildingInfo extends StatefulWidget {
 }
 
 class _BuildingInfoState extends State<BuildingInfo> {
+  final FirestoreService _firestoreServices = FirestoreService();
+  final user = FirebaseAuth.instance.currentUser!;
   bool _isFavorite = false;
+  late Map<String, dynamic> _buildingInfo;
+
+  @override
+  void initState() {
+    super.initState();
+    _setBuildingInfo();
+  }
+
+  void _setBuildingInfo() async {
+    _firestoreServices.getBuildings(userId: user.uid).then(
+      (value) {
+        setState(() {
+          _buildingInfo = value.where((building) {
+            return building['name'] == widget.building;
+          }).first;
+        });
+      },
+    );
+  }
+
+  void _navigateToBuilding() {
+    if (_buildingInfo['address'] is String) {
+      Utils.convertAddressToLatLng(address: _buildingInfo['address']).then(
+        (value) {
+          widget.onNavigateToBuilding(value);
+        },
+      );
+    } else {
+      widget.onNavigateToBuilding(
+        LatLng(
+          _buildingInfo['address']['latitude'],
+          _buildingInfo['address']['longitude'],
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -56,7 +102,9 @@ class _BuildingInfoState extends State<BuildingInfo> {
         Row(
           children: [
             IconButton(
-              onPressed: () {},
+              onPressed: () {
+                _navigateToBuilding();
+              },
               icon: Icon(
                 Icons.directions_walk,
                 color: Colors.blue,
