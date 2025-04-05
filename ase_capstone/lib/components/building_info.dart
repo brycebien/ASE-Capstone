@@ -16,20 +16,12 @@ class BuildingInfo extends StatefulWidget {
 class _BuildingInfoState extends State<BuildingInfo> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.building),
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            children: [
-              //TODO: add actions for the user (e.g. add to favorites, list of resources, etc.)
-            ],
-          ),
-        ),
-      ),
+    return Column(
+      children: [
+        //TODO: add actions for the user (e.g. add to favorites, list of resources, etc.)
+        Text('SOMETHING'),
+        Text('HERE'),
+      ],
     );
   }
 }

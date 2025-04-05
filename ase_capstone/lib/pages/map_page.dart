@@ -34,6 +34,8 @@ class _MapPageState extends State<MapPage> {
   String? _userUniversity;
   CameraPosition? _initialCameraPosition;
   CameraTargetBounds? _cameraTargetBounds;
+  String? _selectedBuilding;
+  bool _showBuildingInfo = false;
 
   final Set<String> _votedPins = {};
   LatLng? destination;
@@ -176,21 +178,16 @@ class _MapPageState extends State<MapPage> {
           icon: customIcon,
           onTap: () async {
             //TODO: open building info page
-            var action = await showDialog(
-              context: context,
-              builder: (BuildContext context) {
-                return BuildingInfo(
-                  university: _userUniversity!,
-                  building: building['name'],
-                );
-              },
-            );
-            _getDirections(
-                destination: _markers
-                    .firstWhere((element) =>
-                        element.markerId.value ==
-                        'building-${building['name']}')
-                    .position);
+            setState(() {
+              _selectedBuilding = building['name'];
+              _showBuildingInfo = true;
+            });
+            // _getDirections(
+            //     destination: _markers
+            //         .firstWhere((element) =>
+            //             element.markerId.value ==
+            //             'building-${building['name']}')
+            //         .position);
           },
         ),
       );
@@ -633,32 +630,12 @@ class _MapPageState extends State<MapPage> {
                             },
                           ),
 
-                    // Cancel directions button
-                    if (_info != null)
-                      Positioned(
-                        bottom: 16,
-                        left: 16,
-                        child: FloatingActionButton(
-                          onPressed: () {
-                            setState(() {
-                              _info = null;
-                              destination = null;
-                              _markers.removeWhere((element) =>
-                                  element.markerId.value ==
-                                  'destinationMarker');
-                            });
-                          },
-                          backgroundColor:
-                              Theme.of(context).colorScheme.primary,
-                          child: Icon(Icons.delete),
-                        ),
-                      ),
+                    // Resources and Event buttons
                     Positioned(
                       bottom: 16,
                       right: 16,
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
-                        // crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           // Resources Button
                           FloatingActionButton(
@@ -686,6 +663,90 @@ class _MapPageState extends State<MapPage> {
                         ],
                       ),
                     ),
+
+                    // BuildingInfo Container
+                    if (_selectedBuilding != null)
+                      AnimatedPositioned(
+                        duration: Duration(milliseconds: 100),
+                        curve: Curves.easeInOut,
+                        top: 0,
+                        bottom: 0,
+                        right: 0,
+                        left: _showBuildingInfo
+                            ? MediaQuery.of(context).size.width * 0.25
+                            : MediaQuery.of(context).size.width,
+                        child: Container(
+                          width: MediaQuery.of(context).size.width * 0.75,
+                          color: Colors.black54,
+                          child: !_showBuildingInfo
+                              ? SizedBox(width: 0.0)
+                              : Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: Center(
+                                            child: Text(
+                                              _selectedBuilding!,
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 20,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        IconButton(
+                                          icon: Icon(
+                                            Icons.close,
+                                            color: Colors.red,
+                                            size: 20,
+                                          ),
+                                          onPressed: () {
+                                            setState(() {
+                                              _showBuildingInfo = false;
+                                            });
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                    Divider(thickness: 1, color: Colors.white),
+                                    SizedBox(height: 10),
+                                    Center(
+                                      child: BuildingInfo(
+                                        university: _userUniversity!,
+                                        building: _selectedBuilding!,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      ),
+
+                    // Cancel directions button
+                    if (_info != null)
+                      Positioned(
+                        bottom: 16,
+                        left: 16,
+                        child: FloatingActionButton(
+                          onPressed: () {
+                            setState(() {
+                              _info = null;
+                              destination = null;
+                              _markers.removeWhere((element) =>
+                                  element.markerId.value ==
+                                  'destinationMarker');
+                            });
+                          },
+                          backgroundColor:
+                              Theme.of(context).colorScheme.primary,
+                          child: Icon(Icons.delete),
+                        ),
+                      ),
+
                     if (_info != null)
                       // Display distance and time
                       Positioned(
