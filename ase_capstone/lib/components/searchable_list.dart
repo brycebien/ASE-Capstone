@@ -5,12 +5,14 @@ class SearchableList extends StatefulWidget {
   final List<String> keys;
   final Widget? trailing;
   final String? prependSubtitle;
+  final Function? onSelected;
   const SearchableList({
     super.key,
     required this.items,
     required this.keys,
     this.trailing,
     this.prependSubtitle,
+    this.onSelected,
   });
 
   @override
@@ -99,8 +101,12 @@ class _SearchableListState extends State<SearchableList> {
                                 color: Colors.blue[400],
                               ),
                               onPressed: () {
-                                Navigator.of(context)
-                                    .pop(_foundItems[index][widget.keys[0]]);
+                                if (widget.onSelected != null) {
+                                  widget.onSelected!(_foundItems[index]);
+                                } else {
+                                  Navigator.of(context)
+                                      .pop(_foundItems[index][widget.keys[0]]);
+                                }
                               },
                             ),
                       ),

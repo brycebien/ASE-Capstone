@@ -663,9 +663,20 @@ class _MapPageState extends State<MapPage> {
                                     appBar: AppBar(
                                       title: Text('Buildings'),
                                     ),
+                                    // TODO: add prioritized buildings to list (user favoried buildings)
                                     body: SearchableList(
                                       items: _buildings,
                                       keys: ['name', 'code'],
+                                      onSelected: (building) {
+                                        // show building info when selected
+                                        setState(() {
+                                          if (mounted) {
+                                            Navigator.of(context).pop();
+                                          }
+                                          _selectedBuilding = building['name'];
+                                          _showBuildingInfo = true;
+                                        });
+                                      },
                                     ),
                                   );
                                 }),
