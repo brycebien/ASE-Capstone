@@ -177,17 +177,10 @@ class _MapPageState extends State<MapPage> {
           position: address!,
           icon: customIcon,
           onTap: () async {
-            //TODO: open building info page
             setState(() {
               _selectedBuilding = building['name'];
-              _showBuildingInfo = true;
+              _showBuildingInfo = !_showBuildingInfo;
             });
-            // _getDirections(
-            //     destination: _markers
-            //         .firstWhere((element) =>
-            //             element.markerId.value ==
-            //             'building-${building['name']}')
-            //         .position);
           },
         ),
       );
