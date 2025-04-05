@@ -677,7 +677,7 @@ class _MapPageState extends State<MapPage> {
                             : MediaQuery.of(context).size.width,
                         child: Container(
                           width: MediaQuery.of(context).size.width * 0.75,
-                          color: Colors.black54,
+                          color: Colors.black87,
                           child: !_showBuildingInfo
                               ? SizedBox(width: 0.0)
                               : Padding(
@@ -718,11 +718,9 @@ class _MapPageState extends State<MapPage> {
                                       Divider(
                                           thickness: 1, color: Colors.white),
                                       SizedBox(height: 10),
-                                      Center(
-                                        child: BuildingInfo(
-                                          university: _userUniversity!,
-                                          building: _selectedBuilding!,
-                                        ),
+                                      BuildingInfo(
+                                        university: _userUniversity!,
+                                        building: _selectedBuilding!,
                                       ),
                                     ],
                                   ),
