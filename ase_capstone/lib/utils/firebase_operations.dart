@@ -133,6 +133,11 @@ class FirestoreService {
       throw Exception('User not found');
     }
 
+    final data = userDoc.data() as Map<String, dynamic>?;
+    if (data == null || !data.containsKey('favorite-buildings')) {
+      return false;
+    }
+
     final List<dynamic> favorites = userDoc.get('favorite-buildings') ?? [];
 
     return favorites.contains(building);
