@@ -531,12 +531,13 @@ class _MapEditorState extends State<MapEditor> {
                               'Error creating building: Please fill out all fields.',
                         );
                       } else {
-                        // create building locally
-                        _buildings.add({
+                        Map<String, dynamic> newBuilding = {
                           'name': _buildingNameController.text,
                           'code': _buildingCodeController.text,
                           'address': location
-                        });
+                        };
+                        // create building locally
+                        _buildings.add(newBuilding);
                         Navigator.of(context).pop();
 
                         // create marker on map for the building
@@ -548,9 +549,7 @@ class _MapEditorState extends State<MapEditor> {
                               title: _buildingNameController.text,
                               snippet: _buildingCodeController.text,
                               onTap: () async {
-                                _deleteBuilding(
-                                  buildingLocation: location,
-                                );
+                                _editBuilding(building: newBuilding);
                               },
                             ),
                           ),
@@ -581,15 +580,18 @@ class _MapEditorState extends State<MapEditor> {
     }
   }
 
-  void _deleteBuilding({required LatLng buildingLocation}) {
-    final Map<String, dynamic> building = _buildings.firstWhere(
-      (building) =>
-          LatLng(building['address']['latitude'],
-              building['address']['longitude']) ==
-          buildingLocation,
-    );
+  Future<void> _deleteBuilding({required LatLng buildingLocation}) async {
+    final Map<String, dynamic> building = _buildings.firstWhere((building) {
+      if (building['address'] is Map<String, dynamic>) {
+        return building['address']['latitude'] == buildingLocation.latitude &&
+            building['address']['longitude'] == buildingLocation.longitude;
+      } else {
+        return building['address'].latitude == buildingLocation.latitude &&
+            building['address'].longitude == buildingLocation.longitude;
+      }
+    });
 
-    showDialog(
+    await showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
@@ -610,12 +612,19 @@ class _MapEditorState extends State<MapEditor> {
                       (marker) => marker.markerId == MarkerId(building['name']),
                     );
 
-                    _buildings.removeWhere(
-                      (building) =>
-                          LatLng(building['address']['latitude'],
-                              building['address']['longitude']) ==
-                          buildingLocation,
-                    );
+                    _buildings.removeWhere((building) {
+                      if (building['address'] is Map<String, dynamic>) {
+                        return building['address']['latitude'] ==
+                                buildingLocation.latitude &&
+                            building['address']['longitude'] ==
+                                buildingLocation.longitude;
+                      } else {
+                        return building['address'].latitude ==
+                                buildingLocation.latitude &&
+                            building['address'].longitude ==
+                                buildingLocation.longitude;
+                      }
+                    });
                   });
                   Navigator.of(context).pop();
                 },
@@ -627,6 +636,10 @@ class _MapEditorState extends State<MapEditor> {
   }
 
   void _editBuilding({required Map<String, dynamic> building}) {
+    setState(() {
+      _buildingNameController.text = building['name'];
+      _buildingCodeController.text = building['code'];
+    });
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -636,23 +649,62 @@ class _MapEditorState extends State<MapEditor> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text('Building Name: ${building['name']}'),
-              SizedBox(height: 5),
+              SizedBox(height: 8),
               MyTextField(
                 controller: _buildingNameController,
-                hintText: 'Building Name',
+                hintText: 'New Building Name',
                 obscureText: false,
               ),
               SizedBox(height: 10),
               Text('Building Code: ${building['code']}'),
-              SizedBox(height: 5),
+              SizedBox(height: 8),
               MyTextField(
                 controller: _buildingCodeController,
-                hintText: 'Building Code',
+                hintText: 'New Building Code',
                 obscureText: false,
               ),
             ],
           ),
           actions: [
+            IconButton(
+              onPressed: () async {
+                LatLng? address;
+                if (building['address'] is Map) {
+                  address = LatLng(
+                    building['address']['latitude'],
+                    building['address']['longitude'],
+                  );
+                } else {
+                  address = building['address'];
+                }
+
+                address != null
+                    ? await _deleteBuilding(buildingLocation: address)
+                    : Utils.displayMessage(
+                        context: context,
+                        message:
+                            'Error deleting building: Please try again later.',
+                      );
+                // clear controllers
+                setState(() {
+                  _buildingNameController.clear();
+                  _buildingCodeController.clear();
+                  _buildingAddressController.clear();
+                });
+
+                if (mounted) {
+                  setState(() {
+                    Navigator.of(context).pop();
+                  });
+                }
+              },
+              icon: Icon(
+                Icons.delete,
+                color: Colors.red[400],
+              ),
+              alignment: Alignment.bottomLeft,
+            ),
+            SizedBox(width: 10),
             TextButton(
               onPressed: () {
                 setState(() {
@@ -878,11 +930,18 @@ class _MapEditorState extends State<MapEditor> {
       } else if (result['callback'] == 'editBuilding') {
         _editBuilding(building: building);
       } else if (result['callback'] == 'deleteBuilding') {
-        _deleteBuilding(
-          buildingLocation: LatLng(
+        LatLng? address;
+        if (building['address'] is Map<String, dynamic>) {
+          address = LatLng(
             building['address']['latitude'],
             building['address']['longitude'],
-          ),
+          );
+        } else {
+          address = building['address'];
+        }
+
+        _deleteBuilding(
+          buildingLocation: address!,
         );
       }
     }
