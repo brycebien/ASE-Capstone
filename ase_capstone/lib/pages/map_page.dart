@@ -35,6 +35,7 @@ class _MapPageState extends State<MapPage> {
   CameraPosition? _initialCameraPosition;
   CameraTargetBounds? _cameraTargetBounds;
   String? _selectedBuilding;
+  final List<Map<String, dynamic>> _buildings = [];
   bool _showBuildingInfo = false;
 
   final Set<String> _votedPins = {};
@@ -65,7 +66,6 @@ class _MapPageState extends State<MapPage> {
     }
 
     // get args passed to map page via Navigator.pushNamed
-    print("ARGS::::::::::::: ${ModalRoute.of(context)?.settings.arguments}");
     final args =
         ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     if (args != null) {
@@ -166,6 +166,11 @@ class _MapPageState extends State<MapPage> {
     BitmapDescriptor customIcon = await _customIcon();
     LatLng? address;
     for (var building in userUniversity['buildings']) {
+      // add buildings to list of buildings
+      setState(() {
+        _buildings.add(building);
+      });
+
       if (building['address'] is String) {
         LatLng newAddress = await DirectionsHandler()
             .getDirectionFromAddress(address: building['address']);
@@ -647,6 +652,29 @@ class _MapPageState extends State<MapPage> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          // Buildings Button
+                          FloatingActionButton(
+                            heroTag: 'buildingsBtn',
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) {
+                                  return Scaffold(
+                                    appBar: AppBar(
+                                      title: Text('Buildings'),
+                                    ),
+                                    body: SearchableList(
+                                      items: _buildings,
+                                      keys: ['name', 'code'],
+                                    ),
+                                  );
+                                }),
+                              );
+                            },
+                            child: Icon(Icons.business),
+                          ),
+                          SizedBox(height: 12), // space between buttons
+
                           // Resources Button
                           FloatingActionButton(
                             heroTag: 'resourcesBtn',
@@ -657,6 +685,8 @@ class _MapPageState extends State<MapPage> {
                             child: Icon(Icons.menu_book),
                           ),
                           SizedBox(height: 12), // space between buttons
+
+                          // Event Button
                           FloatingActionButton(
                             heroTag: 'eventBtn',
                             onPressed: () {
