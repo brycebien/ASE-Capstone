@@ -56,7 +56,6 @@ class _ResourcesPageState extends State<ResourcesPage> {
           await _firestoreService.getResources(universityId: universityId);
       setState(() {
         _resources = resources;
-        isLoading = false;
         _universityId = universityId;
       });
     } catch (e) {
@@ -65,6 +64,9 @@ class _ResourcesPageState extends State<ResourcesPage> {
           context: context,
           message: 'Error loading resources, please try again later',
         );
+      });
+    } finally {
+      setState(() {
         isLoading = false;
       });
     }
