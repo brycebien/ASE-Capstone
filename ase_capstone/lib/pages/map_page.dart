@@ -663,7 +663,6 @@ class _MapPageState extends State<MapPage> {
                                     appBar: AppBar(
                                       title: Text('Buildings'),
                                     ),
-                                    // TODO: add prioritized buildings to list (user favoried buildings)
                                     body: SearchableList(
                                       items: _buildings,
                                       keys: ['name', 'code'],

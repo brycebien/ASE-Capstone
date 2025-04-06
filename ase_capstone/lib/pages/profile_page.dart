@@ -137,10 +137,11 @@ class _ProfilePageState extends State<ProfilePage> {
                       value: usernameController.text,
                     );
                   }
-
                   _getUser();
 
-                  Navigator.pop(context);
+                  setState(() {
+                    Navigator.of(context).pop();
+                  });
                 } catch (e) {
                   setState(() {
                     Utils.displayMessage(
