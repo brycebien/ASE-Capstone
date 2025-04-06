@@ -86,7 +86,8 @@ class _ProfilePageState extends State<ProfilePage> {
         TextEditingController(text: user?.displayName);
     TextEditingController emailController =
         TextEditingController(text: user?.email);
-    TextEditingController usernameController = TextEditingController();
+    TextEditingController usernameController =
+        TextEditingController(text: userData['username']);
 
     showDialog(
       context: context,
@@ -123,10 +124,23 @@ class _ProfilePageState extends State<ProfilePage> {
                     await user?.updateDisplayName(nameController.text);
                   }
 
+                  // Request email update
                   if (emailController.text.isNotEmpty &&
                       emailController.text != user?.email) {
                     await user?.verifyBeforeUpdateEmail(emailController.text);
                   }
+
+                  if (usernameController.text.isNotEmpty) {
+                    await firestoreService.updateUserField(
+                      userId: user!.uid,
+                      field: 'username',
+                      value: usernameController.text,
+                    );
+                  }
+
+                  _getUser();
+
+                  Navigator.pop(context);
                 } catch (e) {
                   setState(() {
                     Utils.displayMessage(

@@ -259,6 +259,17 @@ class FirestoreService {
     
   */
 
+  //update username
+  Future<void> updateUserField({
+    required String userId,
+    required String field,
+    required dynamic value,
+  }) async {
+    await FirebaseFirestore.instance.collection('users').doc(userId).update({
+      field: value,
+    });
+  }
+
   // update user password
   Future<void> updateUserPassword({
     required String userId,
