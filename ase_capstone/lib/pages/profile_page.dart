@@ -86,7 +86,8 @@ class _ProfilePageState extends State<ProfilePage> {
         TextEditingController(text: user?.displayName);
     TextEditingController emailController =
         TextEditingController(text: user?.email);
-    TextEditingController usernameController = TextEditingController();
+    TextEditingController usernameController =
+        TextEditingController(text: userData['username']);
 
     showDialog(
       context: context,
