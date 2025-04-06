@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class SearchBuildings extends StatefulWidget {
-  final List<Map<String, dynamic>> buildings;
+  final List<dynamic> buildings;
   final bool isTutorial;
   const SearchBuildings(
       {super.key, required this.buildings, this.isTutorial = false});
@@ -11,7 +11,7 @@ class SearchBuildings extends StatefulWidget {
 }
 
 class _SearchBuildingsState extends State<SearchBuildings> {
-  List<Map<String, dynamic>> foundBuildings = [];
+  List<dynamic> foundBuildings = [];
   final TextEditingController _searchController = TextEditingController();
 
   @override

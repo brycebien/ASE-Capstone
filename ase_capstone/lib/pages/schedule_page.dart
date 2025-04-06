@@ -122,7 +122,6 @@ class _SchedulePageState extends State<SchedulePage> {
       Navigator.of(context).pop();
     } else {
       Navigator.of(context).pop();
-      print("ERROR:::::::::::: {buildings: ${building != null}}");
       Utils.displayMessage(
         context: context,
         message: 'Error creating class. Please fill all fields.',
@@ -148,15 +147,18 @@ class _SchedulePageState extends State<SchedulePage> {
       await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => SearchableList(
-            items: buildings,
-            listTitle: 'Select a Building',
-            keys: ['name', 'code'],
+          builder: (context) => Scaffold(
+            appBar: AppBar(
+              title: Text('Select a Building'),
+            ),
+            body: SearchableList(
+              items: buildings,
+              keys: ['name', 'code'],
+            ),
           ),
         ),
       ).then((value) {
         setState(() {
-          print("RETURNING SELECTED: $value");
           selectedBuilding = value;
         });
       });
@@ -164,36 +166,6 @@ class _SchedulePageState extends State<SchedulePage> {
       return null; // Return nothing if the widget is not mounted
     }
 
-    // await showDialog(
-    //   context: context,
-    //   builder: (context) {
-    //     return AlertDialog(
-    //       title: Text('Select a Building'),
-    //       content: SearchableList(
-    //         items: buildings,
-    //         listTitle: 'Buildings',
-    //         keys: ['name', 'code'],
-    //       ),
-    //     );
-
-    // return AlertDialog(
-    //   title: Text('Select a Building'),
-    //   content: SingleChildScrollView(
-    //     child: Column(
-    //       children: buildings.map((e) {
-    //         return ListTile(
-    //           title: Text(e['name']),
-    //           onTap: () {
-    //             selectedBuilding = e['name'];
-    //             Navigator.of(context).pop();
-    //           },
-    //         );
-    //       }).toList(),
-    //     ),
-    //   ),
-    // );
-    print(
-        "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::");
     return selectedBuilding;
   }
 

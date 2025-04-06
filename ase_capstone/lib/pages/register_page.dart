@@ -91,11 +91,12 @@ class _RegisterPageState extends State<RegisterPage> {
       });
       return;
     }
-
-    setState(() {
-      // Navigate to the map page when the button is pressed
-      Navigator.pushNamed(context, '/map');
-    });
+    if (mounted) {
+      setState(() {
+        // Navigate to the map page when the button is pressed
+        Navigator.pushNamed(context, '/map');
+      });
+    }
   }
 
   @override

@@ -1,14 +1,23 @@
+import 'package:ase_capstone/utils/firebase_operations.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class SearchableList extends StatefulWidget {
   final List<Map<String, dynamic>> items;
-  final String listTitle;
   final List<String> keys;
+  final Widget? trailing;
+  final bool includePriorityBuildings;
+  final String? prependSubtitle;
+  final Function? onSelected;
+
   const SearchableList({
     super.key,
     required this.items,
-    required this.listTitle,
     required this.keys,
+    this.trailing,
+    this.includePriorityBuildings = false,
+    this.prependSubtitle,
+    this.onSelected,
   });
 
   @override
@@ -16,7 +25,10 @@ class SearchableList extends StatefulWidget {
 }
 
 class _SearchableListState extends State<SearchableList> {
+  final FirestoreService _firestoreServices = FirestoreService();
+  final user = FirebaseAuth.instance.currentUser!;
   List _foundItems = [];
+  List _favoriteItems = [];
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -25,6 +37,23 @@ class _SearchableListState extends State<SearchableList> {
     setState(() {
       _foundItems = widget.items;
     });
+    if (widget.includePriorityBuildings) {
+      _getFavoriteBuildings();
+    }
+  }
+
+  void _getFavoriteBuildings() async {
+    try {
+      await _firestoreServices.getFavorite(userId: user.uid).then(
+        (value) {
+          setState(() {
+            _favoriteItems = value;
+          });
+        },
+      );
+    } catch (e) {
+      return;
+    }
   }
 
   void _searchList(String query) {
@@ -40,82 +69,117 @@ class _SearchableListState extends State<SearchableList> {
           }
         }
         return false;
-        // final name = item['name'].toLowerCase();
-        // final abbreviation = item['abbreviation'].toLowerCase();
-        // final searchLower = query.toLowerCase();
-        // return name.contains(searchLower) || abbreviation.contains(searchLower);
       }).toList();
     });
   }
 
+  String _getItemsSubtitle({required int index}) {
+    String subtitle = "";
+    if (widget.keys.length > 1) {
+      for (var i = 1; i < widget.keys.length; i++) {
+        subtitle += '${_foundItems[index][widget.keys[i]]}';
+        if (i + 1 != widget.keys.length) {
+          subtitle += '\n'; // add a new line if not the last key
+        }
+      }
+      return subtitle;
+    } else {
+      return ''; // return empty string if there is only 1 key per item
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.listTitle),
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: TextField(
-              controller: _searchController,
-              decoration: const InputDecoration(
-                labelText: 'Search',
-                suffixIcon: Icon(Icons.search),
-              ),
-              onChanged: (value) {
-                _searchList(value);
-              },
-            ),
+    return Column(children: [
+      Padding(
+        padding: const EdgeInsets.all(8),
+        child: TextField(
+          controller: _searchController,
+          decoration: const InputDecoration(
+            labelText: 'Search',
+            suffixIcon: Icon(Icons.search),
           ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _foundItems.length,
-              itemBuilder: (context, index) {
-                return Column(
-                  children: [
-                    Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Card(
-                          key: ValueKey(_foundItems[index][widget.keys[0]]),
-                          elevation: 8,
-                          child: ListTile(
-                            title: Text(_foundItems[index][widget.keys[0]]),
-                            subtitle: Text(_foundItems[index][widget.keys[1]]),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.done),
+          onChanged: (value) {
+            _searchList(value);
+          },
+        ),
+      ),
+
+      // PRIORITY ITEMS EXPANSION TILE
+      if (widget.includePriorityBuildings && _favoriteItems.isNotEmpty)
+        SizedBox(height: 10),
+      if (widget.includePriorityBuildings && _favoriteItems.isNotEmpty)
+        ExpansionTile(
+          title: const Text('Favorite Buildings'),
+          children: [
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.3,
+              ),
+              child: ListView(
+                shrinkWrap: true,
+                children: _favoriteItems.map((item) {
+                  return ListTile(
+                    title: Text(item),
+                    onTap: () {
+                      if (widget.onSelected != null) {
+                        widget.onSelected!(widget.items.firstWhere((element) {
+                          return element[widget.keys[0]] == item;
+                        }));
+                      } else {
+                        setState(() {
+                          _foundItems = widget.items.where((element) {
+                            return element[widget.keys[0]] == item;
+                          }).toList();
+                        });
+                      }
+                    },
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
+        ),
+
+      // SEARCHABLE LIST
+      Expanded(
+        child: ListView.builder(
+          itemCount: _foundItems.length,
+          itemBuilder: (context, index) {
+            return Column(
+              children: [
+                Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Card(
+                      key: ValueKey(_foundItems[index][widget.keys[0]]),
+                      elevation: 8,
+                      child: ListTile(
+                        title: Text(_foundItems[index][widget.keys[0]]),
+                        subtitle: Text(
+                            '${widget.prependSubtitle ?? ''} ${_getItemsSubtitle(index: index)}'),
+                        trailing: widget.trailing ??
+                            IconButton(
+                              icon: Icon(
+                                Icons.arrow_forward_ios,
+                                color: Colors.blue[400],
+                              ),
                               onPressed: () {
-                                Navigator.of(context)
-                                    .pop(_foundItems[index][widget.keys[0]]);
+                                if (widget.onSelected != null) {
+                                  widget.onSelected!(_foundItems[index]);
+                                } else {
+                                  Navigator.of(context)
+                                      .pop(_foundItems[index][widget.keys[0]]);
+                                }
                               },
                             ),
-                          ),
-                        )
-                        // child: Card(
-                        //   key: ValueKey(_foundItems[index]['name']),
-                        //   elevation: 8,
-                        //   child: ListTile(
-                        //     title: Text(_foundItems[index]['name']),
-                        //     subtitle: Text(_foundItems[index]['abbreviation']),
-                        //     trailing: IconButton(
-                        //       icon: Icon(Icons.done),
-                        //       onPressed: () {
-                        //         Navigator.of(context)
-                        //             .pop(_foundItems[index]['name']);
-                        //       },
-                        //     ),
-                        //   ),
-                        // ),
-                        ),
-                    SizedBox(height: 10)
-                  ],
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
+                      ),
+                    )),
+                SizedBox(height: 10)
+              ],
+            );
+          },
+        ),
+      )
+    ]);
   }
 }

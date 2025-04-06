@@ -32,6 +32,17 @@ class FirestoreService {
     });
   }
 
+  Future<void> addToFavorites({
+    required String userId,
+    String? building,
+  }) async {
+    if (building != null) {
+      await _usersCollection.doc(userId).update({
+        'favorite-buildings': FieldValue.arrayUnion([building])
+      });
+    }
+  }
+
   // upload profile picture
   Future<void> uploadProfilePicture({
     required String userId,
@@ -110,6 +121,33 @@ class FirestoreService {
     return universities.docs
         .map((DocumentSnapshot doc) => doc.data() as Map<String, dynamic>)
         .toList();
+  }
+
+  // get user favorites
+  Future<dynamic> getFavorite({
+    required String userId,
+    String? building,
+  }) async {
+    final DocumentSnapshot userDoc = await _usersCollection.doc(userId).get();
+    if (!userDoc.exists) {
+      throw Exception('User not found');
+    }
+
+    final data = userDoc.data() as Map<String, dynamic>?;
+
+    // get buildings
+    if (building != null) {
+      if (data == null || !data.containsKey('favorite-buildings')) {
+        return false;
+      }
+
+      final List<dynamic> favorites = userDoc.get('favorite-buildings') ?? [];
+
+      return favorites.contains(building);
+    } else {
+      // return all favorites
+      return data?['favorite-buildings'] ?? [];
+    }
   }
 
   // get user's university
@@ -198,14 +236,21 @@ class FirestoreService {
   }
 
 // get resources from university collection if exists
-  Future<List<dynamic>> getResources({String? universityId}) async {
+  Future<List<Map<String, dynamic>>> getResources(
+      {String? universityId}) async {
     if (universityId == null || universityId.isEmpty) return [];
     final snapshot = await FirebaseFirestore.instance
         .collection('universities')
         .doc(universityId)
         .get();
 
-    return snapshot["resources"];
+    if (snapshot['resources'].isEmpty) {
+      throw Exception('The university does not have any resources yet');
+    }
+
+    return (snapshot["resources"] as List<dynamic>)
+        .map((e) => e as Map<String, dynamic>)
+        .toList();
   }
 
   /*
@@ -278,11 +323,31 @@ class FirestoreService {
     });
   }
 
+  // update university
+  Future<void> updateUniversity({
+    required String name,
+    required Map<String, dynamic> university,
+  }) async {
+    await FirebaseFirestore.instance
+        .collection('universities')
+        .doc(name)
+        .update(university);
+  }
+
   /*
   
     DELETE
     
   */
+
+  Future<void> removeFavorite(
+      {required String userId, String? building}) async {
+    if (building != null) {
+      await _usersCollection.doc(userId).update({
+        'favorite-buildings': FieldValue.arrayRemove([building])
+      });
+    }
+  }
 
   Future<void> deleteClassFromDatabase({
     required String userId,

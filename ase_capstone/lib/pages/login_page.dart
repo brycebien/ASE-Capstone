@@ -41,9 +41,11 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     // send user to map page upon successful login
-    setState(() {
-      Navigator.pushNamed(context, '/map');
-    });
+    if (mounted) {
+      setState(() {
+        Navigator.pushNamed(context, '/map');
+      });
+    }
   }
 
   @override

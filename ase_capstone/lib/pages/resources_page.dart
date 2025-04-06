@@ -1,4 +1,6 @@
 // lib/pages/resources_page.dart
+import 'package:ase_capstone/components/searchable_list.dart';
+import 'package:ase_capstone/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:ase_capstone/components/textfield.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
@@ -14,10 +16,8 @@ class ResourcesPage extends StatefulWidget {
 class _ResourcesPageState extends State<ResourcesPage> {
   User? currentUser = FirebaseAuth.instance.currentUser;
   final FirestoreService _firestoreService = FirestoreService();
-  List<dynamic> _resources = [];
-  List<dynamic> _filteredResources = [];
+  List<Map<String, dynamic>> _resources = [];
 
-  final TextEditingController _searchController = TextEditingController();
   final TextEditingController _newTitleController = TextEditingController();
   final TextEditingController _newTypeController = TextEditingController();
 
@@ -31,11 +31,12 @@ class _ResourcesPageState extends State<ResourcesPage> {
   }
 
   Future<void> _loadUniversityAndResources() async {
-    setState(() => isLoading = true);
+    setState(() {
+      isLoading = true;
+    });
 
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
-      print("No user signed in.");
       setState(() => isLoading = false);
       return;
     }
@@ -44,31 +45,29 @@ class _ResourcesPageState extends State<ResourcesPage> {
     final universityId = user['university'] as String?;
 
     if (universityId == null) {
-      print(" User has no university set.");
-      setState(() => isLoading = false);
+      setState(() {
+        isLoading = false;
+      });
       return;
     }
 
-    List<dynamic> resources =
-        await _firestoreService.getResources(universityId: universityId);
-
-    setState(() {
-      _resources = resources;
-      _filteredResources = resources;
-      isLoading = false;
-      _universityId = universityId;
-    });
-  }
-
-  void _searchResources(String query) {
-    setState(() {
-      _filteredResources = _resources.where((resource) {
-        final title = resource['title'].toLowerCase();
-        final type = resource['type'].toLowerCase();
-        final searchLower = query.toLowerCase();
-        return title.contains(searchLower) || type.contains(searchLower);
-      }).toList();
-    });
+    try {
+      List<Map<String, dynamic>> resources =
+          await _firestoreService.getResources(universityId: universityId);
+      setState(() {
+        _resources = resources;
+        isLoading = false;
+        _universityId = universityId;
+      });
+    } catch (e) {
+      setState(() {
+        Utils.displayMessage(
+          context: context,
+          message: 'Error loading resources, please try again later',
+        );
+        isLoading = false;
+      });
+    }
   }
 
   void _createResourceDialog() {
@@ -104,8 +103,6 @@ class _ResourcesPageState extends State<ResourcesPage> {
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                _newTitleController.clear();
-                _newTypeController.clear();
               },
               child: Text('Cancel'),
             ),
@@ -118,11 +115,6 @@ class _ResourcesPageState extends State<ResourcesPage> {
                   'type': _newTypeController.text,
                   'timestamp': DateTime.now(),
                 };
-
-                // await FirebaseFirestore.instance
-                //     .collection('universities')
-                //     .doc(_universityId)
-                //     .update({newFieldKey: newFieldValue});
 
                 _firestoreService.addResource(
                     resource: newFieldValue, uid: currentUser!.uid);
@@ -148,45 +140,15 @@ class _ResourcesPageState extends State<ResourcesPage> {
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextField(
-                    controller: _searchController,
-                    decoration: const InputDecoration(
-                      labelText: 'Search Resources',
-                      suffixIcon: Icon(Icons.search),
-                    ),
-                    onChanged: _searchResources,
-                  ),
-                ),
-                Expanded(
-                  child: _filteredResources.isEmpty
-                      ? Center(child: Text("No resources available."))
-                      : ListView.builder(
-                          itemCount: _filteredResources.length,
-                          itemBuilder: (context, index) {
-                            final resource = _filteredResources[index];
-                            return Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Card(
-                                elevation: 6,
-                                child: ListTile(
-                                  title: Text(resource['title']),
-                                  subtitle: Text('Type: ${resource['type']}'),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                ),
-              ],
+          : SearchableList(
+              items: _resources,
+              keys: ['title', 'type'],
+              prependSubtitle: 'Type: ',
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: _createResourceDialog,
-        child: Icon(Icons.add),
         tooltip: 'Add Resource',
+        child: Icon(Icons.add),
       ),
     );
   }

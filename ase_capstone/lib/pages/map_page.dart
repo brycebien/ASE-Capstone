@@ -1,3 +1,4 @@
+import 'package:ase_capstone/components/building_info.dart';
 import 'package:ase_capstone/components/searchable_list.dart';
 import 'package:ase_capstone/components/settings_drawer.dart';
 import 'package:ase_capstone/models/directions.dart';
@@ -29,9 +30,13 @@ class _MapPageState extends State<MapPage> {
   LocationData? _currentLocation;
   final Set<Marker> _markers = {};
   bool _hasUniversity = false;
+  bool isLoadingBuildingMarkers = true;
   String? _userUniversity;
   CameraPosition? _initialCameraPosition;
   CameraTargetBounds? _cameraTargetBounds;
+  String? _selectedBuilding;
+  final List<Map<String, dynamic>> _buildings = [];
+  bool _showBuildingInfo = false;
 
   final Set<String> _votedPins = {};
   LatLng? destination;
@@ -45,7 +50,6 @@ class _MapPageState extends State<MapPage> {
     _listenToPins(); // check for pins in the database
     _checkExpiredPins(); // check that no pins are expired (older than 24 hrs)
     _checkUserUniversity(); // check that he user has a university chosen
-    // _setInitialCameraPosition(); // set the initial camera position to the user's university
   }
 
   @override
@@ -65,9 +69,18 @@ class _MapPageState extends State<MapPage> {
     final args =
         ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     if (args != null) {
-      setState(() {
-        destination = args['destination'] as LatLng?;
-      });
+      if (args['destination'] is String) {
+        Utils.convertAddressToLatLng(address: args['destination'])
+            .then((value) {
+          setState(() {
+            destination = value;
+          });
+        });
+      } else {
+        setState(() {
+          destination = args['destination'] as LatLng?;
+        });
+      }
     }
   }
 
@@ -129,10 +142,74 @@ class _MapPageState extends State<MapPage> {
           _userUniversity = universityName;
         }
       });
-      _setInitialCameraPosition();
+      _setInitialCameraPosition(); // set the camera position to the new university
+      _setBuildingMarkers(
+        university: universityName,
+      ); // generate building markers for the new university
     } else {
       return; // do nothing if the user hasn't changed their university
     }
+  }
+
+  void _setBuildingMarkers({required String university}) async {
+    setState(() {
+      isLoadingBuildingMarkers = true;
+    });
+
+    // delete any existing building markers
+    _markers
+        .removeWhere((element) => element.markerId.value.contains('building-'));
+
+    // get the university's buildings and add them to the map
+    Map<String, dynamic> userUniversity =
+        await _firestoreServices.getUniversityByName(name: university);
+    BitmapDescriptor customIcon = await _customIcon();
+    LatLng? address;
+    for (var building in userUniversity['buildings']) {
+      // add buildings to list of buildings
+      setState(() {
+        _buildings.add(building);
+      });
+
+      if (building['address'] is String) {
+        LatLng newAddress = await DirectionsHandler()
+            .getDirectionFromAddress(address: building['address']);
+        // convert the address to a LatLng object
+        setState(() {
+          address = newAddress;
+        });
+      } else {
+        setState(() {
+          address = LatLng(
+            building['address']['latitude'],
+            building['address']['longitude'],
+          );
+        });
+      }
+      _markers.add(
+        Marker(
+          markerId: MarkerId('building-${building['name']}'),
+          position: address!,
+          icon: customIcon,
+          onTap: () async {
+            setState(() {
+              _selectedBuilding = building['name'];
+              _showBuildingInfo = !_showBuildingInfo;
+            });
+          },
+        ),
+      );
+    }
+    setState(() {
+      isLoadingBuildingMarkers = false;
+    });
+  }
+
+  Future<BitmapDescriptor> _customIcon() async {
+    return await BitmapDescriptor.asset(
+      ImageConfiguration(size: Size(24, 24)),
+      'assets/images/building.png',
+    );
   }
 
   void _checkForDirections() async {
@@ -438,11 +515,21 @@ class _MapPageState extends State<MapPage> {
 
   void _getDirections({required LatLng destination}) async {
     final directions = await DirectionsHandler().getDirections(
-        origin: LatLng(
-          _currentLocation!.latitude!,
-          _currentLocation!.longitude!,
+      origin: LatLng(
+        _currentLocation!.latitude!,
+        _currentLocation!.longitude!,
+      ),
+      destination: destination,
+    );
+    _markers.add(
+      Marker(
+        markerId: MarkerId('destinationMarker'),
+        position: destination,
+        icon: BitmapDescriptor.defaultMarkerWithHue(
+          BitmapDescriptor.hueViolet,
         ),
-        destination: destination);
+      ),
+    );
     setState(() {
       _info = directions;
     });
@@ -456,10 +543,14 @@ class _MapPageState extends State<MapPage> {
       result = await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => SearchableList(
-            items: universities,
-            listTitle: 'Select a University',
-            keys: ['name', 'abbreviation'],
+          builder: (context) => Scaffold(
+            appBar: AppBar(
+              title: Text('Select a University'),
+            ),
+            body: SearchableList(
+              items: universities,
+              keys: ['name', 'abbreviation'],
+            ),
           ),
         ),
       );
@@ -476,7 +567,7 @@ class _MapPageState extends State<MapPage> {
         _hasUniversity = true;
         _userUniversity = result;
       });
-      _setInitialCameraPosition();
+      _checkUserUniversity(); // check that the user has a university and update the map based on the new university
     }
   }
 
@@ -514,32 +605,19 @@ class _MapPageState extends State<MapPage> {
                   alignment: Alignment.center,
                   children: [
                     (_initialCameraPosition == null ||
-                            _cameraTargetBounds == null)
+                            _cameraTargetBounds == null ||
+                            isLoadingBuildingMarkers)
                         ? Center(child: CircularProgressIndicator())
                         : GoogleMap(
                             onMapCreated: _onMapCreated,
                             style: _mapStyle,
                             initialCameraPosition: _initialCameraPosition!,
-                            // initialCameraPosition: CameraPosition(
-                            //   target: LatLng(
-                            //     _currentLocation!.latitude!,
-                            //     _currentLocation!.longitude!,
-                            //   ),
-                            //   zoom: 15.5,
-                            //   tilt: 0,
-                            // ),
                             rotateGesturesEnabled: true,
                             myLocationButtonEnabled: true,
                             zoomControlsEnabled:
                                 false, // Disable zoom controls (+/- buttons)
                             myLocationEnabled: true,
                             cameraTargetBounds: _cameraTargetBounds!,
-                            // cameraTargetBounds: CameraTargetBounds(
-                            //   LatLngBounds(
-                            //     southwest: LatLng(39.028, -84.467),
-                            //     northeast: LatLng(39.038, -84.459),
-                            //   ),
-                            // ),
                             minMaxZoomPreference:
                                 MinMaxZoomPreference(15.0, 20.0),
                             polylines: {
@@ -555,19 +633,170 @@ class _MapPageState extends State<MapPage> {
                                 ),
                             },
                             markers: _markers,
+                            onTap: (location) {
+                              if (_showBuildingInfo) {
+                                setState(() {
+                                  _showBuildingInfo = false;
+                                });
+                              }
+                            },
                             onLongPress: (LatLng tappedPoint) {
                               _getDirections(destination: tappedPoint);
-                              _markers.add(
-                                Marker(
-                                  markerId: MarkerId('destinationMarker'),
-                                  position: tappedPoint,
-                                  icon: BitmapDescriptor.defaultMarkerWithHue(
-                                    BitmapDescriptor.hueViolet,
-                                  ),
-                                ),
-                              );
                             },
                           ),
+
+                    // Resources and Event buttons
+                    Positioned(
+                      bottom: 16,
+                      right: 16,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Buildings Button
+                          FloatingActionButton(
+                            heroTag: 'buildingsBtn',
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) {
+                                  return Scaffold(
+                                    appBar: AppBar(
+                                      title: Text('Buildings'),
+                                    ),
+                                    // TODO: add prioritized buildings to list (user favoried buildings)
+                                    body: SearchableList(
+                                      items: _buildings,
+                                      keys: ['name', 'code'],
+                                      includePriorityBuildings: true,
+                                      onSelected: (building) {
+                                        // show building info when selected
+                                        setState(() {
+                                          if (mounted) {
+                                            Navigator.of(context).pop();
+                                          }
+                                          _selectedBuilding = building['name'];
+                                          _showBuildingInfo = true;
+                                        });
+                                      },
+                                    ),
+                                  );
+                                }),
+                              );
+                            },
+                            child: Icon(Icons.business),
+                          ),
+                          SizedBox(height: 12), // space between buttons
+
+                          // Resources Button
+                          FloatingActionButton(
+                            heroTag: 'resourcesBtn',
+                            onPressed: () {
+                              Navigator.pushNamed(context, '/resources');
+                            },
+                            tooltip: 'View Campus Resources',
+                            child: Icon(Icons.menu_book),
+                          ),
+                          SizedBox(height: 12), // space between buttons
+
+                          // Event Button
+                          FloatingActionButton(
+                            heroTag: 'eventBtn',
+                            onPressed: () {
+                              if (_currentLocation != null) {
+                                _addEventMarker(LatLng(
+                                  _currentLocation!.latitude!,
+                                  _currentLocation!.longitude!,
+                                ));
+                              }
+                            },
+                            tooltip: 'Report Event',
+                            child: Icon(Icons.add_location_alt),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // BuildingInfo Container
+                    if (_selectedBuilding != null)
+                      AnimatedPositioned(
+                        duration: Duration(milliseconds: 100),
+                        curve: Curves.easeInOut,
+                        top: 10,
+                        bottom: 10,
+                        right: 0,
+                        left: _showBuildingInfo
+                            ? MediaQuery.of(context).size.width * 0.25
+                            : MediaQuery.of(context).size.width,
+                        child: Container(
+                          width: MediaQuery.of(context).size.width * 0.75,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(20),
+                              bottomLeft: Radius.circular(20),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                blurRadius: 10,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                            color: Theme.of(context).colorScheme.surface,
+                          ),
+                          child: !_showBuildingInfo
+                              ? SizedBox(width: 0.0)
+                              : Padding(
+                                  padding: const EdgeInsets.all(20.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Expanded(
+                                            child: Center(
+                                              child: Text(
+                                                _selectedBuilding!,
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 20,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          IconButton(
+                                            icon: Icon(
+                                              Icons.close,
+                                              color: Colors.red,
+                                              size: 20,
+                                            ),
+                                            onPressed: () {
+                                              setState(() {
+                                                _showBuildingInfo = false;
+                                              });
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                      Divider(
+                                          thickness: 1, color: Colors.white),
+                                      SizedBox(height: 10),
+                                      BuildingInfo(
+                                        university: _userUniversity!,
+                                        building: _selectedBuilding!,
+                                        onNavigateToBuilding: (location) {
+                                          _getDirections(destination: location);
+                                          setState(() {
+                                            _showBuildingInfo = false;
+                                          });
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                        ),
+                      ),
 
                     // Cancel directions button
                     if (_info != null)
@@ -589,40 +818,8 @@ class _MapPageState extends State<MapPage> {
                           child: Icon(Icons.delete),
                         ),
                       ),
-                    Positioned(
-                      bottom: 16,
-                      right: 16,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        // crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          // Resources Button
-                          FloatingActionButton(
-                            heroTag: 'resourcesBtn',
-                            onPressed: () {
-                              Navigator.pushNamed(context, '/resources');
-                            },
-                            tooltip: 'View Campus Resources',
-                            child: Icon(Icons.menu_book),
-                          ),
-                          SizedBox(height: 12), // space between buttons
-                          FloatingActionButton(
-                            heroTag: 'eventBtn',
-                            onPressed: () {
-                              if (_currentLocation != null) {
-                                _addEventMarker(LatLng(
-                                  _currentLocation!.latitude!,
-                                  _currentLocation!.longitude!,
-                                ));
-                              }
-                            },
-                            tooltip: 'Report Event',
-                            child: Icon(Icons.add_location_alt),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (_info != null)
+
+                    if (_info != null && !_showBuildingInfo)
                       // Display distance and time
                       Positioned(
                         top: 20,
