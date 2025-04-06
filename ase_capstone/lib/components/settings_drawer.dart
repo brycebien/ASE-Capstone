@@ -120,6 +120,16 @@ class SettingsDrawerState extends State<SettingsDrawer> {
               );
             },
           ),
+          ListTile(
+            leading: Icon(Icons.public),
+            title: Text('Campus Events'),
+            onTap: () {
+              Navigator.pushNamed(
+                context,
+                '/events',
+              );
+            },
+          ),
           if (_isAdmin)
             ListTile(
               leading: Icon(Icons.admin_panel_settings),

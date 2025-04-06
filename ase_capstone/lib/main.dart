@@ -8,6 +8,7 @@ import 'package:ase_capstone/pages/schedule_page.dart';
 import 'package:ase_capstone/pages/settings_page.dart';
 import 'package:ase_capstone/pages/profile_page.dart';
 import 'package:ase_capstone/pages/inbox_page.dart';
+import 'package:ase_capstone/pages/event_page.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -62,6 +63,7 @@ class _MyAppState extends State<MyApp> {
         '/schedule': (context) => SchedulePage(),
         '/resources': (context) => ResourcesPage(),
         '/inbox': (context) => InboxPage(),
+        '/events': (context) => const EventPage(),
         '/development-page': (context) => const DevelopmentPage(),
         '/edit-university': (context) => const EditUniversityPage(),
         '/create-university': (context) => const CreateUniversityPage(),
