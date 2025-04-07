@@ -1,4 +1,5 @@
 import 'package:ase_capstone/components/bottom_dialog.dart';
+import 'package:ase_capstone/components/my_button.dart';
 import 'package:ase_capstone/components/search_buildings.dart';
 import 'package:ase_capstone/components/textfield.dart';
 import 'package:ase_capstone/models/directions_handler.dart';
@@ -36,6 +37,12 @@ class _MapEditorState extends State<MapEditor> {
   final TextEditingController _buildingCodeController = TextEditingController();
   final TextEditingController _buildingAddressController =
       TextEditingController();
+
+  // new resource controllers
+  final TextEditingController _resourceNameController = TextEditingController();
+  final TextEditingController _resourceRoomController = TextEditingController();
+  Map<String, dynamic>? _selectedResourceBuilding;
+  List<Map<String, dynamic>> resources = [];
 
   List<dynamic> _buildings = [];
   final List<Marker> _buildingMarkers = [];
@@ -761,6 +768,7 @@ class _MapEditorState extends State<MapEditor> {
   }
 
   void _saveUniversity() async {
+    // TODO: add functionality for saving resources
     final navigator = Navigator.of(context);
     if (_isCreate) {
       // ask user for university name and abbreviation
@@ -947,6 +955,102 @@ class _MapEditorState extends State<MapEditor> {
     }
   }
 
+  void _addResourcesDialog() async {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Add Resources'),
+            ),
+            body: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Center(
+                child: Column(
+                  children: [
+                    // resource name
+                    MyTextField(
+                      controller: _resourceNameController,
+                      hintText: 'Resource Name',
+                      obscureText: false,
+                    ),
+                    SizedBox(height: 20),
+
+                    // resource link (not required)
+                    // MyTextField(
+                    //   controller: _resourceLinkController,
+                    //   hintText: 'Resource Link (not required)',
+                    //   obscureText: false,
+                    // ),
+                    // SizedBox(height: 20),
+
+                    // resource location (building)
+                    DropdownButtonFormField<Map<String, dynamic>>(
+                      value: _selectedResourceBuilding,
+                      items: _buildings
+                          .map<DropdownMenuItem<Map<String, dynamic>>>(
+                              (building) {
+                        return DropdownMenuItem<Map<String, dynamic>>(
+                          value: building,
+                          child: Text(building['name']),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedResourceBuilding = value;
+                        });
+                      },
+                      decoration: InputDecoration(
+                        labelText: 'Resource Building',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    SizedBox(height: 20),
+
+                    // room number
+                    MyTextField(
+                      controller: _resourceRoomController,
+                      hintText: 'Room number',
+                      obscureText: false,
+                      isNumber: true,
+                    ),
+                    SizedBox(height: 50),
+
+                    // submit button
+                    MyButton(
+                      buttonText: 'Save Resource',
+                      onTap: () {
+                        if (_resourceNameController.text.isEmpty ||
+                            _selectedResourceBuilding == null ||
+                            _resourceRoomController.text.isEmpty) {
+                          Utils.displayMessage(
+                            context: context,
+                            message: 'Please fill out all fields.',
+                          );
+                        } else {
+                          // add resource to resource map to university
+                          Map<String, dynamic> resource = {
+                            'name': _resourceNameController.text,
+                            'building': _selectedResourceBuilding!,
+                            'room': _resourceRoomController.text,
+                          };
+                          setState(() {
+                            resources.add(resource);
+                          });
+                          if (mounted) {
+                            Navigator.of(context).pop();
+                          }
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1031,6 +1135,14 @@ class _MapEditorState extends State<MapEditor> {
                                 color: Colors.black,
                                 child: Row(
                                   children: [
+                                    IconButton(
+                                      onPressed: _addResourcesDialog,
+                                      icon: Icon(
+                                        Icons.menu_book,
+                                        size: 20,
+                                        color: Colors.blue[400],
+                                      ),
+                                    ),
                                     Text('Buildings: (${_buildings.length})'),
                                     IconButton(
                                       onPressed: () async {
