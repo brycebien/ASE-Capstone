@@ -508,9 +508,9 @@ class _MapPageState extends State<MapPage> {
     await FirebaseAuth.instance.signOut();
 
     // navigate to login page
-    setState(() {
+    if (mounted) {
       Navigator.of(context).pushReplacementNamed('/');
-    });
+    }
   }
 
   void _getDirections({required LatLng destination}) async {
