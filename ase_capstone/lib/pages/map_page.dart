@@ -31,6 +31,7 @@ class _MapPageState extends State<MapPage> {
   final Set<Marker> _markers = {};
   bool _hasUniversity = false;
   bool isLoadingBuildingMarkers = true;
+  bool _isLoadingUser = true;
   String? _userUniversity;
   CameraPosition? _initialCameraPosition;
   CameraTargetBounds? _cameraTargetBounds;
@@ -45,7 +46,12 @@ class _MapPageState extends State<MapPage> {
   @override
   void initState() {
     super.initState();
-    _getCurrentLocation(); // get the user's location
+    _getCurrentLocation().then((_) {
+      _initializeUser();
+    }); // get the user's location
+  }
+
+  void _initializeUser() {
     _loadMapStyle(); // load the map's color theme (light or dark mode)
     _listenToPins(); // check for pins in the database
     _checkExpiredPins(); // check that no pins are expired (older than 24 hrs)
@@ -141,6 +147,7 @@ class _MapPageState extends State<MapPage> {
           _hasUniversity = true;
           _userUniversity = universityName;
         }
+        _isLoadingUser = false;
       });
       _setInitialCameraPosition(); // set the camera position to the new university
       _setBuildingMarkers(
@@ -237,7 +244,7 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
-  void _getCurrentLocation() async {
+  Future<void> _getCurrentLocation() async {
     Location location = Location();
 
     // check if location services are enabled and ask user to enable location permissions if not
@@ -267,31 +274,33 @@ class _MapPageState extends State<MapPage> {
 
     try {
       // set current location to the user's location when the app starts
-      location.getLocation().then((value) {
-        setState(() {
-          _currentLocation = value;
-        });
+      var userLocation = await location.getLocation();
+      setState(() {
+        _currentLocation = userLocation;
       });
 
       // update the current location when the user moves
-      location.onLocationChanged.listen((LocationData newLocation) {
-        setState(() {
-          _currentLocation = newLocation;
-          _checkForDirections();
-        });
+      if (mounted) {
+        location.onLocationChanged.listen((LocationData newLocation) {
+          if (!mounted) return;
+          setState(() {
+            _currentLocation = newLocation;
+            _checkForDirections();
+          });
 
-        // animate the camera to the user's location when the user moves/app is started
-        _controller?.animateCamera(CameraUpdate.newCameraPosition(
-          CameraPosition(
-            zoom: 20.0,
-            tilt: 50.0,
-            target: LatLng(
-              _currentLocation!.latitude!,
-              _currentLocation!.longitude!,
+          // animate the camera to the user's location when the user moves/app is started
+          _controller?.animateCamera(CameraUpdate.newCameraPosition(
+            CameraPosition(
+              zoom: 20.0,
+              tilt: 50.0,
+              target: LatLng(
+                _currentLocation!.latitude!,
+                _currentLocation!.longitude!,
+              ),
             ),
-          ),
-        ));
-      });
+          ));
+        });
+      }
     } catch (e) {
       setState(() {
         Utils.displayMessage(
@@ -584,7 +593,7 @@ class _MapPageState extends State<MapPage> {
       drawer: SafeArea(
         child: SettingsDrawer(user: user),
       ),
-      body: _currentLocation == null
+      body: _currentLocation == null || _isLoadingUser
           ? Center(
               child: CircularProgressIndicator(),
             )
