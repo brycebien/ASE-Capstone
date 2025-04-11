@@ -31,8 +31,6 @@ class _MapPageState extends State<MapPage> {
   final Set<Marker> _markers = {};
   bool _hasUniversity = false;
   bool isLoadingBuildingMarkers = true;
-  bool isLoadingCamera = true;
-  bool _hasLocation = false;
   String? _userUniversity;
   CameraPosition? _initialCameraPosition;
   CameraTargetBounds? _cameraTargetBounds;
@@ -62,11 +60,10 @@ class _MapPageState extends State<MapPage> {
       _updateMapStyle(_controller!);
     }
 
-    // TODO:
     // detect changes to user university
-    // if (_hasUniversity == true) {
-    // _checkUserUniversity();
-    // }
+    if (_hasUniversity == true) {
+      _checkUserUniversity();
+    }
 
     // get args passed to map page via Navigator.pushNamed
     final args =
@@ -87,8 +84,7 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
-  Future<void> _setInitialCameraPosition() async {
-    print("SETTING CAMERA POSITION");
+  void _setInitialCameraPosition() async {
     // get the user's university location
     final String universityName =
         await _firestoreServices.getUserUniversity(userId: user.uid);
@@ -96,9 +92,7 @@ class _MapPageState extends State<MapPage> {
     if (universityName == "") {
       return;
     }
-    await _firestoreServices
-        .getUniversityByName(name: universityName)
-        .then((value) {
+    _firestoreServices.getUniversityByName(name: universityName).then((value) {
       setState(() {
         _initialCameraPosition = CameraPosition(
           target: LatLng(
@@ -121,11 +115,7 @@ class _MapPageState extends State<MapPage> {
             ),
           ),
         );
-
-        isLoadingCamera = false;
       });
-      print(
-          "SUCCESS SETTING CAMERA ---- $_initialCameraPosition ---- $_cameraTargetBounds");
 
       if (_controller != null) {
         Utils.zoomToLocation(
@@ -150,12 +140,10 @@ class _MapPageState extends State<MapPage> {
         } else {
           _hasUniversity = true;
           _userUniversity = universityName;
-          print(
-              "University check: _hasUniversity=$_hasUniversity, _userUniversity=$_userUniversity");
         }
       });
-      await _setInitialCameraPosition(); // set the camera position to the new university
-      await _setBuildingMarkers(
+      _setInitialCameraPosition(); // set the camera position to the new university
+      _setBuildingMarkers(
         university: universityName,
       ); // generate building markers for the new university
     } else {
@@ -163,12 +151,10 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
-  Future<void> _setBuildingMarkers({required String university}) async {
-    print("SETTING BUILDING MARKERS");
+  void _setBuildingMarkers({required String university}) async {
     setState(() {
       isLoadingBuildingMarkers = true;
     });
-    List<Map<String, dynamic>> buildings = [];
 
     // delete any existing building markers
     _markers
@@ -182,7 +168,7 @@ class _MapPageState extends State<MapPage> {
     for (var building in userUniversity['buildings']) {
       // add buildings to list of buildings
       setState(() {
-        buildings.add(building);
+        _buildings.add(building);
       });
 
       if (building['address'] is String) {
@@ -215,11 +201,8 @@ class _MapPageState extends State<MapPage> {
       );
     }
     setState(() {
-      _buildings.addAll(buildings);
       isLoadingBuildingMarkers = false;
     });
-    print(
-        "!!!!!!!!!!!!BUILDINGS SUCCESS ---- added ${userUniversity['buildings'].length} buildings");
   }
 
   Future<BitmapDescriptor> _customIcon() async {
@@ -262,12 +245,11 @@ class _MapPageState extends State<MapPage> {
     if (!serviceEnabled) {
       serviceEnabled = await location.requestService();
       if (!serviceEnabled) {
-        // TODO: handle location permissions denied
         return;
       }
     }
 
-    // check if location permissions granted to the app -- ask user to grant permissions if not
+    // check if location permissions are granted and ask user to grant permissions if not
     var permissionGranted = await location.hasPermission();
     if (permissionGranted == PermissionStatus.denied) {
       permissionGranted = await location.requestPermission();
@@ -284,13 +266,11 @@ class _MapPageState extends State<MapPage> {
     );
 
     try {
-      print("SETTING CURRENT LOCATION");
       // set current location to the user's location when the app starts
-      final currentLocation = await location.getLocation();
-      setState(() {
-        _currentLocation = currentLocation;
-        _hasLocation = true;
-        print("SUCCESS ---- $_currentLocation");
+      location.getLocation().then((value) {
+        setState(() {
+          _currentLocation = value;
+        });
       });
 
       // update the current location when the user moves
@@ -587,8 +567,7 @@ class _MapPageState extends State<MapPage> {
         _hasUniversity = true;
         _userUniversity = result;
       });
-      // TODO:
-      // _checkUserUniversity(); // check that the user has a university and update the map based on the new university
+      _checkUserUniversity(); // check that the user has a university and update the map based on the new university
     }
   }
 
@@ -605,186 +584,208 @@ class _MapPageState extends State<MapPage> {
       drawer: SafeArea(
         child: SettingsDrawer(user: user),
       ),
-      body: !_hasUniversity
-          ? AlertDialog(
-              title: Text('No University Selected'),
-              content: Text('Please select a university to use the map.'),
-              actions: [
-                TextButton(
-                  onPressed: () async {
-                    _showUniversityPicker();
-                  },
-                  child: Text('Universities'),
-                ),
-              ],
+      body: _currentLocation == null
+          ? Center(
+              child: CircularProgressIndicator(),
             )
-          : Stack(
-              alignment: Alignment.center,
-              children: [
-                (_hasLocation == false ||
-                        isLoadingCamera == true ||
-                        isLoadingBuildingMarkers == true)
-                    ? Center(child: CircularProgressIndicator())
-                    : GoogleMap(
-                        onMapCreated: _onMapCreated,
-                        style: _mapStyle,
-                        initialCameraPosition: _initialCameraPosition!,
-                        rotateGesturesEnabled: true,
-                        myLocationButtonEnabled: true,
-                        zoomControlsEnabled:
-                            false, // Disable zoom controls (+/- buttons)
-                        myLocationEnabled: true,
-                        cameraTargetBounds: _cameraTargetBounds!,
-                        minMaxZoomPreference: MinMaxZoomPreference(15.0, 20.0),
-                        polylines: {
-                          if (_info != null)
-                            Polyline(
-                              polylineId: PolylineId('route'),
-                              points: _info!.polylineCoordinates
-                                  .map((e) => LatLng(e.latitude, e.longitude))
-                                  .toList(),
-                              color: Colors.yellow,
-                              width: 5,
-                            ),
-                        },
-                        markers: _markers,
-                        onTap: (location) {
-                          if (_showBuildingInfo) {
-                            setState(() {
-                              _showBuildingInfo = false;
-                            });
-                          }
-                        },
-                        onLongPress: (LatLng tappedPoint) {
-                          _getDirections(destination: tappedPoint);
-                        },
-                      ),
+          : !_hasUniversity
+              ? AlertDialog(
+                  title: Text('No University Selected'),
+                  content: Text('Please select a university to use the map.'),
+                  actions: [
+                    TextButton(
+                      onPressed: () async {
+                        _showUniversityPicker();
+                      },
+                      child: Text('Universities'),
+                    ),
+                  ],
+                )
+              : Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    (_initialCameraPosition == null ||
+                            _cameraTargetBounds == null ||
+                            isLoadingBuildingMarkers)
+                        ? Center(child: CircularProgressIndicator())
+                        : GoogleMap(
+                            onMapCreated: _onMapCreated,
+                            style: _mapStyle,
+                            initialCameraPosition: _initialCameraPosition!,
+                            rotateGesturesEnabled: true,
+                            myLocationButtonEnabled: true,
+                            zoomControlsEnabled:
+                                false, // Disable zoom controls (+/- buttons)
+                            myLocationEnabled: true,
+                            cameraTargetBounds: _cameraTargetBounds!,
+                            minMaxZoomPreference:
+                                MinMaxZoomPreference(15.0, 20.0),
+                            polylines: {
+                              if (_info != null)
+                                Polyline(
+                                  polylineId: PolylineId('route'),
+                                  points: _info!.polylineCoordinates
+                                      .map((e) =>
+                                          LatLng(e.latitude, e.longitude))
+                                      .toList(),
+                                  color: Colors.yellow,
+                                  width: 5,
+                                ),
+                            },
+                            markers: _markers,
+                            onTap: (location) {
+                              if (_showBuildingInfo) {
+                                setState(() {
+                                  _showBuildingInfo = false;
+                                });
+                              }
+                            },
+                            onLongPress: (LatLng tappedPoint) {
+                              _getDirections(destination: tappedPoint);
+                            },
+                          ),
 
-                // Resources and Event buttons
-                Positioned(
-                  bottom: 16,
-                  right: 16,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Buildings Button
-                      FloatingActionButton(
-                        heroTag: 'buildingsBtn',
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) {
-                              return Scaffold(
-                                appBar: AppBar(
-                                  title: Text('Buildings'),
-                                ),
-                                body: SearchableList(
-                                  items: _buildings,
-                                  keys: ['name', 'code'],
-                                  includePriorityBuildings: true,
-                                  onSelected: (building) {
-                                    // show building info when selected
-                                    setState(() {
-                                      if (mounted) {
-                                        Navigator.of(context).pop();
-                                      }
-                                      _selectedBuilding = building['name'];
-                                      _showBuildingInfo = true;
-                                    });
-                                  },
-                                ),
+                    // Resources and Event buttons
+                    Positioned(
+                      bottom: 16,
+                      right: 16,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Buildings Button
+                          FloatingActionButton(
+                            heroTag: 'buildingsBtn',
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) {
+                                  return Scaffold(
+                                    appBar: AppBar(
+                                      title: Text('Buildings'),
+                                    ),
+                                    body: SearchableList(
+                                      items: _buildings,
+                                      keys: ['name', 'code'],
+                                      includePriorityBuildings: true,
+                                      onSelected: (building) {
+                                        // show building info when selected
+                                        setState(() {
+                                          if (mounted) {
+                                            Navigator.of(context).pop();
+                                          }
+                                          _selectedBuilding = building['name'];
+                                          _showBuildingInfo = true;
+                                        });
+                                      },
+                                    ),
+                                  );
+                                }),
                               );
-                            }),
-                          );
-                        },
-                        child: Icon(Icons.business),
-                      ),
-                      SizedBox(height: 12), // space between buttons
+                            },
+                            child: Icon(Icons.business),
+                          ),
+                          SizedBox(height: 12), // space between buttons
 
-                      // Resources Button
-                      FloatingActionButton(
-                        heroTag: 'resourcesBtn',
-                        onPressed: () {
-                          Navigator.pushNamed(context, '/resources');
-                        },
-                        tooltip: 'View Campus Resources',
-                        child: Icon(Icons.menu_book),
-                      ),
-                      SizedBox(height: 12), // space between buttons
+                          // Resources Button
+                          FloatingActionButton(
+                            heroTag: 'resourcesBtn',
+                            onPressed: () {
+                              Navigator.pushNamed(context, '/resources');
+                            },
+                            tooltip: 'View Campus Resources',
+                            child: Icon(Icons.menu_book),
+                          ),
+                          SizedBox(height: 12), // space between buttons
 
-                      // Event Button
-                      FloatingActionButton(
-                        heroTag: 'eventBtn',
-                        onPressed: () {
-                          if (_currentLocation != null) {
-                            _addEventMarker(LatLng(
-                              _currentLocation!.latitude!,
-                              _currentLocation!.longitude!,
-                            ));
-                          }
-                        },
-                        tooltip: 'Report Event',
-                        child: Icon(Icons.add_location_alt),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // BuildingInfo Container
-                if (_selectedBuilding != null)
-                  AnimatedPositioned(
-                    duration: Duration(milliseconds: 100),
-                    curve: Curves.easeInOut,
-                    top: 10,
-                    bottom: 10,
-                    right: 0,
-                    left: _showBuildingInfo
-                        ? MediaQuery.of(context).size.width * 0.25
-                        : MediaQuery.of(context).size.width,
-                    child: Container(
-                      width: MediaQuery.of(context).size.width * 0.75,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(20),
-                          bottomLeft: Radius.circular(20),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            blurRadius: 10,
-                            offset: Offset(0, 2),
+                          // Event Button
+                          FloatingActionButton(
+                            heroTag: 'eventBtn',
+                            onPressed: () {
+                              if (_currentLocation != null) {
+                                _addEventMarker(LatLng(
+                                  _currentLocation!.latitude!,
+                                  _currentLocation!.longitude!,
+                                ));
+                              }
+                            },
+                            tooltip: 'Report Event',
+                            child: Icon(Icons.add_location_alt),
                           ),
                         ],
-                        color: Theme.of(context).colorScheme.surface,
                       ),
-                      child: !_showBuildingInfo
-                          ? SizedBox(width: 0.0)
-                          : Padding(
-                              padding: const EdgeInsets.all(20.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
+                    ),
+
+                    // BuildingInfo Container
+                    if (_selectedBuilding != null)
+                      AnimatedPositioned(
+                        duration: Duration(milliseconds: 100),
+                        curve: Curves.easeInOut,
+                        top: 10,
+                        bottom: 10,
+                        right: 0,
+                        left: _showBuildingInfo
+                            ? MediaQuery.of(context).size.width * 0.25
+                            : MediaQuery.of(context).size.width,
+                        child: Container(
+                          width: MediaQuery.of(context).size.width * 0.75,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(20),
+                              bottomLeft: Radius.circular(20),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                blurRadius: 10,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                            color: Theme.of(context).colorScheme.surface,
+                          ),
+                          child: !_showBuildingInfo
+                              ? SizedBox(width: 0.0)
+                              : Padding(
+                                  padding: const EdgeInsets.all(20.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
                                     children: [
-                                      Expanded(
-                                        child: Center(
-                                          child: Text(
-                                            _selectedBuilding!,
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 20,
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Expanded(
+                                            child: Center(
+                                              child: Text(
+                                                _selectedBuilding!,
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 20,
+                                                ),
+                                              ),
                                             ),
                                           ),
-                                        ),
+                                          IconButton(
+                                            icon: Icon(
+                                              Icons.close,
+                                              color: Colors.red,
+                                              size: 20,
+                                            ),
+                                            onPressed: () {
+                                              setState(() {
+                                                _showBuildingInfo = false;
+                                              });
+                                            },
+                                          ),
+                                        ],
                                       ),
-                                      IconButton(
-                                        icon: Icon(
-                                          Icons.close,
-                                          color: Colors.red,
-                                          size: 20,
-                                        ),
-                                        onPressed: () {
+                                      Divider(
+                                          thickness: 1, color: Colors.white),
+                                      SizedBox(height: 10),
+                                      BuildingInfo(
+                                        university: _userUniversity!,
+                                        building: _selectedBuilding!,
+                                        onNavigateToBuilding: (location) {
+                                          _getDirections(destination: location);
                                           setState(() {
                                             _showBuildingInfo = false;
                                           });
@@ -792,72 +793,60 @@ class _MapPageState extends State<MapPage> {
                                       ),
                                     ],
                                   ),
-                                  Divider(thickness: 1, color: Colors.white),
-                                  SizedBox(height: 10),
-                                  BuildingInfo(
-                                    university: _userUniversity!,
-                                    building: _selectedBuilding!,
-                                    onNavigateToBuilding: (location) {
-                                      _getDirections(destination: location);
-                                      setState(() {
-                                        _showBuildingInfo = false;
-                                      });
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                    ),
-                  ),
-
-                // Cancel directions button
-                if (_info != null)
-                  Positioned(
-                    bottom: 16,
-                    left: 16,
-                    child: FloatingActionButton(
-                      onPressed: () {
-                        setState(() {
-                          _info = null;
-                          destination = null;
-                          _markers.removeWhere((element) =>
-                              element.markerId.value == 'destinationMarker');
-                        });
-                      },
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      child: Icon(Icons.delete),
-                    ),
-                  ),
-
-                if (_info != null && !_showBuildingInfo)
-                  // Display distance and time
-                  Positioned(
-                    top: 20,
-                    child: Container(
-                      padding:
-                          EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 1),
-                            blurRadius: 6,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Text(
-                        'Distance: ${_info!.totalDistance}\nTime: ${_info!.totalDuration}',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 16,
+                                ),
                         ),
                       ),
-                    ),
-                  ),
-              ],
-            ),
+
+                    // Cancel directions button
+                    if (_info != null)
+                      Positioned(
+                        bottom: 16,
+                        left: 16,
+                        child: FloatingActionButton(
+                          onPressed: () {
+                            setState(() {
+                              _info = null;
+                              destination = null;
+                              _markers.removeWhere((element) =>
+                                  element.markerId.value ==
+                                  'destinationMarker');
+                            });
+                          },
+                          backgroundColor:
+                              Theme.of(context).colorScheme.primary,
+                          child: Icon(Icons.delete),
+                        ),
+                      ),
+
+                    if (_info != null && !_showBuildingInfo)
+                      // Display distance and time
+                      Positioned(
+                        top: 20,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                              vertical: 10, horizontal: 20),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primary,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 1),
+                                blurRadius: 6,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            'Distance: ${_info!.totalDistance}\nTime: ${_info!.totalDuration}',
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
     );
   }
 }
