@@ -1112,8 +1112,10 @@ class _MapEditorState extends State<MapEditor> {
     print("editing $resource");
   }
 
-  void _deleteResource(resource) {
-    print("deleting $resource");
+  void _deleteResource(resource) async {
+    setState(() {
+      resources.removeWhere((res) => res['name'] == resource['name']);
+    });
   }
 
   @override
