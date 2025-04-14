@@ -1,6 +1,7 @@
 import 'package:ase_capstone/components/bottom_dialog.dart';
 import 'package:ase_capstone/components/my_button.dart';
 import 'package:ase_capstone/components/search_buildings.dart';
+import 'package:ase_capstone/components/search_resources.dart';
 import 'package:ase_capstone/components/textfield.dart';
 import 'package:ase_capstone/models/directions_handler.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
@@ -41,7 +42,7 @@ class _MapEditorState extends State<MapEditor> {
   // new resource controllers
   final TextEditingController _resourceNameController = TextEditingController();
   final TextEditingController _resourceRoomController = TextEditingController();
-  Map<String, dynamic>? _selectedResourceBuilding;
+  String? _selectedResourceBuilding;
   List<Map<String, dynamic>> resources = [];
 
   List<dynamic> _buildings = [];
@@ -1029,25 +1030,37 @@ class _MapEditorState extends State<MapEditor> {
                     // SizedBox(height: 20),
 
                     // resource location (building)
-                    DropdownButtonFormField<Map<String, dynamic>>(
-                      value: _selectedResourceBuilding,
-                      items: _buildings
-                          .map<DropdownMenuItem<Map<String, dynamic>>>(
-                              (building) {
-                        return DropdownMenuItem<Map<String, dynamic>>(
-                          value: building,
-                          child: Text(building['name']),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
+                    Autocomplete<Map<String, dynamic>>(
+                      optionsBuilder: (TextEditingValue textEditingValue) {
+                        if (textEditingValue.text.isEmpty) {
+                          return const Iterable<Map<String, dynamic>>.empty();
+                        }
+                        return _buildings.where((building) {
+                          return building['name']
+                              .toLowerCase()
+                              .contains(textEditingValue.text.toLowerCase());
+                        }).cast<Map<String, dynamic>>();
+                      },
+                      displayStringForOption: (Map<String, dynamic> building) =>
+                          building['name'],
+                      onSelected: (Map<String, dynamic> selectedBuilding) {
                         setState(() {
-                          _selectedResourceBuilding = value;
+                          _selectedResourceBuilding = selectedBuilding['name'];
                         });
                       },
-                      decoration: InputDecoration(
-                        labelText: 'Resource Building',
-                        border: OutlineInputBorder(),
-                      ),
+                      fieldViewBuilder: (BuildContext context,
+                          TextEditingController textEditingController,
+                          FocusNode focusNode,
+                          VoidCallback onFieldSubmitted) {
+                        return TextFormField(
+                          controller: textEditingController,
+                          focusNode: focusNode,
+                          decoration: InputDecoration(
+                            labelText: 'Resource Building',
+                            border: OutlineInputBorder(),
+                          ),
+                        );
+                      },
                     ),
                     SizedBox(height: 20),
 
@@ -1093,6 +1106,14 @@ class _MapEditorState extends State<MapEditor> {
             ),
           );
         });
+  }
+
+  void _editResource(resource) {
+    print("editing $resource");
+  }
+
+  void _deleteResource() {
+    print("deleting");
   }
 
   @override
@@ -1173,6 +1194,34 @@ class _MapEditorState extends State<MapEditor> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
+                        if (resources.isNotEmpty)
+                          Container(
+                            padding: EdgeInsets.only(left: 10),
+                            color: Colors.black,
+                            child: Row(
+                              children: [
+                                Text('Resources: (${resources.length})'),
+                                IconButton(
+                                  onPressed: () async {
+                                    await showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return SearchResources(
+                                            data: resources,
+                                            onEdit: _editResource,
+                                            onDelete: _deleteResource,
+                                          );
+                                        });
+                                  },
+                                  icon: Icon(
+                                    Icons.arrow_forward_ios,
+                                    size: 20,
+                                    color: Colors.blue[400],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         _buildings.isNotEmpty
                             ? Container(
                                 padding: EdgeInsets.only(left: 10),
