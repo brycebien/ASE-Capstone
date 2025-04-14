@@ -768,9 +768,9 @@ class _MapEditorState extends State<MapEditor> {
   }
 
   void _saveUniversity() async {
-    // TODO: add functionality for saving resources
     final navigator = Navigator.of(context);
     if (_isCreate) {
+      // CREATE UNIVERSITY
       // ask user for university name and abbreviation
       await showDialog(
           context: context,
@@ -801,6 +801,7 @@ class _MapEditorState extends State<MapEditor> {
                       _universityNameController.clear();
                     });
                     Navigator.of(context).pop();
+                    return;
                   },
                   child: const Text('Cancel'),
                 ),
@@ -813,7 +814,67 @@ class _MapEditorState extends State<MapEditor> {
                         message: 'Please fill out all fields.',
                       );
                     } else {
-                      Navigator.of(context).pop();
+                      // SAVE UNIVERSITY TO FIRESTORE
+                      // convert building addresses to doubles for firestore
+                      setState(() {
+                        for (var building in _buildings) {
+                          if (building['address'] is Map<String, dynamic>) {
+                            // if the address has already been converted skip it
+                            continue;
+                          } else {
+                            LatLng address = building['address'] as LatLng;
+                            building['address'] = {
+                              'latitude': address.latitude.toDouble(),
+                              'longitude': address.longitude.toDouble(),
+                            };
+                          }
+                        }
+                      });
+                      try {
+                        await _firestoreServices.createUniversity(
+                          university: {
+                            'name': _universityNameController.text,
+                            'abbreviation': _universityAbbrevController.text,
+                            'location': {
+                              'latitude':
+                                  _universityLocation!.latitude.toDouble(),
+                              'longitude':
+                                  _universityLocation!.longitude.toDouble()
+                            },
+                            'southWestBound': {
+                              'latitude': _southWestBound!.latitude.toDouble(),
+                              'longitude': _southWestBound!.longitude.toDouble()
+                            },
+                            'northEastBound': {
+                              'latitude': _northEastBound!.latitude.toDouble(),
+                              'longitude': _northEastBound!.longitude.toDouble()
+                            },
+                            'buildings': _buildings,
+                          },
+                        );
+                      } catch (e) {
+                        navigator.pop();
+                        setState(() {
+                          Utils.displayMessage(
+                            context: context,
+                            message:
+                                'Error creating university: ${e.toString()}',
+                          );
+                        });
+                        return;
+                      }
+
+                      // send the user back to the development page
+                      navigator.popUntil((route) =>
+                          route.settings.name == '/development-page');
+                      navigator.pushReplacementNamed('/development-page');
+
+                      // show create success dialog
+                      _showSuccessDialog(
+                        title: 'University Created Successfully!',
+                        message:
+                            'Your university has been created successfully. You can now view it on the development page.',
+                      );
                     }
                   },
                   child: const Text('Save'),
@@ -822,106 +883,89 @@ class _MapEditorState extends State<MapEditor> {
             );
           });
     } else {
+      // EDIT UNIVERSITY
       // show confirm dialog
-    }
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Save University'),
+              content: const Text(
+                  'Are you sure you want to save the changes to this university?'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    // convert building addresses to doubles for firestore
+                    setState(() {
+                      for (var building in _buildings) {
+                        if (building['address'] is Map<String, dynamic>) {
+                          // if the address has already been converted skip it
+                          continue;
+                        } else {
+                          LatLng address = building['address'] as LatLng;
+                          building['address'] = {
+                            'latitude': address.latitude.toDouble(),
+                            'longitude': address.longitude.toDouble(),
+                          };
+                        }
+                      }
+                    });
+                    try {
+                      await _firestoreServices.updateUniversity(
+                        name: _university!['name'],
+                        university: {
+                          'name': _university!['name'],
+                          'abbreviation': _university!['abbreviation'],
+                          'location': {
+                            'latitude':
+                                _universityLocation!.latitude.toDouble(),
+                            'longitude':
+                                _universityLocation!.longitude.toDouble()
+                          },
+                          'southWestBound': {
+                            'latitude': _southWestBound!.latitude.toDouble(),
+                            'longitude': _southWestBound!.longitude.toDouble()
+                          },
+                          'northEastBound': {
+                            'latitude': _northEastBound!.latitude.toDouble(),
+                            'longitude': _northEastBound!.longitude.toDouble()
+                          },
+                          'buildings': _buildings,
+                        },
+                      );
+                    } catch (e) {
+                      setState(() {
+                        Utils.displayMessage(
+                          context: context,
+                          message: 'Error saving university: ${e.toString()}',
+                        );
+                      });
+                      return;
+                    }
 
-    // SAVE UNIVERSITY TO FIRESTORE
-    // convert building addresses to doubles for firestore
-    setState(() {
-      for (var building in _buildings) {
-        if (building['address'] is Map<String, dynamic>) {
-          // if the address has already been converted skip it
-          continue;
-        } else {
-          LatLng address = building['address'] as LatLng;
-          building['address'] = {
-            'latitude': address.latitude.toDouble(),
-            'longitude': address.longitude.toDouble(),
-          };
-        }
-      }
-    });
-    if (_isCreate) {
-      try {
-        await _firestoreServices.createUniversity(
-          university: {
-            'name': _universityNameController.text,
-            'abbreviation': _universityAbbrevController.text,
-            'location': {
-              'latitude': _universityLocation!.latitude.toDouble(),
-              'longitude': _universityLocation!.longitude.toDouble()
-            },
-            'southWestBound': {
-              'latitude': _southWestBound!.latitude.toDouble(),
-              'longitude': _southWestBound!.longitude.toDouble()
-            },
-            'northEastBound': {
-              'latitude': _northEastBound!.latitude.toDouble(),
-              'longitude': _northEastBound!.longitude.toDouble()
-            },
-            'buildings': _buildings,
-          },
-        );
-      } catch (e) {
-        navigator.pop();
-        setState(() {
-          Utils.displayMessage(
-            context: context,
-            message: 'Error creating university: ${e.toString()}',
-          );
-        });
-        return;
-      }
-    } else {
-      try {
-        await _firestoreServices.updateUniversity(
-          name: _university!['name'],
-          university: {
-            'name': _university!['name'],
-            'abbreviation': _university!['abbreviation'],
-            'location': {
-              'latitude': _universityLocation!.latitude.toDouble(),
-              'longitude': _universityLocation!.longitude.toDouble()
-            },
-            'southWestBound': {
-              'latitude': _southWestBound!.latitude.toDouble(),
-              'longitude': _southWestBound!.longitude.toDouble()
-            },
-            'northEastBound': {
-              'latitude': _northEastBound!.latitude.toDouble(),
-              'longitude': _northEastBound!.longitude.toDouble()
-            },
-            'buildings': _buildings,
-          },
-        );
-      } catch (e) {
-        setState(() {
-          Utils.displayMessage(
-            context: context,
-            message: 'Error saving university: ${e.toString()}',
-          );
-        });
-        return;
-      }
-    }
+                    // send the user back to the development page
+                    navigator.popUntil(
+                        (route) => route.settings.name == '/development-page');
+                    navigator.pushReplacementNamed('/development-page');
 
-    // send the user back to the development page
-    navigator.popUntil((route) => route.settings.name == '/development-page');
-    navigator.pushReplacementNamed('/development-page');
-
-    if (_isCreate) {
-      // show create success dialog
-      _showSuccessDialog(
-        title: 'University Created Successfully!',
-        message:
-            'Your university has been created successfully. You can now view it on the development page.',
-      );
-    } else {
-      // show edit success dialog
-      _showSuccessDialog(
-        title: '${_university!['name']} Updated Successfully!',
-        message: '${_university!['name']} has been updated successfully!',
-      );
+                    // show edit success dialog
+                    _showSuccessDialog(
+                      title: '${_university!['name']} Updated Successfully!',
+                      message:
+                          '${_university!['name']} has been updated successfully!',
+                    );
+                  },
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          });
     }
   }
 
