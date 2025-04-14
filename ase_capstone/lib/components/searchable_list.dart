@@ -9,6 +9,7 @@ class SearchableList extends StatefulWidget {
   final bool includePriorityBuildings;
   final String? prependSubtitle;
   final Function? onSelected;
+  final String? searchBarHint;
 
   const SearchableList({
     super.key,
@@ -18,6 +19,7 @@ class SearchableList extends StatefulWidget {
     this.includePriorityBuildings = false,
     this.prependSubtitle,
     this.onSelected,
+    this.searchBarHint,
   });
 
   @override
@@ -95,8 +97,8 @@ class _SearchableListState extends State<SearchableList> {
         padding: const EdgeInsets.all(8),
         child: TextField(
           controller: _searchController,
-          decoration: const InputDecoration(
-            labelText: 'Search',
+          decoration: InputDecoration(
+            labelText: widget.searchBarHint ?? 'Search',
             suffixIcon: Icon(Icons.search),
           ),
           onChanged: (value) {
