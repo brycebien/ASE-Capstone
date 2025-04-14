@@ -1184,7 +1184,7 @@ class _MapEditorState extends State<MapEditor> {
                                       icon: Icon(
                                         Icons.menu_book,
                                         size: 20,
-                                        color: Colors.blue[400],
+                                        color: Colors.green[500],
                                       ),
                                     ),
                                     Text('Buildings: (${_buildings.length})'),
