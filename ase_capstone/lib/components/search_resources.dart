@@ -33,8 +33,44 @@ class _SearchResourcesState extends State<SearchResources> {
               context: context,
               builder: (BuildContext context) {
                 return AlertDialog(
-                  title: Text('TEST'),
-                  content: Text('${resource['building']}'),
+                  title: Text(resource['name']),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Resource Name: ${resource['name']}',
+                        style: TextStyle(fontSize: 15),
+                      ),
+                      SizedBox(height: 5),
+                      Text(
+                        'Building: ${resource['building']}',
+                        style: TextStyle(fontSize: 15),
+                      ),
+                      SizedBox(height: 5),
+                      Text(
+                        'Room Number: ${resource['room']}',
+                        style: TextStyle(fontSize: 15),
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    IconButton(
+                      onPressed: () {
+                        widget.onDelete(resource);
+                        Navigator.of(context).pop();
+                      },
+                      icon: Icon(Icons.delete, color: Colors.red),
+                    ),
+                    SizedBox(width: 5),
+                    IconButton(
+                      onPressed: () {
+                        widget.onEdit(resource);
+                        Navigator.of(context).pop();
+                      },
+                      icon: Icon(Icons.edit, color: Colors.lightGreen),
+                    ),
+                  ],
                 );
               });
         },

@@ -1112,8 +1112,8 @@ class _MapEditorState extends State<MapEditor> {
     print("editing $resource");
   }
 
-  void _deleteResource() {
-    print("deleting");
+  void _deleteResource(resource) {
+    print("deleting $resource");
   }
 
   @override
