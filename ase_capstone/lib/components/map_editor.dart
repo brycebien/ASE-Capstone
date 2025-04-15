@@ -43,7 +43,7 @@ class _MapEditorState extends State<MapEditor> {
   final TextEditingController _resourceNameController = TextEditingController();
   final TextEditingController _resourceRoomController = TextEditingController();
   String? _selectedResourceBuilding;
-  List<Map<String, dynamic>> resources = [];
+  List<Map<String, dynamic>> _resources = [];
 
   List<dynamic> _buildings = [];
   final List<Marker> _buildingMarkers = [];
@@ -92,6 +92,7 @@ class _MapEditorState extends State<MapEditor> {
 
   @override
   void initState() {
+    super.initState();
     setState(() {
       _university = widget.university;
       if (_university == null) {
@@ -107,7 +108,6 @@ class _MapEditorState extends State<MapEditor> {
         _isLoading = false;
       });
     }
-    super.initState();
   }
 
   void _setUniversityVariables() async {
@@ -127,6 +127,8 @@ class _MapEditorState extends State<MapEditor> {
           _university!['northEastBound']['longitude'],
         );
         _buildings = _university!['buildings'];
+        List<dynamic> resourceData = _university!['resources'] ?? [];
+        _resources = (resourceData.cast<Map<String, dynamic>>());
       });
 
       // add markers for each building (this is async because it may take a while to load all markers)
@@ -852,6 +854,7 @@ class _MapEditorState extends State<MapEditor> {
                               'longitude': _northEastBound!.longitude.toDouble()
                             },
                             'buildings': _buildings,
+                            'resources': _resources,
                           },
                         );
                       } catch (e) {
@@ -939,6 +942,7 @@ class _MapEditorState extends State<MapEditor> {
                             'longitude': _northEastBound!.longitude.toDouble()
                           },
                           'buildings': _buildings,
+                          'resources': _resources,
                         },
                       );
                     } catch (e) {
@@ -1093,7 +1097,7 @@ class _MapEditorState extends State<MapEditor> {
                             'room': _resourceRoomController.text,
                           };
                           setState(() {
-                            resources.add(resource);
+                            _resources.add(resource);
                           });
                           if (mounted) {
                             Navigator.of(context).pop();
@@ -1111,14 +1115,14 @@ class _MapEditorState extends State<MapEditor> {
 
   void _editResource(resource, newResource) {
     setState(() {
-      resources.removeWhere((res) => res['name'] == resource['name']);
-      resources.add(newResource);
+      _resources.removeWhere((res) => res['name'] == resource['name']);
+      _resources.add(newResource);
     });
   }
 
   void _deleteResource(resource) async {
     setState(() {
-      resources.removeWhere((res) => res['name'] == resource['name']);
+      _resources.removeWhere((res) => res['name'] == resource['name']);
     });
   }
 
@@ -1200,20 +1204,20 @@ class _MapEditorState extends State<MapEditor> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        if (resources.isNotEmpty)
+                        if (_resources.isNotEmpty)
                           Container(
                             padding: EdgeInsets.only(left: 10),
                             color: Colors.black,
                             child: Row(
                               children: [
-                                Text('Resources: (${resources.length})'),
+                                Text('Resources: (${_resources.length})'),
                                 IconButton(
                                   onPressed: () async {
                                     await showDialog(
                                         context: context,
                                         builder: (BuildContext context) {
                                           return SearchResources(
-                                            data: resources,
+                                            data: _resources,
                                             buildings: _buildings,
                                             onEdit: _editResource,
                                             onDelete: _deleteResource,
