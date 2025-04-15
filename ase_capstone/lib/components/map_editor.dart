@@ -769,6 +769,7 @@ class _MapEditorState extends State<MapEditor> {
   }
 
   void _saveUniversity() async {
+    // TODO: save resources
     final navigator = Navigator.of(context);
     if (_isCreate) {
       // CREATE UNIVERSITY
