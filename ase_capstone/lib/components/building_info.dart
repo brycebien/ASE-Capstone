@@ -1,3 +1,4 @@
+import 'package:ase_capstone/components/resource_details_dialog.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -210,14 +211,42 @@ class _BuildingInfoState extends State<BuildingInfo> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: _resources.isNotEmpty
                                 ? _resources.map((resource) {
-                                    // TODO: this should be a card of resource showing the name building and room
                                     return Card(
                                       elevation: 8,
                                       child: ListTile(
                                         title: Text(resource['name']),
                                         subtitle: Text(
-                                          'Building: ${resource['building']}\nRoom: ${resource['room']}',
+                                          'Room Number: ${resource['room']}',
                                         ),
+                                        onTap: () async {
+                                          await showDialog(
+                                              context: context,
+                                              builder: (BuildContext context) {
+                                                return ResourceDetailsDialog(
+                                                  resource: resource,
+                                                  university: _university,
+                                                );
+                                              });
+                                        },
+                                        trailing: IconButton(
+                                            onPressed: () async {
+                                              await showDialog(
+                                                  context: context,
+                                                  builder:
+                                                      (BuildContext context) {
+                                                    return ResourceDetailsDialog(
+                                                        resource: resource,
+                                                        university: _university,
+                                                        onNavigateTapped: () {
+                                                          _navigateToBuilding();
+                                                        });
+                                                  });
+                                            },
+                                            icon: Icon(
+                                              Icons.info_outline,
+                                              color: Colors.blue[400],
+                                              size: 20,
+                                            )),
                                       ),
                                     );
                                   }).toList()
