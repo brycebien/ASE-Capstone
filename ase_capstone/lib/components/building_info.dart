@@ -137,8 +137,6 @@ class _BuildingInfoState extends State<BuildingInfo> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              //TODO: add actions for the user (e.g. add to favorites, list of resources, etc.)
-
               // ADD TO FAVORITES BUTTON
               Row(
                 children: [
