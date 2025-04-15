@@ -209,6 +209,8 @@ class _ResourcesPageState extends State<ResourcesPage> {
           ? Center(child: CircularProgressIndicator())
           : SearchableList(
               items: _resources,
+              searchBarHint:
+                  'Search by resource name, building, or room number',
               keys: ['name', 'building', 'room'],
               prependSubtitle: ['Building: ', 'Room: '],
               onSelected: (resource) {
