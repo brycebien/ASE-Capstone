@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:ase_capstone/components/textfield.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class ResourcesPage extends StatefulWidget {
   const ResourcesPage({super.key});
@@ -21,6 +22,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
   final TextEditingController _newTitleController = TextEditingController();
   final TextEditingController _newTypeController = TextEditingController();
 
+  late Map<String, dynamic> _university;
   String? _universityId;
   bool isLoading = false;
 
@@ -39,6 +41,10 @@ class _ResourcesPageState extends State<ResourcesPage> {
     final Map<String, dynamic> userUniversity =
         await _firestoreService.getUniversityByName(
             name: await _firestoreService.getUserUniversity(userId: uid!));
+
+    setState(() {
+      _university = userUniversity;
+    });
 
     try {
       List<Map<String, dynamic>> resources = await _firestoreService
@@ -153,8 +159,26 @@ class _ResourcesPageState extends State<ResourcesPage> {
             actions: [
               IconButton(
                 onPressed: () {
-                  Navigator.of(context).pop();
+                  Navigator.of(context).pop(); // close the dialog
                   // TODO: get directions to resource building
+                  // get latlng of building
+                  List<dynamic> buildings = _university['buildings'];
+                  final LatLng directions = LatLng(
+                      buildings.firstWhere((building) =>
+                          building['name'] ==
+                          resource['building'])['address']['latitude'],
+                      buildings.firstWhere((building) =>
+                          building['name'] ==
+                          resource['building'])['address']['longitude']);
+                  // return to map page with directions
+                  Navigator.pushNamed(
+                    context,
+                    '/map',
+                    arguments: {
+                      // pass building latlng to map page for directions
+                      'destination': directions,
+                    },
+                  );
                 },
                 icon: Icon(
                   Icons.directions_walk,

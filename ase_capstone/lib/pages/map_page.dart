@@ -56,6 +56,7 @@ class _MapPageState extends State<MapPage> {
     _listenToPins(); // check for pins in the database
     _checkExpiredPins(); // check that no pins are expired (older than 24 hrs)
     _checkUserUniversity(); // check that he user has a university chosen
+    _checkForDirections(); // check if the user has a destination set
   }
 
   @override
@@ -280,27 +281,24 @@ class _MapPageState extends State<MapPage> {
       });
 
       // update the current location when the user moves
-      if (mounted) {
-        location.onLocationChanged.listen((LocationData newLocation) {
-          if (!mounted) return;
-          setState(() {
-            _currentLocation = newLocation;
-            _checkForDirections();
-          });
-
-          // animate the camera to the user's location when the user moves/app is started
-          _controller?.animateCamera(CameraUpdate.newCameraPosition(
-            CameraPosition(
-              zoom: 20.0,
-              tilt: 50.0,
-              target: LatLng(
-                _currentLocation!.latitude!,
-                _currentLocation!.longitude!,
-              ),
-            ),
-          ));
+      location.onLocationChanged.listen((LocationData newLocation) {
+        setState(() {
+          _currentLocation = newLocation;
+          _checkForDirections();
         });
-      }
+
+        // animate the camera to the user's location when the user moves/app is started
+        _controller?.animateCamera(CameraUpdate.newCameraPosition(
+          CameraPosition(
+            zoom: 20.0,
+            tilt: 50.0,
+            target: LatLng(
+              _currentLocation!.latitude!,
+              _currentLocation!.longitude!,
+            ),
+          ),
+        ));
+      });
     } catch (e) {
       setState(() {
         Utils.displayMessage(
