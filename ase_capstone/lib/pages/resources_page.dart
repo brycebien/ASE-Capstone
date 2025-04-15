@@ -1,11 +1,11 @@
 // lib/pages/resources_page.dart
+import 'package:ase_capstone/components/resource_details_dialog.dart';
 import 'package:ase_capstone/components/searchable_list.dart';
 import 'package:ase_capstone/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:ase_capstone/components/textfield.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class ResourcesPage extends StatefulWidget {
   const ResourcesPage({super.key});
@@ -129,76 +129,6 @@ class _ResourcesPageState extends State<ResourcesPage> {
     );
   }
 
-  void _resourceDetailsDialog({required Map<String, dynamic> resource}) async {
-    await showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text(resource['name']),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Name: ${resource['name']}',
-                  style: TextStyle(fontSize: 15),
-                ),
-                SizedBox(height: 5),
-                Text(
-                  'Building: ${resource['building']}',
-                  style: TextStyle(fontSize: 15),
-                ),
-                SizedBox(height: 5),
-                Text(
-                  'Room: ${resource['room']}',
-                  style: TextStyle(fontSize: 15),
-                ),
-                SizedBox(height: 5),
-              ],
-            ),
-            actions: [
-              IconButton(
-                onPressed: () {
-                  Navigator.of(context).pop(); // close the dialog
-                  // TODO: get directions to resource building
-                  // get latlng of building
-                  List<dynamic> buildings = _university['buildings'];
-                  final LatLng directions = LatLng(
-                      buildings.firstWhere((building) =>
-                          building['name'] ==
-                          resource['building'])['address']['latitude'],
-                      buildings.firstWhere((building) =>
-                          building['name'] ==
-                          resource['building'])['address']['longitude']);
-                  // return to map page with directions
-                  Navigator.pushNamed(
-                    context,
-                    '/map',
-                    arguments: {
-                      // pass building latlng to map page for directions
-                      'destination': directions,
-                    },
-                  );
-                },
-                icon: Icon(
-                  Icons.directions_walk,
-                  color: Colors.blue,
-                ),
-              ),
-              IconButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                icon: Icon(
-                  Icons.close,
-                  color: Colors.red,
-                ),
-              ),
-            ],
-          );
-        });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -213,8 +143,15 @@ class _ResourcesPageState extends State<ResourcesPage> {
                   'Search by resource name, building, or room number',
               keys: ['name', 'building', 'room'],
               prependSubtitle: ['Building: ', 'Room: '],
-              onSelected: (resource) {
-                _resourceDetailsDialog(resource: resource);
+              onSelected: (resource) async {
+                await showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return ResourceDetailsDialog(
+                        resource: resource,
+                        university: _university,
+                      );
+                    });
               },
             ),
       floatingActionButton: FloatingActionButton(
