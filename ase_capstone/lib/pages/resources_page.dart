@@ -36,27 +36,16 @@ class _ResourcesPageState extends State<ResourcesPage> {
     });
 
     final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) {
-      setState(() => isLoading = false);
-      return;
-    }
-
-    final user = await _firestoreService.getUser(userId: uid);
-    final universityId = user['university'] as String?;
-
-    if (universityId == null) {
-      setState(() {
-        isLoading = false;
-      });
-      return;
-    }
+    final Map<String, dynamic> userUniversity =
+        await _firestoreService.getUniversityByName(
+            name: await _firestoreService.getUserUniversity(userId: uid!));
 
     try {
-      List<Map<String, dynamic>> resources =
-          await _firestoreService.getResources(universityId: universityId);
+      List<Map<String, dynamic>> resources = await _firestoreService
+          .getResources(universityId: userUniversity['name']);
       setState(() {
         _resources = resources;
-        _universityId = universityId;
+        _universityId = userUniversity['name'];
       });
     } catch (e) {
       setState(() {
@@ -134,6 +123,58 @@ class _ResourcesPageState extends State<ResourcesPage> {
     );
   }
 
+  void _resourceDetailsDialog({required Map<String, dynamic> resource}) async {
+    await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text(resource['name']),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Name: ${resource['name']}',
+                  style: TextStyle(fontSize: 15),
+                ),
+                SizedBox(height: 5),
+                Text(
+                  'Building: ${resource['building']}',
+                  style: TextStyle(fontSize: 15),
+                ),
+                SizedBox(height: 5),
+                Text(
+                  'Room: ${resource['room']}',
+                  style: TextStyle(fontSize: 15),
+                ),
+                SizedBox(height: 5),
+              ],
+            ),
+            actions: [
+              IconButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  // TODO: get directions to resource building
+                },
+                icon: Icon(
+                  Icons.directions_walk,
+                  color: Colors.blue,
+                ),
+              ),
+              IconButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                icon: Icon(
+                  Icons.close,
+                  color: Colors.red,
+                ),
+              ),
+            ],
+          );
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -144,8 +185,11 @@ class _ResourcesPageState extends State<ResourcesPage> {
           ? Center(child: CircularProgressIndicator())
           : SearchableList(
               items: _resources,
-              keys: ['title', 'type'],
-              prependSubtitle: 'Type: ',
+              keys: ['name', 'building', 'room'],
+              prependSubtitle: ['Building: ', 'Room: '],
+              onSelected: (resource) {
+                _resourceDetailsDialog(resource: resource);
+              },
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: _createResourceDialog,

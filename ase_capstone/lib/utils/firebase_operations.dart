@@ -390,28 +390,29 @@ class FirestoreService {
   }
 
   Future<String> getEventUrl({required String userId}) async {
-  try {
-    // Get the user's university
-    final userDoc = await _usersCollection.doc(userId).get();
-    if (!userDoc.exists) {
-      throw Exception('User document does not exist.');
+    try {
+      // Get the user's university
+      final userDoc = await _usersCollection.doc(userId).get();
+      if (!userDoc.exists) {
+        throw Exception('User document does not exist.');
+      }
+      final String university = userDoc.get('university');
+
+      // Fetch the event URL from the university document
+      final universityDoc = await FirebaseFirestore.instance
+          .collection('universities')
+          .doc(university)
+          .get();
+
+      if (!universityDoc.exists) {
+        throw Exception('University document does not exist.');
+      }
+
+      // Return the eventUrl field
+      return universityDoc.data()?['eventUrl'] ??
+          'https://default-url.com'; // Provide a default URL if none exists
+    } catch (e) {
+      throw Exception('Error fetching event URL: $e');
     }
-    final String university = userDoc.get('university');
-
-    // Fetch the event URL from the university document
-    final universityDoc = await FirebaseFirestore.instance
-        .collection('universities')
-        .doc(university)
-        .get();
-
-    if (!universityDoc.exists) {
-      throw Exception('University document does not exist.');
-    }
-
-    // Return the eventUrl field
-    return universityDoc.data()?['eventUrl'] ?? 'https://default-url.com'; // Provide a default URL if none exists
-  } catch (e) {
-    throw Exception('Error fetching event URL: $e');
   }
-}
 }

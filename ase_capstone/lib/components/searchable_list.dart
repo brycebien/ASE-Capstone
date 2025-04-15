@@ -7,7 +7,7 @@ class SearchableList extends StatefulWidget {
   final List<String> keys;
   final Widget? trailing;
   final bool includePriorityBuildings;
-  final String? prependSubtitle;
+  final List<String>? prependSubtitle;
   final Function? onSelected;
   final String? searchBarHint;
 
@@ -79,7 +79,14 @@ class _SearchableListState extends State<SearchableList> {
     String subtitle = "";
     if (widget.keys.length > 1) {
       for (var i = 1; i < widget.keys.length; i++) {
+        try {
+          subtitle += widget.prependSubtitle?[i - 1] ?? '';
+        } catch (e) {
+          continue; // skip if prependSubtitle is not provided
+        }
+
         subtitle += '${_foundItems[index][widget.keys[i]]}';
+
         if (i + 1 != widget.keys.length) {
           subtitle += '\n'; // add a new line if not the last key
         }
@@ -157,8 +164,7 @@ class _SearchableListState extends State<SearchableList> {
                       elevation: 8,
                       child: ListTile(
                         title: Text(_foundItems[index][widget.keys[0]]),
-                        subtitle: Text(
-                            '${widget.prependSubtitle ?? ''} ${_getItemsSubtitle(index: index)}'),
+                        subtitle: Text(_getItemsSubtitle(index: index)),
                         trailing: widget.trailing ??
                             IconButton(
                               icon: Icon(

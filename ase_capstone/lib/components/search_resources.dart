@@ -41,8 +41,8 @@ class _SearchResourcesState extends State<SearchResources> {
           : SearchableList(
               items: widget.data,
               searchBarHint: 'Search by building or resource name',
-              keys: ['name', 'building'],
-              prependSubtitle: 'Building: ',
+              keys: ['name', 'building', 'room'],
+              prependSubtitle: ['Building: ', 'Room: '],
               onSelected: (resource) async {
                 await showDialog(
                     context: context,
