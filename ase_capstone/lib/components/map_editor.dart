@@ -1108,8 +1108,11 @@ class _MapEditorState extends State<MapEditor> {
         });
   }
 
-  void _editResource(resource) {
-    print("editing $resource");
+  void _editResource(resource, newResource) {
+    setState(() {
+      resources.removeWhere((res) => res['name'] == resource['name']);
+      resources.add(newResource);
+    });
   }
 
   void _deleteResource(resource) async {
@@ -1210,6 +1213,7 @@ class _MapEditorState extends State<MapEditor> {
                                         builder: (BuildContext context) {
                                           return SearchResources(
                                             data: resources,
+                                            buildings: _buildings,
                                             onEdit: _editResource,
                                             onDelete: _deleteResource,
                                           );
