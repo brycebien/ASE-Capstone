@@ -109,7 +109,7 @@ class _SearchResourcesState extends State<SearchResources> {
                           IconButton(
                             onPressed: () async {
                               Navigator.of(context).pop();
-                              String? _selectedResourceBuilding;
+                              String? selectedResourceBuilding;
                               Map<String, dynamic> newResource =
                                   await showDialog(
                                       context: context,
@@ -166,7 +166,7 @@ class _SearchResourcesState extends State<SearchResources> {
                                                       (Map<String, dynamic>
                                                           selectedBuilding) {
                                                     setState(() {
-                                                      _selectedResourceBuilding =
+                                                      selectedResourceBuilding =
                                                           selectedBuilding[
                                                               'name'];
                                                     });
@@ -220,7 +220,7 @@ class _SearchResourcesState extends State<SearchResources> {
                                                 if (_newResourceNameController.text.isEmpty ||
                                                     _newResourceRoomController
                                                         .text.isEmpty ||
-                                                    _selectedResourceBuilding ==
+                                                    selectedResourceBuilding ==
                                                         null) {
                                                   Utils.displayMessage(
                                                     context: context,
@@ -235,7 +235,7 @@ class _SearchResourcesState extends State<SearchResources> {
                                                       _newResourceNameController
                                                           .text,
                                                   'building':
-                                                      _selectedResourceBuilding,
+                                                      selectedResourceBuilding,
                                                   'room':
                                                       _newResourceRoomController
                                                           .text,
