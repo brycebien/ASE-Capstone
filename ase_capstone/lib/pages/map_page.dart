@@ -7,10 +7,12 @@ import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:location/location.dart';
+import 'package:location/location.dart' as loc;
+import 'package:geolocator/geolocator.dart';
 import 'dart:async';
 
 class MapPage extends StatefulWidget {
@@ -27,7 +29,7 @@ class _MapPageState extends State<MapPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late String _mapStyleString;
   String? _mapStyle;
-  LocationData? _currentLocation;
+  loc.LocationData? _currentLocation;
   final Set<Marker> _markers = {};
   bool _hasUniversity = false;
   bool isLoadingBuildingMarkers = true;
@@ -246,66 +248,89 @@ class _MapPageState extends State<MapPage> {
   }
 
   Future<void> _getCurrentLocation() async {
-    Location location = Location();
-
-    // check if location services are enabled and ask user to enable location permissions if not
-    var serviceEnabled = await location.serviceEnabled();
-    if (!serviceEnabled) {
-      serviceEnabled = await location.requestService();
-      if (!serviceEnabled) {
-        return;
-      }
-    }
-
-    // check if location permissions are granted and ask user to grant permissions if not
-    var permissionGranted = await location.hasPermission();
-    if (permissionGranted == PermissionStatus.denied) {
-      permissionGranted = await location.requestPermission();
-      if (permissionGranted != PermissionStatus.granted) {
-        return;
-      }
-    }
-
-    // this stops the app from moving the camera to the user's location when the user does not move.
-    await location.changeSettings(
-      accuracy: LocationAccuracy.high, // high accuracy for better location
-      interval: 1000, // update location every second
-      distanceFilter: 10,
-    );
-
-    try {
-      // set current location to the user's location when the app starts
-      var userLocation = await location.getLocation();
-      setState(() {
-        _currentLocation = userLocation;
-      });
-
-      // update the current location when the user moves
-      location.onLocationChanged.listen((LocationData newLocation) {
+    // WEB LOCATION PERMISSIONS
+    if (kIsWeb) {
+      try {
+        final position = await Geolocator.getCurrentPosition();
         setState(() {
-          _currentLocation = newLocation;
-          _checkForDirections();
+          _currentLocation = loc.LocationData.fromMap({
+            "latitude": position.latitude,
+            "longitude": position.longitude,
+          });
+        });
+      } catch (e) {
+        if (mounted) {
+          Utils.displayMessage(
+            context: context,
+            message: 'Unable to get location: $e',
+          );
+        }
+      }
+      return;
+    } else {
+      // ANDROID LOCATION PERMISSIONS
+      loc.Location location = loc.Location();
+
+      // check if location services are enabled and ask user to enable location permissions if not
+      var serviceEnabled = await location.serviceEnabled();
+      if (!serviceEnabled) {
+        serviceEnabled = await location.requestService();
+        if (!serviceEnabled) {
+          return;
+        }
+      }
+
+      // check if location permissions are granted and ask user to grant permissions if not
+      var permissionGranted = await location.hasPermission();
+      if (permissionGranted == loc.PermissionStatus.denied) {
+        permissionGranted = await location.requestPermission();
+        if (permissionGranted != loc.PermissionStatus.granted) {
+          return;
+        }
+      }
+
+      // this stops the app from moving the camera to the user's location when the user does not move.
+      await location.changeSettings(
+        accuracy:
+            loc.LocationAccuracy.high, // high accuracy for better location
+        interval: 1000, // update location every second
+        distanceFilter: 10,
+      );
+
+      try {
+        // set current location to the user's location when the app starts
+        var userLocation = await location.getLocation();
+        setState(() {
+          _currentLocation = userLocation;
         });
 
-        // animate the camera to the user's location when the user moves/app is started
-        _controller?.animateCamera(CameraUpdate.newCameraPosition(
-          CameraPosition(
-            zoom: 20.0,
-            tilt: 50.0,
-            target: LatLng(
-              _currentLocation!.latitude!,
-              _currentLocation!.longitude!,
+        // update the current location when the user moves
+        location.onLocationChanged.listen((loc.LocationData newLocation) {
+          setState(() {
+            _currentLocation = newLocation;
+            _checkForDirections();
+          });
+
+          // animate the camera to the user's location when the user moves/app is started
+          _controller?.animateCamera(CameraUpdate.newCameraPosition(
+            CameraPosition(
+              zoom: 20.0,
+              tilt: 50.0,
+              target: LatLng(
+                _currentLocation!.latitude!,
+                _currentLocation!.longitude!,
+              ),
             ),
-          ),
-        ));
-      });
-    } catch (e) {
-      setState(() {
-        Utils.displayMessage(
-          context: context,
-          message: 'Unable to get location: $e',
-        );
-      });
+          ));
+        });
+      } catch (e) {
+        setState(() {
+          Utils.displayMessage(
+            context: context,
+            message: 'Unable to get location: $e',
+          );
+        });
+      }
     }
   }
 
