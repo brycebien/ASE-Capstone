@@ -141,6 +141,7 @@ class _MapEditorState extends State<MapEditor> {
         _buildings = _university!['buildings'];
         List<dynamic> resourceData = _university!['resources'] ?? [];
         _resources = (resourceData.cast<Map<String, dynamic>>());
+        _engagementLink = _university!['eventUrl'];
       });
 
       // add markers for each building (this is async because it may take a while to load all markers)
@@ -1062,6 +1063,9 @@ class _MapEditorState extends State<MapEditor> {
               children: [
                 Text(
                     'Enter the link to the universities engagement site (optional).'),
+                _engagementLink != null
+                    ? Text('\nCurrent Engagement Link:\n${_engagementLink!}')
+                    : SizedBox(),
                 SizedBox(height: 10),
                 MyTextField(
                   controller: _engagementLinkController,
@@ -1086,7 +1090,6 @@ class _MapEditorState extends State<MapEditor> {
                       message: 'Please enter a link.',
                     );
                   } else {
-                    //TODO: add engagement link to university map
                     setState(() {
                       _engagementLink = _engagementLinkController.text;
                     });
