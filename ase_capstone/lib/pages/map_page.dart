@@ -29,7 +29,7 @@ class _MapPageState extends State<MapPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late String _mapStyleString;
   String? _mapStyle;
-  loc.LocationData? _currentLocation;
+  dynamic _currentLocation;
   final Set<Marker> _markers = {};
   bool _hasUniversity = false;
   bool isLoadingBuildingMarkers = true;
@@ -44,6 +44,9 @@ class _MapPageState extends State<MapPage> {
   final Set<String> _votedPins = {};
   LatLng? destination;
   Directions? _info;
+
+  // web only variable (for handling gestures on the map when showing a dialog)
+  bool _showDialog = false;
 
   @override
   void initState() {
@@ -264,6 +267,7 @@ class _MapPageState extends State<MapPage> {
         }
 
         final Position position = await Geolocator.getCurrentPosition();
+        print("GOT POSITION: $position");
         final loc.LocationData locationData = loc.LocationData.fromMap({
           'latitude': position.latitude,
           'longitude': position.longitude,
@@ -271,6 +275,79 @@ class _MapPageState extends State<MapPage> {
         setState(() {
           _currentLocation = locationData;
         });
+
+        Geolocator.getPositionStream(
+          locationSettings: LocationSettings(
+            accuracy: LocationAccuracy.high,
+            distanceFilter: 10,
+          ),
+        ).listen((Position position) {
+          print("GETTING HERE: $position");
+          setState(() {
+            _currentLocation = loc.LocationData.fromMap({
+              'latitude': position.latitude,
+              'longitude': position.longitude,
+            });
+            print("set location to: $_currentLocation");
+          });
+          _checkForDirections();
+
+          // Add a marker for the user's location
+          final userMarker = Marker(
+            markerId: MarkerId('userLocation'),
+            position: LatLng(
+              _currentLocation!.latitude!,
+              _currentLocation!.longitude!,
+            ),
+            infoWindow: InfoWindow(
+              title: 'Your Location',
+            ),
+            icon:
+                BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+          );
+          setState(() {
+            _markers.add(userMarker);
+            print("added marker: $userMarker");
+          });
+
+          // Move the camera to the updated location
+          _controller?.animateCamera(CameraUpdate.newCameraPosition(
+            CameraPosition(
+              target: LatLng(
+                _currentLocation!.latitude!,
+                _currentLocation!.longitude!,
+              ),
+              zoom: 15.0,
+            ),
+          ));
+        });
+
+        // if (_currentLocation != null) {
+        //   final userMarker = Marker(
+        //     markerId: MarkerId('userLocation'),
+        //     position: LatLng(
+        //       _currentLocation!.latitude!,
+        //       _currentLocation!.longitude!,
+        //     ),
+        //     icon:
+        //         BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+        //   );
+
+        //   setState(() {
+        //     _markers.add(userMarker);
+        //   });
+
+        //   // Move the camera to the user's location
+        //   _controller?.animateCamera(CameraUpdate.newCameraPosition(
+        //     CameraPosition(
+        //       target: LatLng(
+        //         _currentLocation!.latitude!,
+        //         _currentLocation!.longitude!,
+        //       ),
+        //       zoom: 15.0,
+        //     ),
+        //   ));
+        // }
       } catch (e) {
         if (mounted) {
           Utils.displayMessage(
@@ -371,8 +448,9 @@ class _MapPageState extends State<MapPage> {
       (snapshot) {
         setState(() {
           _markers.removeWhere((element) =>
-              element.markerId.value !=
-              'destinationMarker'); // Clear existing markers before updating
+              element.markerId.value != 'destinationMarker' &&
+              !element.markerId.value.contains(
+                  "building-")); // Clear existing markers before updating
           for (var doc in snapshot.docs) {
             final data = doc.data();
             if (data.containsKey('latitude') &&
@@ -423,6 +501,9 @@ class _MapPageState extends State<MapPage> {
     String markerTitle = "Reported Event";
     double markerColor = BitmapDescriptor.hueOrange;
 
+    setState(() {
+      _showDialog = true;
+    });
     await showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -481,9 +562,12 @@ class _MapPageState extends State<MapPage> {
         );
       },
     );
+    setState(() {
+      _showDialog = false;
+    });
   }
 
-  void _showVoteDialog(String markerId, int yesVotes, int noVotes) {
+  void _showVoteDialog(String markerId, int yesVotes, int noVotes) async {
     if (_votedPins.contains(markerId)) {
       Utils.displayMessage(
         context: context,
@@ -492,7 +576,10 @@ class _MapPageState extends State<MapPage> {
       return;
     }
 
-    showDialog(
+    setState(() {
+      _showDialog = true;
+    });
+    await showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
@@ -529,6 +616,9 @@ class _MapPageState extends State<MapPage> {
         );
       },
     );
+    setState(() {
+      _showDialog = false;
+    });
   }
 
   void _checkExpiredPins() async {
@@ -558,25 +648,30 @@ class _MapPageState extends State<MapPage> {
   }
 
   void _getDirections({required LatLng destination}) async {
-    final directions = await DirectionsHandler().getDirections(
-      origin: LatLng(
-        _currentLocation!.latitude!,
-        _currentLocation!.longitude!,
-      ),
-      destination: destination,
-    );
-    _markers.add(
-      Marker(
-        markerId: MarkerId('destinationMarker'),
-        position: destination,
-        icon: BitmapDescriptor.defaultMarkerWithHue(
-          BitmapDescriptor.hueViolet,
+    try {
+      final directions = await DirectionsHandler().getDirections(
+        origin: LatLng(
+          _currentLocation!.latitude!,
+          _currentLocation!.longitude!,
         ),
-      ),
-    );
-    setState(() {
-      _info = directions;
-    });
+        destination: destination,
+      );
+
+      _markers.add(
+        Marker(
+          markerId: MarkerId('destinationMarker'),
+          position: destination,
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueViolet,
+          ),
+        ),
+      );
+      setState(() {
+        _info = directions;
+      });
+    } catch (e) {
+      print("ERROR $e");
+    }
   }
 
   void _showUniversityPicker() async {
@@ -682,11 +777,11 @@ class _MapPageState extends State<MapPage> {
                               },
                               markers: _markers,
                               onTap: (location) {
-                                if (_showBuildingInfo) {
-                                  setState(() {
-                                    _showBuildingInfo = false;
-                                  });
-                                }
+                                // if (_showBuildingInfo) {
+                                //   setState(() {
+                                //     _showBuildingInfo = false;
+                                //   });
+                                // }
                               },
                               onLongPress: (LatLng tappedPoint) {
                                 _getDirections(destination: tappedPoint);
