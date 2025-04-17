@@ -258,9 +258,11 @@ class _MapPageState extends State<MapPage> {
         if (permission == LocationPermission.denied ||
             permission == LocationPermission.deniedForever) {
           if (mounted) {
+            signUserOut();
             Utils.displayMessage(
               context: context,
-              message: 'Location permissions are denied.',
+              message:
+                  'Location permissions are denied. You must enable location permissions to use this app.',
             );
           }
           return;
@@ -353,6 +355,10 @@ class _MapPageState extends State<MapPage> {
             message: 'Unable to get location: $e',
           );
         }
+        setState(() {
+          _currentLocation = LatLng(0,
+              0); // set location to 0,0 if error to allow the user in (only on web because location is not required)
+        });
       }
     } else {
       // ANDROID LOCATION PERMISSIONS
@@ -372,7 +378,23 @@ class _MapPageState extends State<MapPage> {
       if (permissionGranted == loc.PermissionStatus.denied) {
         permissionGranted = await location.requestPermission();
         if (permissionGranted != loc.PermissionStatus.granted) {
-          return;
+          if (mounted) {
+            signUserOut();
+            Navigator.pushNamed(context, '/auth');
+            Utils.displayMessage(
+                context: context,
+                message:
+                    'You must enable location permissions to use this app.');
+          }
+        }
+      }
+
+      if (permissionGranted == loc.PermissionStatus.deniedForever) {
+        if (mounted) {
+          Navigator.of(context).pop();
+          Utils.displayMessage(
+              context: context,
+              message: 'You must enable location permissions to use this app.');
         }
       }
 
