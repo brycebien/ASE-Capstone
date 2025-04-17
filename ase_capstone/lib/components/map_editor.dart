@@ -1040,8 +1040,11 @@ class _MapEditorState extends State<MapEditor> {
     }
   }
 
-  void _addResourcesDialog() async {
-    showDialog(
+  Future<void> _addResourcesDialog() async {
+    setState(() {
+      _showDialog = true;
+    });
+    await showDialog(
         context: context,
         builder: (BuildContext context) {
           return Scaffold(
@@ -1146,6 +1149,9 @@ class _MapEditorState extends State<MapEditor> {
             ),
           );
         });
+    setState(() {
+      _showDialog = false;
+    });
   }
 
   void _editResource(resource, newResource) {
@@ -1308,6 +1314,9 @@ class _MapEditorState extends State<MapEditor> {
                                 Text('Resources: (${_resources.length})'),
                                 IconButton(
                                   onPressed: () async {
+                                    setState(() {
+                                      _showDialog = true;
+                                    });
                                     await showDialog(
                                         context: context,
                                         builder: (BuildContext context) {
@@ -1318,6 +1327,9 @@ class _MapEditorState extends State<MapEditor> {
                                             onDelete: _deleteResource,
                                           );
                                         });
+                                    setState(() {
+                                      _showDialog = false;
+                                    });
                                   },
                                   icon: Icon(
                                     Icons.arrow_forward_ios,
@@ -1345,6 +1357,9 @@ class _MapEditorState extends State<MapEditor> {
                                     Text('Buildings: (${_buildings.length})'),
                                     IconButton(
                                       onPressed: () async {
+                                        setState(() {
+                                          _showDialog = true;
+                                        });
                                         Map<String, dynamic>? result =
                                             await showDialog(
                                           context: context,
@@ -1360,6 +1375,10 @@ class _MapEditorState extends State<MapEditor> {
                                             result: result,
                                           );
                                         }
+
+                                        setState(() {
+                                          _showDialog = false;
+                                        });
 
                                         // clear instructions for buildings
                                         if (_isTutorial) {
