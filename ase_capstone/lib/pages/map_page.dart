@@ -251,12 +251,25 @@ class _MapPageState extends State<MapPage> {
     // WEB LOCATION PERMISSIONS
     if (kIsWeb) {
       try {
-        final position = await Geolocator.getCurrentPosition();
+        final permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied ||
+            permission == LocationPermission.deniedForever) {
+          if (mounted) {
+            Utils.displayMessage(
+              context: context,
+              message: 'Location permissions are denied.',
+            );
+          }
+          return;
+        }
+
+        final Position position = await Geolocator.getCurrentPosition();
+        final loc.LocationData locationData = loc.LocationData.fromMap({
+          'latitude': position.latitude,
+          'longitude': position.longitude,
+        });
         setState(() {
-          _currentLocation = loc.LocationData.fromMap({
-            "latitude": position.latitude,
-            "longitude": position.longitude,
-          });
+          _currentLocation = locationData;
         });
       } catch (e) {
         if (mounted) {
@@ -266,7 +279,6 @@ class _MapPageState extends State<MapPage> {
           );
         }
       }
-      return;
     } else {
       // ANDROID LOCATION PERMISSIONS
       loc.Location location = loc.Location();
@@ -640,43 +652,50 @@ class _MapPageState extends State<MapPage> {
                             _cameraTargetBounds == null ||
                             isLoadingBuildingMarkers)
                         ? Center(child: CircularProgressIndicator())
-                        : GoogleMap(
-                            onMapCreated: _onMapCreated,
-                            style: _mapStyle,
-                            initialCameraPosition: _initialCameraPosition!,
-                            rotateGesturesEnabled: true,
-                            myLocationButtonEnabled: true,
-                            zoomControlsEnabled:
-                                false, // Disable zoom controls (+/- buttons)
-                            myLocationEnabled: true,
-                            cameraTargetBounds: _cameraTargetBounds!,
-                            minMaxZoomPreference:
-                                MinMaxZoomPreference(15.0, 20.0),
-                            polylines: {
-                              if (_info != null)
-                                Polyline(
-                                  polylineId: PolylineId('route'),
-                                  points: _info!.polylineCoordinates
-                                      .map((e) =>
-                                          LatLng(e.latitude, e.longitude))
-                                      .toList(),
-                                  color: Colors.yellow,
-                                  width: 5,
-                                ),
-                            },
-                            markers: _markers,
-                            onTap: (location) {
-                              if (_showBuildingInfo) {
-                                setState(() {
-                                  _showBuildingInfo = false;
-                                });
-                              }
-                            },
-                            onLongPress: (LatLng tappedPoint) {
-                              _getDirections(destination: tappedPoint);
-                            },
+                        : Padding(
+                            padding: kIsWeb
+                                ? EdgeInsets.only(right: 80)
+                                : EdgeInsets.zero,
+                            child: GoogleMap(
+                              onMapCreated: _onMapCreated,
+                              style: _mapStyle,
+                              initialCameraPosition: _initialCameraPosition!,
+                              rotateGesturesEnabled: true,
+                              myLocationButtonEnabled: true,
+                              zoomControlsEnabled:
+                                  false, // Disable zoom controls (+/- buttons)
+                              myLocationEnabled: true,
+                              cameraTargetBounds: _cameraTargetBounds!,
+                              minMaxZoomPreference:
+                                  MinMaxZoomPreference(15.0, 20.0),
+                              polylines: {
+                                if (_info != null)
+                                  Polyline(
+                                    polylineId: PolylineId('route'),
+                                    points: _info!.polylineCoordinates
+                                        .map((e) =>
+                                            LatLng(e.latitude, e.longitude))
+                                        .toList(),
+                                    color: Colors.yellow,
+                                    width: 5,
+                                  ),
+                              },
+                              markers: _markers,
+                              onTap: (location) {
+                                if (_showBuildingInfo) {
+                                  setState(() {
+                                    _showBuildingInfo = false;
+                                  });
+                                }
+                              },
+                              onLongPress: (LatLng tappedPoint) {
+                                _getDirections(destination: tappedPoint);
+                              },
+                              webGestureHandling: _showBuildingInfo
+                                  ? WebGestureHandling.none
+                                  : WebGestureHandling.auto,
+                            ),
                           ),
-
                     // Resources and Event buttons
                     Positioned(
                       bottom: 16,
