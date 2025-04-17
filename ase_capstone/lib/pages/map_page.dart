@@ -349,12 +349,6 @@ class _MapPageState extends State<MapPage> {
         //   ));
         // }
       } catch (e) {
-        if (mounted) {
-          Utils.displayMessage(
-            context: context,
-            message: 'Unable to get location: $e',
-          );
-        }
         setState(() {
           _currentLocation = loc.LocationData.fromMap({
             'latitude': 0,
