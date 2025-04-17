@@ -48,6 +48,11 @@ class _MapEditorState extends State<MapEditor> {
   String? _selectedResourceBuilding;
   List<Map<String, dynamic>> _resources = [];
 
+  // engagement link
+  final TextEditingController _engagementLinkController =
+      TextEditingController();
+  String? _engagementLink;
+
   List<dynamic> _buildings = [];
   final List<Marker> _buildingMarkers = [];
   MinMaxZoomPreference? _zoomPreference;
@@ -808,7 +813,6 @@ class _MapEditorState extends State<MapEditor> {
   }
 
   void _saveUniversity() async {
-    // TODO: save resources
     final navigator = Navigator.of(context);
     if (_isCreate) {
       // CREATE UNIVERSITY
@@ -892,6 +896,7 @@ class _MapEditorState extends State<MapEditor> {
                             },
                             'buildings': _buildings,
                             'resources': _resources,
+                            'eventUrl': _engagementLink,
                           },
                         );
                       } catch (e) {
@@ -980,6 +985,7 @@ class _MapEditorState extends State<MapEditor> {
                           },
                           'buildings': _buildings,
                           'resources': _resources,
+                          'eventUrl': _engagementLink,
                         },
                       );
                     } catch (e) {
@@ -1040,6 +1046,63 @@ class _MapEditorState extends State<MapEditor> {
         );
       }
     }
+  }
+
+  void _engagementLinkDialog() async {
+    setState(() {
+      _showDialog = true;
+    });
+    await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Engagement Link'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                    'Enter the link to the universities engagement site (optional).'),
+                SizedBox(height: 10),
+                MyTextField(
+                  controller: _engagementLinkController,
+                  hintText: 'link to the universities engagement site',
+                  obscureText: false,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  _engagementLinkController.clear();
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  if (_engagementLinkController.text.isEmpty) {
+                    Utils.displayMessage(
+                      context: context,
+                      message: 'Please enter a link.',
+                    );
+                  } else {
+                    //TODO: add engagement link to university map
+                    setState(() {
+                      _engagementLink = _engagementLinkController.text;
+                    });
+                    if (mounted) {
+                      Navigator.of(context).pop();
+                    }
+                  }
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        });
+    setState(() {
+      _showDialog = false;
+    });
   }
 
   Future<void> _addResourcesDialog() async {
@@ -1507,6 +1570,15 @@ class _MapEditorState extends State<MapEditor> {
                                 color: Colors.black,
                                 child: Row(
                                   children: [
+                                    IconButton(
+                                      onPressed: _engagementLinkDialog,
+                                      icon: Icon(
+                                        Icons.public,
+                                        size: 20,
+                                        color: const Color.fromARGB(
+                                            255, 219, 201, 0),
+                                      ),
+                                    ),
                                     IconButton(
                                         icon: Icon(
                                           Icons.location_on,
