@@ -356,8 +356,10 @@ class _MapPageState extends State<MapPage> {
           );
         }
         setState(() {
-          _currentLocation = LatLng(0,
-              0); // set location to 0,0 if error to allow the user in (only on web because location is not required)
+          _currentLocation = loc.LocationData.fromMap({
+            'latitude': 0,
+            'longitude': 0,
+          }); // set location to 0,0 if error to allow the user in (only on web because location is not required)
         });
       }
     } else {
