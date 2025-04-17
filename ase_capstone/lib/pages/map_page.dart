@@ -267,7 +267,6 @@ class _MapPageState extends State<MapPage> {
         }
 
         final Position position = await Geolocator.getCurrentPosition();
-        print("GOT POSITION: $position");
         final loc.LocationData locationData = loc.LocationData.fromMap({
           'latitude': position.latitude,
           'longitude': position.longitude,
@@ -282,13 +281,11 @@ class _MapPageState extends State<MapPage> {
             distanceFilter: 10,
           ),
         ).listen((Position position) {
-          print("GETTING HERE: $position");
           setState(() {
             _currentLocation = loc.LocationData.fromMap({
               'latitude': position.latitude,
               'longitude': position.longitude,
             });
-            print("set location to: $_currentLocation");
           });
           _checkForDirections();
 
@@ -307,19 +304,19 @@ class _MapPageState extends State<MapPage> {
           );
           setState(() {
             _markers.add(userMarker);
-            print("added marker: $userMarker");
           });
 
+          // ---- disabled because it will move the camera to the user's location even if they are not on campus ----
           // Move the camera to the updated location
-          _controller?.animateCamera(CameraUpdate.newCameraPosition(
-            CameraPosition(
-              target: LatLng(
-                _currentLocation!.latitude!,
-                _currentLocation!.longitude!,
-              ),
-              zoom: 15.0,
-            ),
-          ));
+          // _controller?.animateCamera(CameraUpdate.newCameraPosition(
+          //   CameraPosition(
+          //     target: LatLng(
+          //       _currentLocation!.latitude!,
+          //       _currentLocation!.longitude!,
+          //     ),
+          //     zoom: 15.0,
+          //   ),
+          // ));
         });
 
         // if (_currentLocation != null) {
@@ -776,13 +773,13 @@ class _MapPageState extends State<MapPage> {
                                   ),
                               },
                               markers: _markers,
-                              onTap: (location) {
-                                // if (_showBuildingInfo) {
-                                //   setState(() {
-                                //     _showBuildingInfo = false;
-                                //   });
-                                // }
-                              },
+                              onTap: _showDialog
+                                  ? (location) {
+                                      /*Leave empty (does not allow tap function on web)*/
+                                    }
+                                  : (location) {
+                                      /**Add tap functionality here */
+                                    },
                               onLongPress: (LatLng tappedPoint) {
                                 _getDirections(destination: tappedPoint);
                               },
