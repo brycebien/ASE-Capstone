@@ -1098,7 +1098,7 @@ class _MapEditorState extends State<MapEditor> {
                     }
                   }
                 },
-                child: const Text('OK'),
+                child: const Text('Confirm'),
               ),
             ],
           );
