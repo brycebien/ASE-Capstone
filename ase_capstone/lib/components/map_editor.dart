@@ -43,6 +43,8 @@ class _MapEditorState extends State<MapEditor> {
   // new resource controllers
   final TextEditingController _resourceNameController = TextEditingController();
   final TextEditingController _resourceRoomController = TextEditingController();
+  final TextEditingController _resourceDescriptionController =
+      TextEditingController();
   String? _selectedResourceBuilding;
   List<Map<String, dynamic>> _resources = [];
 
@@ -1114,6 +1116,14 @@ class _MapEditorState extends State<MapEditor> {
                       obscureText: false,
                       isNumber: true,
                     ),
+                    SizedBox(height: 20),
+
+                    // description (optional)
+                    MyTextField(
+                      controller: _resourceDescriptionController,
+                      hintText: 'Description (optional)',
+                      obscureText: false,
+                    ),
                     SizedBox(height: 50),
 
                     // submit button
@@ -1133,6 +1143,7 @@ class _MapEditorState extends State<MapEditor> {
                             'name': _resourceNameController.text,
                             'building': _selectedResourceBuilding!,
                             'room': _resourceRoomController.text,
+                            'description': _resourceDescriptionController.text,
                           };
                           setState(() {
                             _resources.add(resource);

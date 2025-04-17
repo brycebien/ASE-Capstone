@@ -667,7 +667,13 @@ class _MapPageState extends State<MapPage> {
         _info = directions;
       });
     } catch (e) {
-      print("ERROR $e");
+      if (mounted) {
+        Utils.displayMessage(
+          context: context,
+          message:
+              'Sorry we couldn\'t find directions.\nThere is currently no route support for iOS or web.',
+        );
+      }
     }
   }
 

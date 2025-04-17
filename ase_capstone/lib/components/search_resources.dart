@@ -67,6 +67,13 @@ class _SearchResourcesState extends State<SearchResources> {
                               'Room Number: ${resource['room']}',
                               style: TextStyle(fontSize: 15),
                             ),
+                            SizedBox(height: 5),
+                            resource['description'] != null
+                                ? Text(
+                                    'Description:\n ${resource['description']}',
+                                    style: TextStyle(fontSize: 15),
+                                  )
+                                : SizedBox(),
                           ],
                         ),
                         actions: [
