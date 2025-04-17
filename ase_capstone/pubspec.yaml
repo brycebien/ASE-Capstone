@@ -45,7 +45,7 @@ dependencies:
   flutter_dotenv: ^5.2.1
   flutter_polyline_points: ^2.1.0
   flutter_inappwebview: ^6.1.5
-  geolocator: ^14.0.0
+  geolocator: ^10.0.1
 
 dev_dependencies:
   flutter_test:
