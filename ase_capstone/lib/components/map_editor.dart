@@ -6,6 +6,7 @@ import 'package:ase_capstone/components/textfield.dart';
 import 'package:ase_capstone/models/directions_handler.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:ase_capstone/utils/utils.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -71,7 +72,7 @@ class _MapEditorState extends State<MapEditor> {
     {
       'step': 4,
       'message':
-          'Long press on the map to create a building. You can also edit or delete buildings by tapping on them.',
+          '${kIsWeb ? 'Click the create new building button' : 'Long press on the map'} to create a building. You can also edit or delete buildings by tapping on them.',
     },
     {
       'step': 5,
@@ -89,6 +90,10 @@ class _MapEditorState extends State<MapEditor> {
       TextEditingController();
   final TextEditingController _universityAbbrevController =
       TextEditingController();
+
+  // web only variables
+  final GlobalKey buildingLocationMarkerKey = GlobalKey();
+  bool _showDialog = false;
 
   @override
   void initState() {
@@ -217,7 +222,10 @@ class _MapEditorState extends State<MapEditor> {
   }
 
   Future<void> _showStartTutorialDialog() async {
-    return showDialog(
+    setState(() {
+      _showDialog = true;
+    });
+    await showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
@@ -240,10 +248,16 @@ class _MapEditorState extends State<MapEditor> {
             ],
           );
         });
+    setState(() {
+      _showDialog = false;
+    });
   }
 
-  void _startBuildingTutorial() {
-    showDialog(
+  void _startBuildingTutorial() async {
+    setState(() {
+      _showDialog = true;
+    });
+    await showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
@@ -252,7 +266,7 @@ class _MapEditorState extends State<MapEditor> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Text(
-                  'Next, long press on the map to create a building.',
+                  'Next, ${kIsWeb ? 'press the create new building button' : 'long press on the map'} to create a building.',
                 ),
               ],
             ),
@@ -266,6 +280,9 @@ class _MapEditorState extends State<MapEditor> {
             ],
           );
         });
+    setState(() {
+      _showDialog = false;
+    });
   }
 
   //////////////////////////////////
@@ -276,8 +293,11 @@ class _MapEditorState extends State<MapEditor> {
     required String title,
     String? message,
     Function? callBack,
-  }) {
-    showDialog(
+  }) async {
+    setState(() {
+      _showDialog = true;
+    });
+    await showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
@@ -294,9 +314,12 @@ class _MapEditorState extends State<MapEditor> {
             ],
           );
         });
+    setState(() {
+      _showDialog = false;
+    });
   }
 
-  void _setUniversityLocation(LatLng location) {
+  void _setUniversityLocation(LatLng location) async {
     // user already has a location selected (setting bounds)
     if (_universityLocation != null) {
       if (_southWestBound == null) {
@@ -357,7 +380,10 @@ class _MapEditorState extends State<MapEditor> {
     } else {
       if (_isTutorial) {
         // Setting university location
-        showDialog(
+        setState(() {
+          _showDialog = true;
+        });
+        await showDialog(
             context: context,
             builder: (BuildContext context) {
               return AlertDialog(
@@ -384,6 +410,9 @@ class _MapEditorState extends State<MapEditor> {
                 ],
               );
             });
+        setState(() {
+          _showDialog = false;
+        });
       }
 
       // set and zoom to university location
@@ -405,8 +434,11 @@ class _MapEditorState extends State<MapEditor> {
     }
   }
 
-  void _deleteUniversityLocation() {
-    showDialog(
+  void _deleteUniversityLocation() async {
+    setState(() {
+      _showDialog = true;
+    });
+    await showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
@@ -434,6 +466,9 @@ class _MapEditorState extends State<MapEditor> {
             ],
           );
         });
+    setState(() {
+      _showDialog = false;
+    });
   }
 
   void _setUniversityBounds() {
@@ -1148,33 +1183,93 @@ class _MapEditorState extends State<MapEditor> {
               padding: const EdgeInsets.fromLTRB(8, 20, 8, 8),
               child: Stack(
                 children: [
-                  GoogleMap(
-                    onMapCreated: _onMapCreated,
-                    initialCameraPosition: CameraPosition(
-                      target: LatLng(40, -96),
+                  Padding(
+                    padding: kIsWeb
+                        ? const EdgeInsets.only(bottom: 200, top: 50)
+                        : EdgeInsets.zero,
+                    child: GoogleMap(
+                      onMapCreated: _onMapCreated,
+                      initialCameraPosition: CameraPosition(
+                        target: LatLng(40, -96),
+                      ),
+                      minMaxZoomPreference:
+                          _zoomPreference ?? MinMaxZoomPreference.unbounded,
+                      markers: Set<Marker>.of(_buildingMarkers),
+                      zoomControlsEnabled: false,
+                      rotateGesturesEnabled: false,
+                      onTap:
+                          !_showDialog ? _setUniversityLocation : (location) {},
+                      cameraTargetBounds:
+                          _southWestBound != null && _northEastBound != null
+                              ? CameraTargetBounds(
+                                  LatLngBounds(
+                                    southwest: _southWestBound!,
+                                    northeast: _northEastBound!,
+                                  ),
+                                )
+                              : CameraTargetBounds.unbounded,
+                      onLongPress: _createBuilding,
+                      webGestureHandling: _showDialog
+                          ? WebGestureHandling.none
+                          : WebGestureHandling.auto,
                     ),
-                    minMaxZoomPreference:
-                        _zoomPreference ?? MinMaxZoomPreference.unbounded,
-                    markers: Set<Marker>.of(_buildingMarkers),
-                    zoomControlsEnabled: false,
-                    rotateGesturesEnabled: false,
-                    onTap: _setUniversityLocation,
-                    cameraTargetBounds:
-                        _southWestBound != null && _northEastBound != null
-                            ? CameraTargetBounds(
-                                LatLngBounds(
-                                  southwest: _southWestBound!,
-                                  northeast: _northEastBound!,
-                                ),
-                              )
-                            : CameraTargetBounds.unbounded,
-                    onLongPress: _createBuilding,
                   ),
+                  if (kIsWeb && _universityLocation != null)
+                    Stack(
+                      children: (_universityLocation != null &&
+                              _southWestBound != null &&
+                              _northEastBound != null)
+                          ? [
+                              Center(
+                                child: Icon(
+                                  key: buildingLocationMarkerKey,
+                                  Icons.location_pin,
+                                  size: 50,
+                                  color: Colors.purple[400],
+                                ),
+                              ),
+                              Positioned(
+                                top: 0,
+                                child: SizedBox(
+                                  height: 25,
+                                  width: 250,
+                                  child: FloatingActionButton(
+                                    onPressed: () async {
+                                      if (_controller != null) {
+                                        RenderBox box =
+                                            buildingLocationMarkerKey
+                                                    .currentContext!
+                                                    .findRenderObject()
+                                                as RenderBox;
+                                        Offset position =
+                                            box.localToGlobal(Offset.zero);
+                                        double y = position.dy;
+                                        double x = position.dx;
+                                        LatLng latLng =
+                                            await _controller!.getLatLng(
+                                          ScreenCoordinate(
+                                            // modifing x and y to center the pin on purple marker
+                                            x: x.toInt() + 20,
+                                            y: y.toInt() - 90,
+                                          ),
+                                        );
+
+                                        _createBuilding(latLng);
+                                      }
+                                    },
+                                    child: Text(
+                                        'Create new building on purple pin'),
+                                  ),
+                                ),
+                              ),
+                            ]
+                          : [],
+                    ),
                   // INSTRUCTIONS FOR USER
                   _currentInstructions == null
                       ? Text('')
                       : Padding(
-                          padding: const EdgeInsets.all(8.0),
+                          padding: const EdgeInsets.fromLTRB(8, 30, 8, 8),
                           child: Align(
                             alignment: Alignment.topCenter,
                             child: Container(
