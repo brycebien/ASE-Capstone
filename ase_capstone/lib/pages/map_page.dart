@@ -275,49 +275,50 @@ class _MapPageState extends State<MapPage> {
           _currentLocation = locationData;
         });
 
-        Geolocator.getPositionStream(
-          locationSettings: LocationSettings(
-            accuracy: LocationAccuracy.high,
-            distanceFilter: 10,
-          ),
-        ).listen((Position position) {
-          setState(() {
-            _currentLocation = loc.LocationData.fromMap({
-              'latitude': position.latitude,
-              'longitude': position.longitude,
-            });
-          });
-          _checkForDirections();
+        // --- disabled (updates the user's location every second -- not needed for web because we are not doing routes on it at this time) ---
+        // Geolocator.getPositionStream(
+        //   locationSettings: LocationSettings(
+        //     accuracy: LocationAccuracy.high,
+        //     distanceFilter: 10,
+        //   ),
+        // ).listen((Position position) {
+        //   setState(() {
+        //     _currentLocation = loc.LocationData.fromMap({
+        //       'latitude': position.latitude,
+        //       'longitude': position.longitude,
+        //     });
+        //   });
+        //   _checkForDirections();
 
-          // Add a marker for the user's location
-          final userMarker = Marker(
-            markerId: MarkerId('userLocation'),
-            position: LatLng(
-              _currentLocation!.latitude!,
-              _currentLocation!.longitude!,
-            ),
-            infoWindow: InfoWindow(
-              title: 'Your Location',
-            ),
-            icon:
-                BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-          );
-          setState(() {
-            _markers.add(userMarker);
-          });
+        //   // Add a marker for the user's location
+        //   final userMarker = Marker(
+        //     markerId: MarkerId('userLocation'),
+        //     position: LatLng(
+        //       _currentLocation!.latitude!,
+        //       _currentLocation!.longitude!,
+        //     ),
+        //     infoWindow: InfoWindow(
+        //       title: 'Your Location',
+        //     ),
+        //     icon:
+        //         BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+        //   );
+        //   setState(() {
+        //     _markers.add(userMarker);
+        //   });
 
-          // ---- disabled because it will move the camera to the user's location even if they are not on campus ----
-          // Move the camera to the updated location
-          // _controller?.animateCamera(CameraUpdate.newCameraPosition(
-          //   CameraPosition(
-          //     target: LatLng(
-          //       _currentLocation!.latitude!,
-          //       _currentLocation!.longitude!,
-          //     ),
-          //     zoom: 15.0,
-          //   ),
-          // ));
-        });
+        //   // ---- disabled because it will move the camera to the user's location even if they are not on campus ----
+        //   // Move the camera to the updated location
+        //   // _controller?.animateCamera(CameraUpdate.newCameraPosition(
+        //   //   CameraPosition(
+        //   //     target: LatLng(
+        //   //       _currentLocation!.latitude!,
+        //   //       _currentLocation!.longitude!,
+        //   //     ),
+        //   //     zoom: 15.0,
+        //   //   ),
+        //   // ));
+        // });
 
         // if (_currentLocation != null) {
         //   final userMarker = Marker(
