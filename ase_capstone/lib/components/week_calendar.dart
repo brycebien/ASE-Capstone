@@ -111,7 +111,8 @@ class _WeekCalendarState extends State<WeekCalendar> {
                 color: day == 1
                     ? Theme.of(context).colorScheme.primary
                     : Theme.of(context).colorScheme.secondary,
-                padding: const EdgeInsets.all(50),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 50),
                 child: Center(
                   child: Column(
                     children: [
@@ -130,7 +131,8 @@ class _WeekCalendarState extends State<WeekCalendar> {
                 color: day == 2
                     ? Theme.of(context).colorScheme.primary
                     : Theme.of(context).colorScheme.secondary,
-                padding: const EdgeInsets.all(50),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 50),
                 child: Center(
                   child: Column(
                     children: [
@@ -149,7 +151,8 @@ class _WeekCalendarState extends State<WeekCalendar> {
                 color: day == 3
                     ? Theme.of(context).colorScheme.primary
                     : Theme.of(context).colorScheme.secondary,
-                padding: const EdgeInsets.all(50),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 50),
                 child: Center(
                     child: Column(
                   children: [
@@ -167,7 +170,8 @@ class _WeekCalendarState extends State<WeekCalendar> {
                 color: day == 4
                     ? Theme.of(context).colorScheme.primary
                     : Theme.of(context).colorScheme.secondary,
-                padding: const EdgeInsets.all(50),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 50),
                 child: Center(
                     child: Column(
                   children: [
@@ -185,7 +189,8 @@ class _WeekCalendarState extends State<WeekCalendar> {
                 color: day == 5
                     ? Theme.of(context).colorScheme.primary
                     : Theme.of(context).colorScheme.secondary,
-                padding: const EdgeInsets.all(50),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 50),
                 child: Center(
                     child: Column(
                   children: [
