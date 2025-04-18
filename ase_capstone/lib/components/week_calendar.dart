@@ -9,72 +9,169 @@ class WeekCalendar extends StatefulWidget {
 }
 
 class _WeekCalendarState extends State<WeekCalendar> {
+  final day = DateTime.now().weekday;
+  Map<String, dynamic> schedule = {
+    'monday': [],
+    'tuesday': [],
+    'wednesday': [],
+    'thursday': [],
+    'friday': [],
+  };
+  @override
+  void initState() {
+    super.initState();
+    _initializeClasses();
+  }
+
+  void _initializeClasses() {
+    for (var course in widget.classes) {
+      setState(() {
+        String courseDay = course['days'].toString().toLowerCase();
+
+        if (courseDay.contains('monday')) {
+          schedule['monday'].add(course);
+        }
+
+        if (courseDay.contains('tuesday')) {
+          schedule['tuesday'].add(course);
+        }
+
+        if (courseDay.contains('wednesday')) {
+          schedule['wednesday'].add(course);
+        }
+
+        if (courseDay.contains('thursday')) {
+          schedule['thursday'].add(course);
+        }
+
+        if (courseDay.contains('friday')) {
+          schedule['friday'].add(course);
+        }
+      });
+    }
+  }
+
+  List<Widget> _getCourses({required day}) {
+    List<dynamic> courses = schedule[day];
+    List<Widget> courseWidgets = [];
+    for (var course in courses) {
+      courseWidgets.add(Card(
+        child: ListTile(
+          title: Text(
+            course['name'],
+            style: const TextStyle(color: Colors.white, fontSize: 20),
+          ),
+        ),
+      ));
+    }
+    return courseWidgets;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      alignment: Alignment.center,
-      padding: const EdgeInsets.all(16),
-      height: MediaQuery.of(context).size.height * 0.5,
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: [
-          Container(
-            width: 100,
-            height: 100,
-            color: Colors.red,
-            child: const Center(
-              child: Text(
-                'Monday',
-                style: TextStyle(color: Colors.white, fontSize: 20),
+    return Expanded(
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Wrap(
+            runSpacing: 8,
+            spacing: 8,
+            children: [
+              // MONDAY
+              Container(
+                color: day == 1
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.secondary,
+                padding: const EdgeInsets.all(50),
+                child: Center(
+                  child: Column(
+                    children: [
+                      Text(
+                        'Monday',
+                        style: TextStyle(color: Colors.white, fontSize: 24),
+                      ),
+                      SizedBox(height: 25),
+                      ..._getCourses(day: 'monday'),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ),
-          Container(
-            width: 100,
-            height: 100,
-            color: Colors.red,
-            child: const Center(
-              child: Text(
-                'Tuesday',
-                style: TextStyle(color: Colors.white, fontSize: 20),
+              // TUESDAY
+              Container(
+                color: day == 2
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.secondary,
+                padding: const EdgeInsets.all(50),
+                child: Center(
+                  child: Column(
+                    children: [
+                      Text(
+                        'Tuesday',
+                        style: TextStyle(color: Colors.white, fontSize: 24),
+                      ),
+                      SizedBox(height: 25),
+                      ..._getCourses(day: 'tuesday'),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ),
-          Container(
-            width: 100,
-            height: 100,
-            color: Colors.red,
-            child: const Center(
-              child: Text(
-                'Wednesday',
-                style: TextStyle(color: Colors.white, fontSize: 20),
+              // WEDNESDAY
+              Container(
+                color: day == 3
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.secondary,
+                padding: const EdgeInsets.all(50),
+                child: Center(
+                    child: Column(
+                  children: [
+                    Text(
+                      'Wednesday',
+                      style: TextStyle(color: Colors.white, fontSize: 24),
+                    ),
+                    SizedBox(height: 25),
+                    ..._getCourses(day: 'wednesday'),
+                  ],
+                )),
               ),
-            ),
-          ),
-          Container(
-            width: 100,
-            height: 100,
-            color: Colors.red,
-            child: const Center(
-              child: Text(
-                'Thursday',
-                style: TextStyle(color: Colors.white, fontSize: 20),
+              // THURSDAY
+              Container(
+                color: day == 4
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.secondary,
+                padding: const EdgeInsets.all(50),
+                child: Center(
+                    child: Column(
+                  children: [
+                    Text(
+                      'Thursday',
+                      style: TextStyle(color: Colors.white, fontSize: 24),
+                    ),
+                    SizedBox(height: 25),
+                    ..._getCourses(day: 'thursday'),
+                  ],
+                )),
               ),
-            ),
-          ),
-          Container(
-            width: 100,
-            height: 100,
-            color: Colors.red,
-            child: const Center(
-              child: Text(
-                'Friday',
-                style: TextStyle(color: Colors.white, fontSize: 20),
+              // FRIDAY
+              Container(
+                color: day == 5
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.secondary,
+                padding: const EdgeInsets.all(50),
+                child: Center(
+                    child: Column(
+                  children: [
+                    Text(
+                      'Friday',
+                      style: TextStyle(color: Colors.white, fontSize: 24),
+                    ),
+                    SizedBox(height: 25),
+                    ..._getCourses(day: 'friday'),
+                  ],
+                )),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

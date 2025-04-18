@@ -7,7 +7,6 @@ import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class SchedulePage extends StatefulWidget {
@@ -21,6 +20,7 @@ class _SchedulePageState extends State<SchedulePage> {
   bool _isLoading = false;
   FirestoreService firestoreService = FirestoreService();
   User? currentUser = FirebaseAuth.instance.currentUser;
+
   late List<Map<String, dynamic>> buildings;
   TimeOfDay? startTime;
   TimeOfDay? endTime;
@@ -29,8 +29,14 @@ class _SchedulePageState extends State<SchedulePage> {
   final TextEditingController _classNameController = TextEditingController();
   final TextEditingController _roomController = TextEditingController();
 
+  List<String> selectedDays = [];
+  List<dynamic> classes = [
+    // {'name': 'Math', 'time': '8:00 AM', 'building': 'MP', 'room': '101'},
+    // {'name': 'Science', 'time': '9:00 AM', 'building': 'SC', 'room': '202'}
+  ];
+
   // select screen
-  bool isCalendar = false;
+  bool isCalendar = true;
 
   @override
   void initState() {
@@ -56,11 +62,7 @@ class _SchedulePageState extends State<SchedulePage> {
     'Thursday',
     'Friday'
   ];
-  List<String> selectedDays = [];
-  List<dynamic> classes = [
-    // {'name': 'Math', 'time': '8:00 AM', 'building': 'MP', 'room': '101'},
-    // {'name': 'Science', 'time': '9:00 AM', 'building': 'SC', 'room': '202'}
-  ];
+
   Future<void> _getBuildings() async {
     try {
       List<dynamic> result =
