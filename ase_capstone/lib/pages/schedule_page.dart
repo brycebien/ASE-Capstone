@@ -1,10 +1,13 @@
+import 'package:ase_capstone/components/my_button.dart';
 import 'package:ase_capstone/components/searchable_list.dart';
 import 'package:ase_capstone/components/textfield.dart';
+import 'package:ase_capstone/components/week_calendar.dart';
 import 'package:ase_capstone/models/directions_handler.dart';
 import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class SchedulePage extends StatefulWidget {
@@ -18,7 +21,6 @@ class _SchedulePageState extends State<SchedulePage> {
   bool _isLoading = false;
   FirestoreService firestoreService = FirestoreService();
   User? currentUser = FirebaseAuth.instance.currentUser;
-  // late List<dynamic> buildings;
   late List<Map<String, dynamic>> buildings;
   TimeOfDay? startTime;
   TimeOfDay? endTime;
@@ -26,6 +28,9 @@ class _SchedulePageState extends State<SchedulePage> {
   String? buildingCode;
   final TextEditingController _classNameController = TextEditingController();
   final TextEditingController _roomController = TextEditingController();
+
+  // select screen
+  bool isCalendar = false;
 
   @override
   void initState() {
@@ -364,9 +369,37 @@ class _SchedulePageState extends State<SchedulePage> {
               child: CircularProgressIndicator(),
             )
           : Padding(
-              padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
-              child: Stack(
+              padding: EdgeInsets.all(20),
+              child: Column(
+                // crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Row(
+                    children: [
+                      MyButton(
+                        buttonText: 'List View',
+                        onTap: () {
+                          setState(() {
+                            isCalendar = false;
+                          });
+                        },
+                        color: !isCalendar
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.secondary,
+                      ),
+                      MyButton(
+                        buttonText: 'Calendar View',
+                        onTap: () {
+                          setState(() {
+                            isCalendar = true;
+                          });
+                        },
+                        color: isCalendar
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.secondary,
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 10),
                   classes.isEmpty
                       ? Center(
                           child: Text(
@@ -375,90 +408,92 @@ class _SchedulePageState extends State<SchedulePage> {
                             style: TextStyle(fontSize: 20),
                           ),
                         )
-                      : Padding(
-                          padding: const EdgeInsets.only(bottom: 8.0),
-                          child: SingleChildScrollView(
-                            child: Column(
-                              children: classes.map((e) {
-                                return Card(
-                                  elevation: 8,
-                                  child: ListTile(
-                                    title: Text(
-                                      e['name'],
-                                      style: TextStyle(fontSize: 20),
-                                    ),
-                                    subtitle: Text(
-                                        '${e['startTime']} - ${e['endTime']}\n${e['building']} - ${e['code']}\nRoom: ${e['room']}\nDays: ${e['days'].join(', ')}'),
-                                    trailing: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        IconButton(
-                                          icon: Icon(Icons.directions_walk),
-                                          style: ButtonStyle(
-                                            foregroundColor:
-                                                WidgetStateProperty.all(
-                                                    Colors.blue),
-                                          ),
-                                          onPressed: () async {
-                                            LatLng destination;
-                                            // check wether the address is latlng or address
-                                            if (e['address'] is Map &&
-                                                e['address']['latitude'] !=
-                                                    null &&
-                                                e['address']['longitude'] !=
-                                                    null) {
-                                              destination = LatLng(
-                                                  e['address']['latitude'],
-                                                  e['address']['longitude']);
-                                            } else {
-                                              // get destination from building address
-                                              destination =
-                                                  await DirectionsHandler()
-                                                      .getDirectionFromAddress(
-                                                          address:
-                                                              e['address']);
-                                            }
+                      : isCalendar
+                          ? WeekCalendar(classes: classes)
+                          : Expanded(
+                              child: SingleChildScrollView(
+                                child: Column(
+                                  children: classes.map((e) {
+                                    return Card(
+                                      elevation: 8,
+                                      child: ListTile(
+                                        title: Text(
+                                          e['name'],
+                                          style: TextStyle(fontSize: 20),
+                                        ),
+                                        subtitle: Text(
+                                            '${e['startTime']} - ${e['endTime']}\n${e['building']} - ${e['code']}\nRoom: ${e['room']}\nDays: ${e['days'].join(', ')}'),
+                                        trailing: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            IconButton(
+                                              icon: Icon(Icons.directions_walk),
+                                              style: ButtonStyle(
+                                                foregroundColor:
+                                                    WidgetStateProperty.all(
+                                                        Colors.blue),
+                                              ),
+                                              onPressed: () async {
+                                                LatLng destination;
+                                                // check wether the address is latlng or address
+                                                if (e['address'] is Map &&
+                                                    e['address']['latitude'] !=
+                                                        null &&
+                                                    e['address']['longitude'] !=
+                                                        null) {
+                                                  destination = LatLng(
+                                                      e['address']['latitude'],
+                                                      e['address']
+                                                          ['longitude']);
+                                                } else {
+                                                  // get destination from building address
+                                                  destination =
+                                                      await DirectionsHandler()
+                                                          .getDirectionFromAddress(
+                                                              address:
+                                                                  e['address']);
+                                                }
 
-                                            setState(() {
-                                              Navigator.pushNamed(
-                                                context,
-                                                '/map',
-                                                arguments: {
-                                                  // pass building latlng to map page for directions
-                                                  'destination': destination,
-                                                },
-                                              );
-                                            });
-                                          },
+                                                setState(() {
+                                                  Navigator.pushNamed(
+                                                    context,
+                                                    '/map',
+                                                    arguments: {
+                                                      // pass building latlng to map page for directions
+                                                      'destination':
+                                                          destination,
+                                                    },
+                                                  );
+                                                });
+                                              },
+                                            ),
+                                            IconButton(
+                                              icon: Icon(Icons.delete),
+                                              style: ButtonStyle(
+                                                foregroundColor:
+                                                    WidgetStateProperty.all(
+                                                        Colors.red),
+                                              ),
+                                              onPressed: () {
+                                                _deleteClass(
+                                                    classes.indexOf(e));
+                                              },
+                                            ),
+                                          ],
                                         ),
-                                        IconButton(
-                                          icon: Icon(Icons.delete),
-                                          style: ButtonStyle(
-                                            foregroundColor:
-                                                WidgetStateProperty.all(
-                                                    Colors.red),
-                                          ),
-                                          onPressed: () {
-                                            _deleteClass(classes.indexOf(e));
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
+                                      ),
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                  Container(
-                    alignment: Alignment.bottomRight,
-                    child: FloatingActionButton(
-                      onPressed: _addClass,
-                      child: Icon(Icons.add),
-                    ),
-                  )
                 ],
-              )),
+              ),
+            ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _addClass,
+        child: Icon(Icons.add),
+      ),
     );
   }
 }
