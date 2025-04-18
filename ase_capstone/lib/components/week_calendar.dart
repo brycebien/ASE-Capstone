@@ -67,6 +67,7 @@ class _WeekCalendarState extends State<WeekCalendar> {
         }
       });
     }
+    // TODO: sort classes by start time
   }
 
   void _deleteClass(index) {
