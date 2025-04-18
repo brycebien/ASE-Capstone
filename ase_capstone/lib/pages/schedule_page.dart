@@ -35,7 +35,7 @@ class _SchedulePageState extends State<SchedulePage> {
   ];
 
   // select screen
-  bool isCalendar = true;
+  bool isCalendar = false;
 
   @override
   void initState() {
@@ -410,7 +410,10 @@ class _SchedulePageState extends State<SchedulePage> {
                           ),
                         )
                       : isCalendar
-                          ? WeekCalendar(classes: classes)
+                          ? WeekCalendar(
+                              classes: classes,
+                              onDeleteClass: _deleteClass,
+                            )
                           : Expanded(
                               child: SingleChildScrollView(
                                 child: Column(

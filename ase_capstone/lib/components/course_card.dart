@@ -6,12 +6,14 @@ class CourseCard extends StatefulWidget {
   final Map<String, dynamic> course;
   final List<dynamic> courseList;
   final Function onDeleteClass;
+  final bool omitDays;
 
   const CourseCard({
     super.key,
     required this.course,
     required this.courseList,
     required this.onDeleteClass,
+    this.omitDays = false,
   });
 
   @override
@@ -29,7 +31,7 @@ class _CourseCardState extends State<CourseCard> {
           style: TextStyle(fontSize: 20),
         ),
         subtitle: Text(
-            '${widget.course['startTime']} - ${widget.course['endTime']}\n${widget.course['building']} - ${widget.course['code']}\nRoom: ${widget.course['room']}\nDays: ${widget.course['days'].join(', ')}'),
+            '${widget.course['startTime']} - ${widget.course['endTime']}\n${widget.course['building']} - ${widget.course['code']}\nRoom: ${widget.course['room']}${widget.omitDays ? '' : '\nDays: ${widget.course['days'].join(', ')}'}'),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [

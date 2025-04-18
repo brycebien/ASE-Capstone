@@ -1,14 +1,25 @@
+import 'package:ase_capstone/components/course_card.dart';
+import 'package:ase_capstone/utils/firebase_operations.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class WeekCalendar extends StatefulWidget {
   final List<dynamic> classes;
-  const WeekCalendar({super.key, required this.classes});
+  final Function onDeleteClass;
+
+  const WeekCalendar({
+    super.key,
+    required this.classes,
+    required this.onDeleteClass,
+  });
 
   @override
   State<WeekCalendar> createState() => _WeekCalendarState();
 }
 
 class _WeekCalendarState extends State<WeekCalendar> {
+  User? currentUser = FirebaseAuth.instance.currentUser;
+  FirestoreService firestoreService = FirestoreService();
   final day = DateTime.now().weekday;
   Map<String, dynamic> schedule = {
     'monday': [],
@@ -24,6 +35,13 @@ class _WeekCalendarState extends State<WeekCalendar> {
   }
 
   void _initializeClasses() {
+    schedule = {
+      'monday': [],
+      'tuesday': [],
+      'wednesday': [],
+      'thursday': [],
+      'friday': [],
+    };
     for (var course in widget.classes) {
       setState(() {
         String courseDay = course['days'].toString().toLowerCase();
@@ -51,17 +69,28 @@ class _WeekCalendarState extends State<WeekCalendar> {
     }
   }
 
+  void _deleteClass(index) {
+    firestoreService.deleteClassFromDatabase(
+      userId: currentUser!.uid,
+      userClass: widget.classes[index],
+    );
+
+    // remove class from schedule (front end)
+    setState(() {
+      widget.classes.removeAt(index);
+      _initializeClasses();
+    });
+  }
+
   List<Widget> _getCourses({required day}) {
     List<dynamic> courses = schedule[day];
     List<Widget> courseWidgets = [];
     for (var course in courses) {
-      courseWidgets.add(Card(
-        child: ListTile(
-          title: Text(
-            course['name'],
-            style: const TextStyle(color: Colors.white, fontSize: 20),
-          ),
-        ),
+      courseWidgets.add(CourseCard(
+        course: course,
+        courseList: widget.classes,
+        onDeleteClass: _deleteClass,
+        omitDays: true,
       ));
     }
     return courseWidgets;
