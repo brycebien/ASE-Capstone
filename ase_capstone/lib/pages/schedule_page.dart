@@ -1,13 +1,12 @@
+import 'package:ase_capstone/components/course_card.dart';
 import 'package:ase_capstone/components/my_button.dart';
 import 'package:ase_capstone/components/searchable_list.dart';
 import 'package:ase_capstone/components/textfield.dart';
 import 'package:ase_capstone/components/week_calendar.dart';
-import 'package:ase_capstone/models/directions_handler.dart';
 import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class SchedulePage extends StatefulWidget {
   const SchedulePage({super.key});
@@ -416,74 +415,10 @@ class _SchedulePageState extends State<SchedulePage> {
                               child: SingleChildScrollView(
                                 child: Column(
                                   children: classes.map((e) {
-                                    return Card(
-                                      elevation: 8,
-                                      child: ListTile(
-                                        title: Text(
-                                          e['name'],
-                                          style: TextStyle(fontSize: 20),
-                                        ),
-                                        subtitle: Text(
-                                            '${e['startTime']} - ${e['endTime']}\n${e['building']} - ${e['code']}\nRoom: ${e['room']}\nDays: ${e['days'].join(', ')}'),
-                                        trailing: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            IconButton(
-                                              icon: Icon(Icons.directions_walk),
-                                              style: ButtonStyle(
-                                                foregroundColor:
-                                                    WidgetStateProperty.all(
-                                                        Colors.blue),
-                                              ),
-                                              onPressed: () async {
-                                                LatLng destination;
-                                                // check wether the address is latlng or address
-                                                if (e['address'] is Map &&
-                                                    e['address']['latitude'] !=
-                                                        null &&
-                                                    e['address']['longitude'] !=
-                                                        null) {
-                                                  destination = LatLng(
-                                                      e['address']['latitude'],
-                                                      e['address']
-                                                          ['longitude']);
-                                                } else {
-                                                  // get destination from building address
-                                                  destination =
-                                                      await DirectionsHandler()
-                                                          .getDirectionFromAddress(
-                                                              address:
-                                                                  e['address']);
-                                                }
-
-                                                setState(() {
-                                                  Navigator.pushNamed(
-                                                    context,
-                                                    '/map',
-                                                    arguments: {
-                                                      // pass building latlng to map page for directions
-                                                      'destination':
-                                                          destination,
-                                                    },
-                                                  );
-                                                });
-                                              },
-                                            ),
-                                            IconButton(
-                                              icon: Icon(Icons.delete),
-                                              style: ButtonStyle(
-                                                foregroundColor:
-                                                    WidgetStateProperty.all(
-                                                        Colors.red),
-                                              ),
-                                              onPressed: () {
-                                                _deleteClass(
-                                                    classes.indexOf(e));
-                                              },
-                                            ),
-                                          ],
-                                        ),
-                                      ),
+                                    return CourseCard(
+                                      course: e,
+                                      courseList: classes,
+                                      onDeleteClass: _deleteClass,
                                     );
                                   }).toList(),
                                 ),
