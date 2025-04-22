@@ -649,8 +649,9 @@ class _MapEditorState extends State<MapEditor> {
         builder: (BuildContext context) {
           return AlertDialog(
             title: const Text('Delete Building'),
-            content:
-                Text('Are you sure you want to delete ${building['name']}?'),
+            content: Text(
+                'Are you sure you want to delete ${building['name']}?\n\n'
+                'This will also delete all resources associated with this building.'),
             actions: [
               TextButton(
                 onPressed: () {
@@ -677,6 +678,10 @@ class _MapEditorState extends State<MapEditor> {
                             building['address'].longitude ==
                                 buildingLocation.longitude;
                       }
+                    });
+
+                    _resources.removeWhere((resource) {
+                      return resource['building'] == building['name'];
                     });
                   });
                   Navigator.of(context).pop();
