@@ -121,6 +121,16 @@ class SettingsDrawerState extends State<SettingsDrawer> {
             },
           ),
           ListTile(
+            leading: Icon(Icons.add_alert),
+            title: Text('Campus Event Reminders'),
+            onTap: () {
+              Navigator.pushNamed(
+                context,
+                '/reminders',
+              );
+            },
+          ),
+          ListTile(
             leading: Icon(Icons.public),
             title: Text('Campus Events'),
             onTap: () {
