@@ -25,6 +25,32 @@ class _SearchResourcesState extends State<SearchResources> {
       TextEditingController();
   final TextEditingController _newResourceRoomController =
       TextEditingController();
+  final TextEditingController _newResourceDescriptionController =
+      TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  void _initializeEditControllers({required Map<String, dynamic> resource}) {
+    _newResourceNameController.clear();
+    _newResourceRoomController.clear();
+    _newResourceDescriptionController.clear();
+
+    if (resource['name'] != null) {
+      _newResourceNameController.text = resource['name'];
+    }
+
+    if (resource['room'] != null) {
+      _newResourceRoomController.text = resource['room'];
+    }
+
+    if (resource['description'] != null) {
+      _newResourceDescriptionController.text = resource['description'];
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -44,6 +70,7 @@ class _SearchResourcesState extends State<SearchResources> {
               keys: ['name', 'building', 'room'],
               prependSubtitle: ['Building: ', 'Room: '],
               onSelected: (resource) async {
+                _initializeEditControllers(resource: resource);
                 await showDialog(
                     context: context,
                     builder: (BuildContext context) {
@@ -68,12 +95,11 @@ class _SearchResourcesState extends State<SearchResources> {
                               style: TextStyle(fontSize: 15),
                             ),
                             SizedBox(height: 5),
-                            resource['description'] != null
-                                ? Text(
-                                    'Description:\n ${resource['description']}',
-                                    style: TextStyle(fontSize: 15),
-                                  )
-                                : SizedBox(),
+                            if (resource['description'] != null)
+                              Text(
+                                'Description: ${resource['description']}',
+                                style: TextStyle(fontSize: 15),
+                              ),
                           ],
                         ),
                         actions: [
@@ -129,18 +155,12 @@ class _SearchResourcesState extends State<SearchResources> {
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
                                               children: [
-                                                Text(
-                                                    'Current Name: ${resource['name']}'),
-                                                SizedBox(height: 5),
                                                 MyTextField(
                                                   controller:
                                                       _newResourceNameController,
                                                   hintText: 'New Resource Name',
                                                   obscureText: false,
                                                 ),
-                                                SizedBox(height: 5),
-                                                Text(
-                                                    'Current Building: ${resource['building']}'),
                                                 SizedBox(height: 5),
                                                 Autocomplete<
                                                     Map<String, dynamic>>(
@@ -185,6 +205,10 @@ class _SearchResourcesState extends State<SearchResources> {
                                                       FocusNode focusNode,
                                                       VoidCallback
                                                           onFieldSubmitted) {
+                                                    textEditingController.text =
+                                                        resource['building'];
+                                                    selectedResourceBuilding =
+                                                        resource['building'];
                                                     return TextFormField(
                                                       controller:
                                                           textEditingController,
@@ -200,15 +224,19 @@ class _SearchResourcesState extends State<SearchResources> {
                                                   },
                                                 ),
                                                 SizedBox(height: 5),
-                                                Text(
-                                                    'Current Room Number: ${resource['room']}'),
-                                                SizedBox(height: 5),
                                                 MyTextField(
                                                   controller:
                                                       _newResourceRoomController,
                                                   hintText: 'New Room Number',
                                                   obscureText: false,
                                                   isNumber: true,
+                                                ),
+                                                SizedBox(height: 10),
+                                                MyTextField(
+                                                  controller:
+                                                      _newResourceDescriptionController,
+                                                  hintText: 'Description',
+                                                  obscureText: false,
                                                 ),
                                               ]),
                                           actions: [
@@ -236,6 +264,9 @@ class _SearchResourcesState extends State<SearchResources> {
                                                   );
                                                   return;
                                                 }
+                                                String newResourceDescription =
+                                                    _newResourceDescriptionController
+                                                        .text;
                                                 Map<String, dynamic>
                                                     newResource = {
                                                   'name':
@@ -246,7 +277,15 @@ class _SearchResourcesState extends State<SearchResources> {
                                                   'room':
                                                       _newResourceRoomController
                                                           .text,
+                                                  'description':
+                                                      newResourceDescription,
                                                 };
+                                                // remove description if empty
+                                                if (newResourceDescription
+                                                    .isEmpty) {
+                                                  newResource
+                                                      .remove('description');
+                                                }
                                                 _newResourceNameController
                                                     .clear();
                                                 _newResourceRoomController
