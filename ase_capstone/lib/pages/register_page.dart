@@ -2,6 +2,7 @@ import 'package:ase_capstone/components/my_button.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ase_capstone/components/textfield.dart';
 
@@ -112,105 +113,113 @@ class _RegisterPageState extends State<RegisterPage> {
         child: Center(
           // allows scrolling if keyboard is open
           child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                if (_isLoading)
-                  Column(
-                    children: [
-                      const CircularProgressIndicator(),
-                    ],
-                  ),
-                // Campus Compass Logo
-                Icon(
-                  Icons.account_circle,
-                  size: 100,
-                ),
-
-                SizedBox(height: 30),
-
-                // Welcome Text
-                const Text(
-                  'Welcome to Campus Compass!',
-                  style: TextStyle(
-                    fontSize: 24,
-                  ),
-                ),
-                const Text(
-                  'Let\'s create an account!',
-                  style: TextStyle(
-                    fontSize: 20,
-                  ),
-                ),
-                SizedBox(height: 20),
-
-                // Email Text Field
-                MyTextField(
-                  controller: emailController,
-                  hintText: 'Email',
-                  obscureText: false,
-                ),
-
-                SizedBox(height: 10),
-
-                // Username Text Field
-                MyTextField(
-                  controller: usernameController,
-                  hintText: 'Username',
-                  obscureText: false,
-                ),
-
-                SizedBox(height: 10),
-
-                // Password Text Field
-                MyTextField(
-                  controller: passwordController,
-                  hintText: 'Password',
-                  obscureText: true,
-                ),
-
-                SizedBox(height: 10),
-
-                // Password Text Field
-                MyTextField(
-                  controller: confirmPasswordController,
-                  hintText: 'Confirm Password',
-                  obscureText: true,
-                ),
-
-                // sign up button
-                SizedBox(height: 20),
-                MyButton(
-                  buttonText: 'Sign Up',
-                  onTap: () => signUserUp(),
-                ),
-
-                SizedBox(height: 20),
-                Divider(thickness: 1, color: Colors.black),
-
-                // Sign Up
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Already a member?',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
+            child: Padding(
+              padding: kIsWeb
+                  ? EdgeInsets.symmetric(
+                      horizontal: MediaQuery.of(context).size.width * 0.3)
+                  : EdgeInsets.symmetric(horizontal: 8.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  if (_isLoading)
+                    Column(
+                      children: [
+                        const CircularProgressIndicator(),
+                      ],
                     ),
-                    SizedBox(width: 4),
-                    GestureDetector(
-                      onTap: widget.onTap,
-                      child: Text(
-                        'Log In',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
+                  // Campus Compass Logo
+                  Icon(
+                    Icons.account_circle,
+                    size: 100,
+                  ),
+
+                  SizedBox(height: 30),
+
+                  // Welcome Text
+                  const Text(
+                    'Welcome to Campus Compass!',
+                    style: TextStyle(
+                      fontSize: 24,
+                    ),
+                  ),
+                  const Text(
+                    'Let\'s create an account!',
+                    style: TextStyle(
+                      fontSize: 20,
+                    ),
+                  ),
+                  SizedBox(height: 20),
+
+                  // Email Text Field
+                  MyTextField(
+                    controller: emailController,
+                    hintText: 'Email',
+                    obscureText: false,
+                  ),
+
+                  SizedBox(height: 10),
+
+                  // Username Text Field
+                  MyTextField(
+                    controller: usernameController,
+                    hintText: 'Username',
+                    obscureText: false,
+                  ),
+
+                  SizedBox(height: 10),
+
+                  // Password Text Field
+                  MyTextField(
+                    controller: passwordController,
+                    hintText: 'Password',
+                    obscureText: true,
+                  ),
+
+                  SizedBox(height: 10),
+
+                  // Password Text Field
+                  MyTextField(
+                    controller: confirmPasswordController,
+                    hintText: 'Confirm Password',
+                    obscureText: true,
+                  ),
+
+                  // sign up button
+                  SizedBox(height: 20),
+                  MyButton(
+                    buttonText: 'Sign Up',
+                    onTap: () => signUserUp(),
+                  ),
+
+                  SizedBox(height: 20),
+                  Divider(
+                      thickness: 1,
+                      color: const Color.fromARGB(255, 75, 75, 75)),
+
+                  // Sign Up
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Already a member?',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                      ),
+                      SizedBox(width: 4),
+                      GestureDetector(
+                        onTap: widget.onTap,
+                        child: Text(
+                          'Log In',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                )
-              ],
+                    ],
+                  )
+                ],
+              ),
             ),
           ),
         ),
