@@ -13,15 +13,34 @@ class SettingsDrawer extends StatefulWidget {
 
 class SettingsDrawerState extends State<SettingsDrawer> {
   final FirestoreService _firestoreService = FirestoreService();
+  bool _isAdmin = false;
 
   @override
   void initState() {
     super.initState();
+    _checkUserAdmin();
+  }
+
+  Future<void> _checkUserAdmin() async {
+    bool isAdmin = await _firestoreService.isAdmin(userId: widget.user!.uid);
+    setState(() {
+      _isAdmin = isAdmin;
+    });
   }
 
   void _showUniversitySelectionDialog() async {
     List<Map<String, dynamic>> universities =
         await _firestoreService.getUniversities();
+
+    if (!_isAdmin) {
+      setState(() {
+        universities = universities.where((university) {
+          return university['isPublic'] == true ||
+              university['createdBy'] == widget.user!.uid;
+        }).toList();
+      });
+    }
+
     if (mounted) {
       await Navigator.push(
         context,

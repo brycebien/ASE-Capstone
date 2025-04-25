@@ -25,6 +25,8 @@ class MapPage extends StatefulWidget {
 class _MapPageState extends State<MapPage> {
   final FirestoreService _firestoreServices = FirestoreService();
   final user = FirebaseAuth.instance.currentUser!;
+  bool _isAdmin = false;
+
   GoogleMapController? _controller;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late String _mapStyleString;
@@ -62,6 +64,7 @@ class _MapPageState extends State<MapPage> {
     _checkExpiredPins(); // check that no pins are expired (older than 24 hrs)
     _checkUserUniversity(); // check that he user has a university chosen
     _checkForDirections(); // check if the user has a destination set
+    _checkUserAdmin(); // check if the user is an admin
   }
 
   @override
@@ -94,6 +97,13 @@ class _MapPageState extends State<MapPage> {
         });
       }
     }
+  }
+
+  Future<void> _checkUserAdmin() async {
+    bool isAdmin = await _firestoreServices.isAdmin(userId: user.uid);
+    setState(() {
+      _isAdmin = isAdmin;
+    });
   }
 
   void _setInitialCameraPosition() async {
@@ -699,6 +709,14 @@ class _MapPageState extends State<MapPage> {
   void _showUniversityPicker() async {
     List<Map<String, dynamic>> universities =
         await _firestoreServices.getUniversities();
+
+    if (!_isAdmin) {
+      setState(() {
+        universities = universities.where((university) {
+          return university['isPublic'] == true;
+        }).toList();
+      });
+    }
     String? result;
     if (mounted) {
       result = await Navigator.push(
