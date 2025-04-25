@@ -5,6 +5,7 @@ import 'package:ase_capstone/components/textfield.dart';
 import 'package:ase_capstone/components/week_calendar.dart';
 import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
 
@@ -416,14 +417,24 @@ class _SchedulePageState extends State<SchedulePage> {
                             )
                           : Expanded(
                               child: SingleChildScrollView(
-                                child: Column(
-                                  children: classes.map((e) {
-                                    return CourseCard(
-                                      course: e,
-                                      courseList: classes,
-                                      onDeleteClass: _deleteClass,
-                                    );
-                                  }).toList(),
+                                child: Padding(
+                                  padding: kIsWeb
+                                      ? EdgeInsets.symmetric(
+                                          horizontal: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              .3)
+                                      : const EdgeInsets.symmetric(
+                                          horizontal: 8.0),
+                                  child: Column(
+                                    children: classes.map((e) {
+                                      return CourseCard(
+                                        course: e,
+                                        courseList: classes,
+                                        onDeleteClass: _deleteClass,
+                                      );
+                                    }).toList(),
+                                  ),
                                 ),
                               ),
                             ),
