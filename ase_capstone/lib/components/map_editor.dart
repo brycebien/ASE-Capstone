@@ -1125,7 +1125,10 @@ class _MapEditorState extends State<MapEditor> {
               title: const Text('Add Resources'),
             ),
             body: Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: kIsWeb
+                  ? EdgeInsets.symmetric(
+                      horizontal: MediaQuery.of(context).size.width * .3)
+                  : const EdgeInsets.all(8.0),
               child: Center(
                 child: Column(
                   children: [

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class SearchBuildings extends StatefulWidget {
@@ -43,7 +44,10 @@ class _SearchBuildingsState extends State<SearchBuildings> {
           children: [
             widget.isTutorial
                 ? Padding(
-                    padding: const EdgeInsets.all(8.0),
+                    padding: kIsWeb
+                        ? EdgeInsets.symmetric(
+                            horizontal: MediaQuery.of(context).size.width * .3)
+                        : const EdgeInsets.all(8.0),
                     child: Align(
                       alignment: Alignment.topCenter,
                       child: Container(
@@ -56,7 +60,10 @@ class _SearchBuildingsState extends State<SearchBuildings> {
                   )
                 : SizedBox(height: 0),
             Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: kIsWeb
+                  ? EdgeInsets.symmetric(
+                      horizontal: MediaQuery.of(context).size.width * .3)
+                  : const EdgeInsets.all(8.0),
               child: TextField(
                 controller: _searchController,
                 decoration: const InputDecoration(
@@ -72,64 +79,70 @@ class _SearchBuildingsState extends State<SearchBuildings> {
               child: ListView.builder(
                 itemCount: foundBuildings.length,
                 itemBuilder: (context, index) {
-                  return Column(
-                    children: [
-                      Card(
-                        key: ValueKey(foundBuildings[index]['name']),
-                        elevation: 8,
-                        child: ListTile(
-                          title: Text(foundBuildings[index]['name']),
-                          subtitle: Text(foundBuildings[index]['code']),
-                          onTap: () {
-                            Navigator.pop(context, {
-                              'building': foundBuildings[index],
-                              'callback': 'editBuilding',
-                            });
-                          },
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.edit,
-                                  color: Colors.lightGreen,
+                  return Padding(
+                    padding: kIsWeb
+                        ? EdgeInsets.symmetric(
+                            horizontal: MediaQuery.of(context).size.width * .3)
+                        : const EdgeInsets.all(8.0),
+                    child: Column(
+                      children: [
+                        Card(
+                          key: ValueKey(foundBuildings[index]['name']),
+                          elevation: 8,
+                          child: ListTile(
+                            title: Text(foundBuildings[index]['name']),
+                            subtitle: Text(foundBuildings[index]['code']),
+                            onTap: () {
+                              Navigator.pop(context, {
+                                'building': foundBuildings[index],
+                                'callback': 'editBuilding',
+                              });
+                            },
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.edit,
+                                    color: Colors.lightGreen,
+                                  ),
+                                  onPressed: () {
+                                    Navigator.pop(context, {
+                                      'building': foundBuildings[index],
+                                      'callback': 'editBuilding',
+                                    });
+                                  },
                                 ),
-                                onPressed: () {
-                                  Navigator.pop(context, {
-                                    'building': foundBuildings[index],
-                                    'callback': 'editBuilding',
-                                  });
-                                },
-                              ),
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.delete,
-                                  color: Colors.red,
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.delete,
+                                    color: Colors.red,
+                                  ),
+                                  onPressed: () {
+                                    Navigator.pop(context, {
+                                      'building': foundBuildings[index],
+                                      'callback': 'deleteBuilding',
+                                    });
+                                  },
                                 ),
-                                onPressed: () {
-                                  Navigator.pop(context, {
-                                    'building': foundBuildings[index],
-                                    'callback': 'deleteBuilding',
-                                  });
-                                },
-                              ),
-                              IconButton(
-                                onPressed: () {
-                                  Navigator.pop(context, {
-                                    'building': foundBuildings[index],
-                                    'callback': 'zoomToBuilding',
-                                  });
-                                },
-                                icon: Icon(
-                                  Icons.location_on,
-                                  color: Colors.blue[400],
-                                ),
-                              )
-                            ],
+                                IconButton(
+                                  onPressed: () {
+                                    Navigator.pop(context, {
+                                      'building': foundBuildings[index],
+                                      'callback': 'zoomToBuilding',
+                                    });
+                                  },
+                                  icon: Icon(
+                                    Icons.location_on,
+                                    color: Colors.blue[400],
+                                  ),
+                                )
+                              ],
+                            ),
                           ),
-                        ),
-                      )
-                    ],
+                        )
+                      ],
+                    ),
                   );
                 },
               ),

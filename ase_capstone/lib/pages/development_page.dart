@@ -1,4 +1,5 @@
 import 'package:ase_capstone/utils/firebase_operations.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class DevelopmentPage extends StatefulWidget {
@@ -53,7 +54,10 @@ class _DevelopmentPageState extends State<DevelopmentPage> {
             body: Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.all(8.0),
+                  padding: kIsWeb
+                      ? EdgeInsets.symmetric(
+                          horizontal: MediaQuery.of(context).size.width * .3)
+                      : const EdgeInsets.all(8.0),
                   child: TextField(
                     controller: _searchController,
                     decoration: const InputDecoration(
@@ -72,7 +76,11 @@ class _DevelopmentPageState extends State<DevelopmentPage> {
                       return Column(
                         children: [
                           Padding(
-                            padding: const EdgeInsets.all(8.0),
+                            padding: kIsWeb
+                                ? EdgeInsets.symmetric(
+                                    horizontal:
+                                        MediaQuery.of(context).size.width * .3)
+                                : const EdgeInsets.all(8.0),
                             child: Card(
                               key: ValueKey(_foundUniversities[index]['name']),
                               elevation: 8,
