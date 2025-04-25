@@ -1,4 +1,5 @@
 import 'package:ase_capstone/utils/firebase_operations.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -11,6 +12,9 @@ class DevelopmentPage extends StatefulWidget {
 
 class _DevelopmentPageState extends State<DevelopmentPage> {
   final FirestoreService _firestoreServices = FirestoreService();
+  final User user = FirebaseAuth.instance.currentUser!;
+  bool? _isAdmin;
+
   List<Map<String, dynamic>> _universities = [];
   List<Map<String, dynamic>> _foundUniversities = [];
 
@@ -20,6 +24,14 @@ class _DevelopmentPageState extends State<DevelopmentPage> {
   initState() {
     super.initState();
     _getUniversities();
+    _checkUserAdmin();
+  }
+
+  Future<void> _checkUserAdmin() async {
+    bool isAdmin = await _firestoreServices.isAdmin(userId: user.uid);
+    setState(() {
+      _isAdmin = isAdmin;
+    });
   }
 
   Future<void> _getUniversities() async {
@@ -43,7 +55,7 @@ class _DevelopmentPageState extends State<DevelopmentPage> {
 
   @override
   Widget build(BuildContext context) {
-    return _universities.isEmpty
+    return _universities.isEmpty || _isAdmin == null
         ? const Center(
             child: CircularProgressIndicator(),
           )
@@ -88,19 +100,21 @@ class _DevelopmentPageState extends State<DevelopmentPage> {
                                 title: Text(_foundUniversities[index]['name']),
                                 subtitle: Text(
                                     _foundUniversities[index]['abbreviation']),
-                                trailing: IconButton(
-                                  icon: Icon(Icons.edit),
-                                  onPressed: () {
-                                    Navigator.pushNamed(
-                                      context,
-                                      '/edit-university',
-                                      arguments: {
-                                        'name': _foundUniversities[index]
-                                            ['name']
-                                      },
-                                    );
-                                  },
-                                ),
+                                trailing: _isAdmin!
+                                    ? IconButton(
+                                        icon: Icon(Icons.edit),
+                                        onPressed: () {
+                                          Navigator.pushNamed(
+                                            context,
+                                            '/edit-university',
+                                            arguments: {
+                                              'name': _foundUniversities[index]
+                                                  ['name']
+                                            },
+                                          );
+                                        },
+                                      )
+                                    : null,
                               ),
                             ),
                           ),
