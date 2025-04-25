@@ -100,7 +100,10 @@ class _DevelopmentPageState extends State<DevelopmentPage> {
                                 title: Text(_foundUniversities[index]['name']),
                                 subtitle: Text(
                                     _foundUniversities[index]['abbreviation']),
-                                trailing: _isAdmin!
+                                trailing: _isAdmin! ||
+                                        _foundUniversities[index]
+                                                ['createdBy'] ==
+                                            user.uid
                                     ? IconButton(
                                         icon: Icon(Icons.edit),
                                         onPressed: () {

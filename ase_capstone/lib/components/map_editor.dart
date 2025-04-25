@@ -6,6 +6,7 @@ import 'package:ase_capstone/components/textfield.dart';
 import 'package:ase_capstone/models/directions_handler.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:ase_capstone/utils/utils.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -24,8 +25,10 @@ class MapEditor extends StatefulWidget {
 
 class _MapEditorState extends State<MapEditor> {
   final FirestoreService _firestoreServices = FirestoreService();
+  final User user = FirebaseAuth.instance.currentUser!;
   GoogleMapController? _controller;
   bool _isLoading = true;
+  bool _isPublic = false;
 
   // university variables
   Map<String, dynamic>? _university;
@@ -120,6 +123,15 @@ class _MapEditorState extends State<MapEditor> {
         _isLoading = false;
       });
     }
+    // check if the user is an admin (for saving universities publically)
+    _checkUserAdmin();
+  }
+
+  Future<void> _checkUserAdmin() async {
+    bool isAdmin = await _firestoreServices.isAdmin(userId: user.uid);
+    setState(() {
+      _isPublic = isAdmin;
+    });
   }
 
   void _setUniversityVariables() async {
@@ -903,6 +915,8 @@ class _MapEditorState extends State<MapEditor> {
                             'buildings': _buildings,
                             'resources': _resources,
                             'eventUrl': _engagementLink,
+                            'isPublic': _isPublic,
+                            'createdBy': user.uid,
                           },
                         );
                       } catch (e) {
