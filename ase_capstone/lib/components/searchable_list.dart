@@ -1,5 +1,6 @@
 import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class SearchableList extends StatefulWidget {
@@ -101,7 +102,10 @@ class _SearchableListState extends State<SearchableList> {
   Widget build(BuildContext context) {
     return Column(children: [
       Padding(
-        padding: const EdgeInsets.all(8),
+        padding: kIsWeb
+            ? EdgeInsets.symmetric(
+                horizontal: MediaQuery.of(context).size.width * .3)
+            : const EdgeInsets.all(8.0),
         child: TextField(
           controller: _searchController,
           decoration: InputDecoration(
@@ -118,36 +122,42 @@ class _SearchableListState extends State<SearchableList> {
       if (widget.includePriorityBuildings && _favoriteItems.isNotEmpty)
         SizedBox(height: 10),
       if (widget.includePriorityBuildings && _favoriteItems.isNotEmpty)
-        ExpansionTile(
-          title: const Text('Favorite Buildings'),
-          children: [
-            ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.3,
-              ),
-              child: ListView(
-                shrinkWrap: true,
-                children: _favoriteItems.map((item) {
-                  return ListTile(
-                    title: Text(item),
-                    onTap: () {
-                      if (widget.onSelected != null) {
-                        widget.onSelected!(widget.items.firstWhere((element) {
-                          return element[widget.keys[0]] == item;
-                        }));
-                      } else {
-                        setState(() {
-                          _foundItems = widget.items.where((element) {
+        Padding(
+          padding: kIsWeb
+              ? EdgeInsets.fromLTRB(MediaQuery.of(context).size.width * .3, 8,
+                  MediaQuery.of(context).size.width * .3, 20)
+              : const EdgeInsets.fromLTRB(8, 8, 8, 20),
+          child: ExpansionTile(
+            title: const Text('Favorite Buildings'),
+            children: [
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.3,
+                ),
+                child: ListView(
+                  shrinkWrap: true,
+                  children: _favoriteItems.map((item) {
+                    return ListTile(
+                      title: Text(item),
+                      onTap: () {
+                        if (widget.onSelected != null) {
+                          widget.onSelected!(widget.items.firstWhere((element) {
                             return element[widget.keys[0]] == item;
-                          }).toList();
-                        });
-                      }
-                    },
-                  );
-                }).toList(),
+                          }));
+                        } else {
+                          setState(() {
+                            _foundItems = widget.items.where((element) {
+                              return element[widget.keys[0]] == item;
+                            }).toList();
+                          });
+                        }
+                      },
+                    );
+                  }).toList(),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
 
       // SEARCHABLE LIST
@@ -158,7 +168,10 @@ class _SearchableListState extends State<SearchableList> {
             return Column(
               children: [
                 Padding(
-                    padding: const EdgeInsets.all(8.0),
+                    padding: kIsWeb
+                        ? EdgeInsets.symmetric(
+                            horizontal: MediaQuery.of(context).size.width * .3)
+                        : const EdgeInsets.all(8.0),
                     child: Card(
                       key: ValueKey(_foundItems[index][widget.keys[0]]),
                       elevation: 8,
