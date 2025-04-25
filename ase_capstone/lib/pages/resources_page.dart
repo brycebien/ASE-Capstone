@@ -2,6 +2,7 @@
 import 'package:ase_capstone/components/resource_details_dialog.dart';
 import 'package:ase_capstone/components/searchable_list.dart';
 import 'package:ase_capstone/utils/utils.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -132,22 +133,28 @@ class _ResourcesPageState extends State<ResourcesPage> {
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
-          : SearchableList(
-              items: _resources,
-              searchBarHint:
-                  'Search by resource name, building, or room number',
-              keys: ['name', 'building', 'room'],
-              prependSubtitle: ['Building: ', 'Room: '],
-              onSelected: (resource) async {
-                await showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return ResourceDetailsDialog(
-                        resource: resource,
-                        university: _university,
-                      );
-                    });
-              },
+          : Padding(
+              padding: kIsWeb
+                  ? EdgeInsets.symmetric(
+                      horizontal: MediaQuery.of(context).size.width * .3)
+                  : const EdgeInsets.symmetric(horizontal: 8.0),
+              child: SearchableList(
+                items: _resources,
+                searchBarHint:
+                    'Search by resource name, building, or room number',
+                keys: ['name', 'building', 'room'],
+                prependSubtitle: ['Building: ', 'Room: '],
+                onSelected: (resource) async {
+                  await showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return ResourceDetailsDialog(
+                          resource: resource,
+                          university: _university,
+                        );
+                      });
+                },
+              ),
             ),
       // --- disabled because we don't want to allow users to add resources to db ---
       // floatingActionButton: FloatingActionButton(
