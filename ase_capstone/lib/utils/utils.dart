@@ -37,7 +37,6 @@ class Utils {
   }
 
   static String authErrorHandler({required FirebaseAuthException e}) {
-    print("Auth Error: ${e.code} - ${e.message}");
     switch (e.code) {
       case 'invalid-email':
         return 'Invalid email address';
