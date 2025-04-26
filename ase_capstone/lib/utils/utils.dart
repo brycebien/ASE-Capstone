@@ -37,6 +37,7 @@ class Utils {
   }
 
   static String authErrorHandler({required FirebaseAuthException e}) {
+    print("Auth Error: ${e.code} - ${e.message}");
     switch (e.code) {
       case 'invalid-email':
         return 'Invalid email address';
@@ -50,8 +51,10 @@ class Utils {
         return 'Email already in use';
       case 'weak-password':
         return 'Weak password';
+      case 'invalid-credential':
+        return 'Your email or password is incorrect';
       default:
-        return 'An unexpected error occured: ${e.message!}';
+        return 'An unexpected error occured, please try again later';
     }
   }
 
