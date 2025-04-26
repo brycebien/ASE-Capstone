@@ -51,7 +51,8 @@ class _EventRemindersPageState extends State<EventRemindersPage> {
 
     if (_events.isNotEmpty) {
       for (var event in _events) {
-        if (DateTime.parse(event['date'].toString()).isBefore(DateTime.now())) {
+        if (DateTime.parse(event['date'].toString())
+            .isBefore(DateTime.now().subtract(const Duration(days: 1)))) {
           // Remove past events from the list
           setState(() {
             _events.remove(event);

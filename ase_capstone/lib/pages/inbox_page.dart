@@ -45,8 +45,35 @@ class _InboxPageState extends State<InboxPage> {
       }
     }
 
+    final Map<String, dynamic> userData =
+        await _firestoreService.getUser(userId: currentUser!.uid);
+    final List<dynamic> upcomingEvents = userData['eventReminders'] ?? [];
+
+    for (var event in upcomingEvents) {
+      if (DateTime.parse(event['date'].toString()).toLocal().year ==
+              DateTime.now().year &&
+          DateTime.parse(event['date'].toString()).toLocal().month ==
+              DateTime.now().month &&
+          DateTime.parse(event['date'].toString()).toLocal().day ==
+              DateTime.now().day) {
+        final eventTime = Utils.parseTimeOfDay(event['startTime']);
+        final notificationTime =
+            Utils.subtractMinutesFromTimeOfDay(eventTime, 10);
+
+        if (Utils.isTimeInFuture(now, notificationTime)) {
+          setState(() {
+            upcomingNotifications.add({
+              'title': event['name'],
+              'time': notificationTime.format(context),
+              'details': event['buildingName'],
+            });
+          });
+        }
+      }
+    }
+
     setState(() {
-      notifications = upcomingNotifications;
+      notifications.addAll(upcomingNotifications);
     });
   }
 
