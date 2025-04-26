@@ -108,6 +108,15 @@ class FirestoreService {
     });
   }
 
+  Future<void> addEventReminder({
+    required String userId,
+    required Map<String, dynamic> event,
+  }) async {
+    _usersCollection.doc(userId).update({
+      'eventReminders': FieldValue.arrayUnion([event])
+    });
+  }
+
   /*
   
     READ

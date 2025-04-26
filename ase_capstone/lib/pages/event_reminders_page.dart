@@ -17,6 +17,7 @@ class _EventRemindersPageState extends State<EventRemindersPage> {
   late List<Map<String, dynamic>> _events;
   List<Map<String, dynamic>>? _buildings;
   bool _loadingEvents = true;
+  bool _loadingBuildings = true;
 
   final TextEditingController _eventNameController = TextEditingController();
   final TextEditingController _eventDateController = TextEditingController();
@@ -37,19 +38,10 @@ class _EventRemindersPageState extends State<EventRemindersPage> {
   Future<void> _initEvents() async {
     final Map<String, dynamic> userData =
         await _firestoreService.getUser(userId: user!.uid);
-    final List<Map<String, dynamic>> events = userData['reminders'] ?? [];
-
-    if (events.isNotEmpty) {
-      setState(() {
-        _events = events;
-      });
-    } else {
-      setState(() {
-        _events = [];
-      });
-    }
+    final List<dynamic> events = userData['eventReminders'] ?? [];
 
     setState(() {
+      _events = events.cast<Map<String, dynamic>>();
       _loadingEvents = false;
     });
   }
@@ -59,6 +51,7 @@ class _EventRemindersPageState extends State<EventRemindersPage> {
         await _firestoreService.getBuildings(userId: user!.uid);
     setState(() {
       _buildings = buildings.cast<Map<String, dynamic>>();
+      _loadingBuildings = false;
     });
   }
 
@@ -71,7 +64,6 @@ class _EventRemindersPageState extends State<EventRemindersPage> {
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // TODO: add event date and time pockers, add building picker
                 // EVENT NAME
                 MyTextField(
                     controller: _eventNameController,
@@ -208,16 +200,31 @@ class _EventRemindersPageState extends State<EventRemindersPage> {
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pop();
-                  // TODO: add event to local list and firebase
+                  final Map<String, dynamic> eventObject = {
+                    'name': _eventNameController.text,
+                    'date': _eventDateController.text,
+                    'startTime': _eventStartTimeController.text,
+                    'endTime': _eventEndTimeController.text,
+                    'buildingName': _eventBuilding['name'],
+                    'building': _eventBuilding,
+                  };
+                  // Add event to local list
                   setState(() {
-                    _events.add({
-                      'name': _eventNameController.text,
-                      'date': _eventDateController.text,
-                      'startTime': _eventStartTimeController.text,
-                      'endTime': _eventEndTimeController.text,
-                      'buildingName': _eventBuilding['name'],
-                      'building': _eventBuilding,
-                    });
+                    _events.add(eventObject);
+                  });
+
+                  // Add event to Firebase
+                  _firestoreService.addEventReminder(
+                      event: eventObject, userId: user!.uid);
+
+                  // Clear the text fields
+                  setState(() {
+                    _eventNameController.clear();
+                    _eventDateController.clear();
+                    _eventStartTimeController.clear();
+                    _eventEndTimeController.clear();
+                    _eventBuildingController.clear();
+                    _eventBuilding = {};
                   });
                 },
                 child: const Text('Confirm'),
@@ -234,7 +241,7 @@ class _EventRemindersPageState extends State<EventRemindersPage> {
         title: const Text('Event Reminders'),
       ),
       body: Center(
-        child: _buildings == null || _loadingEvents
+        child: _loadingBuildings || _loadingEvents
             ? CircularProgressIndicator()
             : _events.isEmpty
                 ? Column(
