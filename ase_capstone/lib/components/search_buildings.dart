@@ -46,8 +46,11 @@ class _SearchBuildingsState extends State<SearchBuildings> {
                 ? Padding(
                     padding: kIsWeb
                         ? EdgeInsets.symmetric(
-                            horizontal: MediaQuery.of(context).size.width * .3)
-                        : const EdgeInsets.all(8.0),
+                            horizontal: MediaQuery.of(context).size.width > 800
+                                ? MediaQuery.of(context).size.width * .3
+                                : 20,
+                          )
+                        : EdgeInsets.all(8),
                     child: Align(
                       alignment: Alignment.topCenter,
                       child: Container(
@@ -62,8 +65,11 @@ class _SearchBuildingsState extends State<SearchBuildings> {
             Padding(
               padding: kIsWeb
                   ? EdgeInsets.symmetric(
-                      horizontal: MediaQuery.of(context).size.width * .3)
-                  : const EdgeInsets.all(8.0),
+                      horizontal: MediaQuery.of(context).size.width > 800
+                          ? MediaQuery.of(context).size.width * .3
+                          : 20,
+                    )
+                  : EdgeInsets.all(8),
               child: TextField(
                 controller: _searchController,
                 decoration: const InputDecoration(
@@ -82,8 +88,11 @@ class _SearchBuildingsState extends State<SearchBuildings> {
                   return Padding(
                     padding: kIsWeb
                         ? EdgeInsets.symmetric(
-                            horizontal: MediaQuery.of(context).size.width * .3)
-                        : const EdgeInsets.all(8.0),
+                            horizontal: MediaQuery.of(context).size.width > 800
+                                ? MediaQuery.of(context).size.width * .3
+                                : 20,
+                          )
+                        : EdgeInsets.all(8),
                     child: Column(
                       children: [
                         Card(

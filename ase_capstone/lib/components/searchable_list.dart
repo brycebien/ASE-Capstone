@@ -104,8 +104,11 @@ class _SearchableListState extends State<SearchableList> {
       Padding(
         padding: kIsWeb
             ? EdgeInsets.symmetric(
-                horizontal: MediaQuery.of(context).size.width * .3)
-            : const EdgeInsets.all(8.0),
+                horizontal: MediaQuery.of(context).size.width > 800
+                    ? MediaQuery.of(context).size.width * .3
+                    : 20,
+              )
+            : EdgeInsets.all(8),
         child: TextField(
           controller: _searchController,
           decoration: InputDecoration(
@@ -124,9 +127,12 @@ class _SearchableListState extends State<SearchableList> {
       if (widget.includePriorityBuildings && _favoriteItems.isNotEmpty)
         Padding(
           padding: kIsWeb
-              ? EdgeInsets.fromLTRB(MediaQuery.of(context).size.width * .3, 8,
-                  MediaQuery.of(context).size.width * .3, 20)
-              : const EdgeInsets.fromLTRB(8, 8, 8, 20),
+              ? EdgeInsets.symmetric(
+                  horizontal: MediaQuery.of(context).size.width > 800
+                      ? MediaQuery.of(context).size.width * .3
+                      : 20,
+                )
+              : EdgeInsets.all(8),
           child: ExpansionTile(
             title: const Text('Favorite Buildings'),
             children: [
@@ -170,8 +176,11 @@ class _SearchableListState extends State<SearchableList> {
                 Padding(
                     padding: kIsWeb
                         ? EdgeInsets.symmetric(
-                            horizontal: MediaQuery.of(context).size.width * .3)
-                        : const EdgeInsets.all(8.0),
+                            horizontal: MediaQuery.of(context).size.width > 800
+                                ? MediaQuery.of(context).size.width * .3
+                                : 20,
+                          )
+                        : EdgeInsets.all(8),
                     child: Card(
                       key: ValueKey(_foundItems[index][widget.keys[0]]),
                       elevation: 8,
