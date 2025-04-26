@@ -360,6 +360,15 @@ class FirestoreService {
     
   */
 
+  Future<void> deleteEventReminder({
+    required String userId,
+    required Map<String, dynamic> event,
+  }) async {
+    await _usersCollection.doc(userId).update({
+      'eventReminders': FieldValue.arrayRemove([event])
+    });
+  }
+
   Future<void> removeFavorite(
       {required String userId, String? building}) async {
     if (building != null) {

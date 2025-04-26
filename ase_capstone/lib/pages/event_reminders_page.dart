@@ -1,8 +1,11 @@
+import 'package:ase_capstone/components/event_details_dialog.dart';
 import 'package:ase_capstone/components/searchable_list.dart';
 import 'package:ase_capstone/components/textfield.dart';
+import 'package:ase_capstone/models/directions_handler.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class EventRemindersPage extends StatefulWidget {
   const EventRemindersPage({super.key});
@@ -234,6 +237,16 @@ class _EventRemindersPageState extends State<EventRemindersPage> {
         });
   }
 
+  void _deleteEventReminder(Map<String, dynamic> event) {
+    setState(() {
+      _events.remove(event);
+    });
+    _firestoreService.deleteEventReminder(
+      event: event,
+      userId: user!.uid,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -270,7 +283,47 @@ class _EventRemindersPageState extends State<EventRemindersPage> {
                       'End Time: ',
                       'Location: ',
                     ],
-                    trailing: SizedBox(width: 0.0),
+                    onSelected: (event) {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return EventDetailsDialog(
+                            event: event,
+                            onNavigateTapped: () async {
+                              LatLng destination;
+                              // check wether the address is latlng or address
+                              if (event['building']['address'] is Map &&
+                                  event['building']['address']['latitude'] !=
+                                      null &&
+                                  event['building']['address']['longitude'] !=
+                                      null) {
+                                destination = LatLng(
+                                    event['building']['address']['latitude'],
+                                    event['building']['address']['longitude']);
+                              } else {
+                                // get destination from building address
+                                destination = await DirectionsHandler()
+                                    .getDirectionFromAddress(
+                                        address: event['building']['address']);
+                              }
+                              setState(() {
+                                Navigator.pushNamed(
+                                  context,
+                                  '/map',
+                                  arguments: {
+                                    'destination': destination,
+                                  },
+                                );
+                              });
+                            },
+                            onDeleteTapped: () {
+                              _deleteEventReminder(event);
+                              Navigator.of(context).pop();
+                            },
+                          );
+                        },
+                      );
+                    },
                   ),
       ),
       floatingActionButton: _buildings == null
