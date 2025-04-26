@@ -423,7 +423,7 @@ class _SchedulePageState extends State<SchedulePage> {
                                           horizontal: MediaQuery.of(context)
                                                       .size
                                                       .width >
-                                                  500
+                                                  800
                                               ? MediaQuery.of(context)
                                                       .size
                                                       .width *

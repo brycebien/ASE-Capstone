@@ -105,8 +105,11 @@ class _WeekCalendarState extends State<WeekCalendar> {
         child: Padding(
           padding: kIsWeb
               ? EdgeInsets.symmetric(
-                  horizontal: MediaQuery.of(context).size.width * .3)
-              : const EdgeInsets.all(8.0),
+                  horizontal: MediaQuery.of(context).size.width > 800
+                      ? MediaQuery.of(context).size.width * .3
+                      : 20,
+                )
+              : EdgeInsets.all(8),
           child: Wrap(
             runSpacing: 8,
             spacing: 8,
