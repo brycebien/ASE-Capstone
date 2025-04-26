@@ -3,6 +3,7 @@ import 'package:ase_capstone/components/searchable_list.dart';
 import 'package:ase_capstone/components/textfield.dart';
 import 'package:ase_capstone/models/directions_handler.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
+import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -47,6 +48,24 @@ class _EventRemindersPageState extends State<EventRemindersPage> {
       _events = events.cast<Map<String, dynamic>>();
       _loadingEvents = false;
     });
+
+    if (_events.isNotEmpty) {
+      for (var event in _events) {
+        if (DateTime.parse(event['date'].toString()).isBefore(DateTime.now())) {
+          // Remove past events from the list
+          setState(() {
+            _events.remove(event);
+          });
+          _firestoreService.deleteEventReminder(
+            event: event,
+            userId: user!.uid,
+          );
+        }
+      }
+      // Sort events by date
+      _events.sort((a, b) => DateTime.parse(a['date'].toString())
+          .compareTo(DateTime.parse(b['date'].toString())));
+    }
   }
 
   Future<void> _initBuildings() async {
@@ -86,7 +105,7 @@ class _EventRemindersPageState extends State<EventRemindersPage> {
                     if (pickedDate != null) {
                       setState(() {
                         _eventDateController.text =
-                            "${pickedDate.year}-${pickedDate.month}-${pickedDate.day}";
+                            pickedDate.toString().split(' ')[0];
                       });
                     }
                   },
@@ -211,24 +230,34 @@ class _EventRemindersPageState extends State<EventRemindersPage> {
                     'buildingName': _eventBuilding['name'],
                     'building': _eventBuilding,
                   };
-                  // Add event to local list
-                  setState(() {
-                    _events.add(eventObject);
-                  });
+                  if (_eventNameController.text.isEmpty ||
+                      _eventDateController.text.isEmpty ||
+                      _eventStartTimeController.text.isEmpty ||
+                      _eventBuilding.isEmpty) {
+                    Utils.displayMessage(
+                      context: context,
+                      message: 'Please fill all required fields.',
+                    );
+                  } else {
+                    // Add event to local list
+                    setState(() {
+                      _events.add(eventObject);
+                    });
 
-                  // Add event to Firebase
-                  _firestoreService.addEventReminder(
-                      event: eventObject, userId: user!.uid);
+                    // Add event to Firebase
+                    _firestoreService.addEventReminder(
+                        event: eventObject, userId: user!.uid);
 
-                  // Clear the text fields
-                  setState(() {
-                    _eventNameController.clear();
-                    _eventDateController.clear();
-                    _eventStartTimeController.clear();
-                    _eventEndTimeController.clear();
-                    _eventBuildingController.clear();
-                    _eventBuilding = {};
-                  });
+                    // Clear the text fields
+                    setState(() {
+                      _eventNameController.clear();
+                      _eventDateController.clear();
+                      _eventStartTimeController.clear();
+                      _eventEndTimeController.clear();
+                      _eventBuildingController.clear();
+                      _eventBuilding = {};
+                    });
+                  }
                 },
                 child: const Text('Confirm'),
               ),
