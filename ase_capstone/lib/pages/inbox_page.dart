@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -61,34 +62,47 @@ class _InboxPageState extends State<InboxPage> {
       appBar: AppBar(
         title: const Text('Notifications'),
       ),
-      body: notifications.isEmpty
-          ? const Center(
-              child: Text(
-                'No upcoming notifications.',
-                style: TextStyle(fontSize: 18),
+      body: Padding(
+        padding: kIsWeb
+            ? EdgeInsets.symmetric(
+                horizontal: MediaQuery.of(context).size.width > 800
+                    ? MediaQuery.of(context).size.width * .3
+                    : 20,
+              )
+            : EdgeInsets.all(8),
+        child: notifications.isEmpty
+            ? const Center(
+                child: Text(
+                  'No upcoming notifications.',
+                  style: TextStyle(fontSize: 18),
+                ),
+              )
+            : ListView.builder(
+                itemCount: notifications.length,
+                itemBuilder: (context, index) {
+                  final notification = notifications[index];
+                  return Card(
+                    elevation: 8,
+                    child: ListTile(
+                      title: Text(
+                        notification['title'],
+                        style: const TextStyle(fontSize: 18),
+                      ),
+                      subtitle: Text(
+                        'Time: ${notification['time']}\nDetails: ${notification['details']}',
+                      ),
+                      trailing: IconButton(
+                        icon: const Icon(
+                          Icons.close,
+                          color: Colors.red,
+                        ),
+                        onPressed: () => _dismissNotification(index),
+                      ),
+                    ),
+                  );
+                },
               ),
-            )
-          : ListView.builder(
-              itemCount: notifications.length,
-              itemBuilder: (context, index) {
-                final notification = notifications[index];
-                return Card(
-                  child: ListTile(
-                    title: Text(
-                      notification['title'],
-                      style: const TextStyle(fontSize: 18),
-                    ),
-                    subtitle: Text(
-                      'Time: ${notification['time']}\nDetails: ${notification['details']}',
-                    ),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => _dismissNotification(index),
-                    ),
-                  ),
-                );
-              },
-            ),
+      ),
     );
   }
 }

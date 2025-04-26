@@ -421,11 +421,16 @@ class _SchedulePageState extends State<SchedulePage> {
                                   padding: kIsWeb
                                       ? EdgeInsets.symmetric(
                                           horizontal: MediaQuery.of(context)
-                                                  .size
-                                                  .width *
-                                              .3)
-                                      : const EdgeInsets.symmetric(
-                                          horizontal: 8.0),
+                                                      .size
+                                                      .width >
+                                                  500
+                                              ? MediaQuery.of(context)
+                                                      .size
+                                                      .width *
+                                                  .3
+                                              : 20,
+                                        )
+                                      : EdgeInsets.all(8),
                                   child: Column(
                                     children: classes.map((e) {
                                       return CourseCard(

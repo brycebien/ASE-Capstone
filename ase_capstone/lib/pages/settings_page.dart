@@ -1,5 +1,6 @@
 import 'package:ase_capstone/components/textfield.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ase_capstone/utils/utils.dart';
@@ -149,26 +150,35 @@ class SettingsPageState extends State<SettingsPage> {
       appBar: AppBar(
         title: Text('General'),
       ),
-      body: ListView(
-        padding: EdgeInsets.zero,
-        children: <Widget>[
-          SwitchListTile(
-            title: Text('Dark Mode'),
-            value: isDarkMode,
-            onChanged: toggleDarkMode,
-            secondary: Icon(Icons.dark_mode),
-          ),
-          ListTile(
-            leading: Icon(Icons.lock),
-            title: Text('Change Password'),
-            onTap: changePasswordDialog,
-          ),
-          ListTile(
-            leading: Icon(Icons.notifications),
-            title: Text('Notifications'),
-            onTap: manageNotifications,
-          ),
-        ],
+      body: Padding(
+        padding: kIsWeb
+            ? EdgeInsets.symmetric(
+                horizontal: MediaQuery.of(context).size.width > 500
+                    ? MediaQuery.of(context).size.width * .3
+                    : 20,
+              )
+            : EdgeInsets.all(8),
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            SwitchListTile(
+              title: Text('Dark Mode'),
+              value: isDarkMode,
+              onChanged: toggleDarkMode,
+              secondary: Icon(Icons.dark_mode),
+            ),
+            ListTile(
+              leading: Icon(Icons.lock),
+              title: Text('Change Password'),
+              onTap: changePasswordDialog,
+            ),
+            ListTile(
+              leading: Icon(Icons.notifications),
+              title: Text('Notifications'),
+              onTap: manageNotifications,
+            ),
+          ],
+        ),
       ),
     );
   }

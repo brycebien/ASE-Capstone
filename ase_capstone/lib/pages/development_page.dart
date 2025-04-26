@@ -68,8 +68,11 @@ class _DevelopmentPageState extends State<DevelopmentPage> {
                 Padding(
                   padding: kIsWeb
                       ? EdgeInsets.symmetric(
-                          horizontal: MediaQuery.of(context).size.width * .3)
-                      : const EdgeInsets.all(8.0),
+                          horizontal: MediaQuery.of(context).size.width > 500
+                              ? MediaQuery.of(context).size.width * .3
+                              : 20,
+                        )
+                      : EdgeInsets.all(8),
                   child: TextField(
                     controller: _searchController,
                     decoration: const InputDecoration(
@@ -90,9 +93,14 @@ class _DevelopmentPageState extends State<DevelopmentPage> {
                           Padding(
                             padding: kIsWeb
                                 ? EdgeInsets.symmetric(
-                                    horizontal:
-                                        MediaQuery.of(context).size.width * .3)
-                                : const EdgeInsets.all(8.0),
+                                    horizontal: MediaQuery.of(context)
+                                                .size
+                                                .width >
+                                            500
+                                        ? MediaQuery.of(context).size.width * .3
+                                        : 20,
+                                  )
+                                : EdgeInsets.all(8),
                             child: Card(
                               key: ValueKey(_foundUniversities[index]['name']),
                               elevation: 8,
