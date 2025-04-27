@@ -177,6 +177,13 @@ class SettingsPageState extends State<SettingsPage> {
               title: Text('Notifications'),
               onTap: manageNotifications,
             ),
+            ListTile(
+              leading: Icon(Icons.palette),
+              title: Text('Change Theme'),
+              onTap: () {
+                Navigator.of(context).pushNamed('/theme-selection');
+              },
+            ),
           ],
         ),
       ),
