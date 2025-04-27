@@ -68,7 +68,10 @@ class _WeekCalendarState extends State<WeekCalendar> {
         }
       });
     }
-    // TODO: sort classes by start time
+    for (var day in schedule.keys) {
+      schedule[day].sort((a, b) =>
+          (a['startTime'] as String).compareTo(b['startTime'] as String));
+    }
   }
 
   void _deleteClass(index) {
