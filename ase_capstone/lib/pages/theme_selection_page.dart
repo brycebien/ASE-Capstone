@@ -1,5 +1,7 @@
 import 'package:ase_capstone/components/choose_color_input.dart';
 import 'package:ase_capstone/components/my_button.dart';
+import 'package:ase_capstone/utils/firebase_operations.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
@@ -12,6 +14,9 @@ class ThemeSelection extends StatefulWidget {
 }
 
 class _ThemeSelectionState extends State<ThemeSelection> {
+  final FirestoreService _firestoreService = FirestoreService();
+  final User user = FirebaseAuth.instance.currentUser!;
+
   String selectedTheme = 'Dark';
 
   // MAIN THEME DEFAULT COLORS
@@ -58,6 +63,26 @@ class _ThemeSelectionState extends State<ThemeSelection> {
           );
         });
     return pickedColor;
+  }
+
+  Future<void> _saveColorTheme() async {
+    // SAVE SELECTED THEME COLORS TO DATABASE
+
+    final userTheme = {
+      'primaryColor': primaryColor.toARGB32(),
+      'secondaryColor': secondaryColor.toARGB32(),
+      'tertiaryColor': tertiaryColor.toARGB32(),
+      'surfaceColor': surfaceColor.toARGB32(),
+      'appBarBackgroundColor': appBarBackgroundColor.toARGB32(),
+      'appBarForegroundColor': appBarForegroundColor.toARGB32(),
+      'appBarTitleColor': appBarTitleColor.toARGB32(),
+    };
+
+    await _firestoreService.saveTheme(
+      userId: user.uid,
+      theme: userTheme,
+      themeName: selectedTheme,
+    );
   }
 
   @override
@@ -223,7 +248,11 @@ class _ThemeSelectionState extends State<ThemeSelection> {
                 ),
                 SizedBox(height: 80),
                 Center(
-                  child: MyButton(buttonText: 'Save', onTap: () {}),
+                  child: MyButton(
+                    buttonText: 'Save',
+                    onTap: _saveColorTheme,
+                    color: primaryColor,
+                  ),
                 )
               ],
             ),

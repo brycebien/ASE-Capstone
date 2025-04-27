@@ -123,6 +123,25 @@ class FirestoreService {
     
   */
 
+  // get user theme
+  Future<Map<String, dynamic>> getUserTheme({
+    required String userId,
+    required String themeName,
+  }) async {
+    final DocumentSnapshot userDoc = await _usersCollection.doc(userId).get();
+    if (!userDoc.exists) {
+      throw Exception('User not found');
+    }
+
+    final data = userDoc.data() as Map<String, dynamic>?;
+
+    if (data == null || !data.containsKey('theme-$themeName')) {
+      return {};
+    }
+
+    return data['theme-$themeName'] as Map<String, dynamic>;
+  }
+
   // get universities
   Future<List<Map<String, dynamic>>> getUniversities() async {
     final QuerySnapshot universities =
@@ -267,6 +286,17 @@ class FirestoreService {
     UPDATE
     
   */
+
+  // update user theme
+  Future<void> saveTheme({
+    required userId,
+    required Map<String, dynamic> theme,
+    required String themeName,
+  }) async {
+    await _usersCollection.doc(userId).update({
+      'theme-$themeName': theme,
+    });
+  }
 
   //update username
   Future<void> updateUserField({
