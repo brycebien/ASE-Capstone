@@ -129,8 +129,8 @@ class _EventRemindersPageState extends State<EventRemindersPage> {
                     );
                     if (pickedTime != null) {
                       setState(() {
-                        _eventStartTimeController.text +=
-                            " ${pickedTime.hour}:${pickedTime.minute}";
+                        _eventStartTimeController.text =
+                            "${pickedTime.hour.toString().padLeft(2, '0')}:${pickedTime.minute.toString().padLeft(2, '0')}";
                       });
                     }
                   },
@@ -154,7 +154,7 @@ class _EventRemindersPageState extends State<EventRemindersPage> {
                     if (pickedTime != null) {
                       setState(() {
                         _eventEndTimeController.text +=
-                            " ${pickedTime.hour}:${pickedTime.minute}";
+                            "${pickedTime.hour.toString().padLeft(2, '0')}:${pickedTime.minute.toString().padLeft(2, '0')}";
                       });
                     }
                   },
