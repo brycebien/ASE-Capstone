@@ -2,6 +2,7 @@ import 'package:ase_capstone/components/choose_color_input.dart';
 import 'package:ase_capstone/components/my_button.dart';
 import 'package:ase_capstone/models/theme_notifier.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
+import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -21,7 +22,7 @@ class _ThemeSelectionState extends State<ThemeSelection> {
 
   bool _isLoading = true;
 
-  String selectedTheme = 'Dark';
+  late String selectedTheme;
 
   // MAIN THEME DEFAULT COLORS
   late Color primaryColor;
@@ -38,6 +39,10 @@ class _ThemeSelectionState extends State<ThemeSelection> {
   void initState() {
     super.initState();
     _loadCurrentThemeColors();
+    selectedTheme =
+        Provider.of<ThemeNotifier>(context, listen: false).isDarkMode
+            ? 'Dark'
+            : 'Light';
   }
 
   void _loadCurrentThemeColors() async {
@@ -132,6 +137,11 @@ class _ThemeSelectionState extends State<ThemeSelection> {
 
     if (mounted) {
       Provider.of<ThemeNotifier>(context, listen: false).setTheme();
+      Navigator.of(context).pop();
+      Utils.displayMessage(
+        context: context,
+        message: 'Theme updated successfully!',
+      );
     }
   }
 
@@ -169,24 +179,10 @@ class _ThemeSelectionState extends State<ThemeSelection> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text(
-                            "Slect a theme to edit: ",
+                            "Editing Theme: ",
                           ),
                           // CHOOSE THEME TO EDIT
-                          DropdownButton<String>(
-                            value: selectedTheme,
-                            items: <String>['Dark', 'Light']
-                                .map<DropdownMenuItem<String>>((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(value),
-                              );
-                            }).toList(),
-                            onChanged: (String? newValue) {
-                              setState(() {
-                                selectedTheme = newValue!;
-                              });
-                            },
-                          ),
+                          Text(selectedTheme),
                         ],
                       ),
                       Divider(
@@ -307,7 +303,8 @@ class _ThemeSelectionState extends State<ThemeSelection> {
                           onTap: _saveColorTheme,
                           color: primaryColor,
                         ),
-                      )
+                      ),
+                      SizedBox(height: 80),
                     ],
                   ),
                 ),

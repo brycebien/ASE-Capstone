@@ -85,8 +85,6 @@ class ThemeNotifier extends ChangeNotifier {
   }
 
   void toggleTheme(isDark) {
-    // final isDark = _themeData.brightness == Brightness.dark;
-    // _isDarkMode = !isDark;
     _isDarkMode = isDark;
     setTheme();
     notifyListeners();

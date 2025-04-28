@@ -34,16 +34,13 @@ class SettingsPageState extends State<SettingsPage> {
   void initState() {
     super.initState();
     isDarkMode = Provider.of<ThemeNotifier>(context, listen: false).isDarkMode;
-    print("GOT isDarkMode: $isDarkMode");
   }
 
   // function to change dark mode (true/false)
   void toggleDarkMode(bool value) {
-    print("TOGGLING DARK MODE TO $value");
     Provider.of<ThemeNotifier>(context, listen: false).toggleTheme(value);
     setState(() {
       isDarkMode = value;
-      print("TOGGLED DARK MODE TO $isDarkMode");
     });
   }
 

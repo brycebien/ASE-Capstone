@@ -3,6 +3,7 @@ import 'package:ase_capstone/components/searchable_list.dart';
 import 'package:ase_capstone/components/settings_drawer.dart';
 import 'package:ase_capstone/models/directions.dart';
 import 'package:ase_capstone/models/directions_handler.dart';
+import 'package:ase_capstone/models/theme_notifier.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -14,6 +15,8 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:location/location.dart' as loc;
 import 'package:geolocator/geolocator.dart';
 import 'dart:async';
+
+import 'package:provider/provider.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -53,6 +56,8 @@ class _MapPageState extends State<MapPage> {
   @override
   void initState() {
     super.initState();
+    Provider.of<ThemeNotifier>(context, listen: false)
+        .setTheme(); // set the theme based on the user's preference
     _getCurrentLocation().then((_) {
       _initializeUser();
     }); // get the user's location
