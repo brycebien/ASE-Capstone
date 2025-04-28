@@ -58,6 +58,7 @@ class _MapPageState extends State<MapPage> {
     super.initState();
     Provider.of<ThemeNotifier>(context, listen: false)
         .setTheme(); // set the theme based on the user's preference
+
     _getCurrentLocation().then((_) {
       _initializeUser();
     }); // get the user's location
@@ -468,7 +469,7 @@ class _MapPageState extends State<MapPage> {
   // update the map style when the theme changes
   void _updateMapStyle(GoogleMapController controller) {
     setState(() {
-      _mapStyle = Theme.of(context).brightness == Brightness.dark
+      _mapStyle = Provider.of<ThemeNotifier>(context, listen: false).isDarkMode
           ? _mapStyleString
           : null;
     });
