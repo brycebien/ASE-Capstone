@@ -1,18 +1,20 @@
 import 'package:ase_capstone/components/textfield.dart';
+import 'package:ase_capstone/models/theme_notifier.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ase_capstone/utils/utils.dart';
+import 'package:provider/provider.dart';
 
 class SettingsPage extends StatefulWidget {
-  final Function toggleTheme;
-  final bool isDarkMode;
+  final Function? toggleTheme;
+  final bool? isDarkMode;
 
   const SettingsPage({
     super.key,
-    required this.toggleTheme,
-    required this.isDarkMode,
+    this.toggleTheme,
+    this.isDarkMode,
   });
 
   @override
@@ -25,20 +27,23 @@ class SettingsPageState extends State<SettingsPage> {
   TextEditingController newPasswordController = TextEditingController();
   TextEditingController confirmPasswordController = TextEditingController();
   final User? user = FirebaseAuth.instance.currentUser!;
-  bool isDarkMode = false;
+  late bool isDarkMode;
   String _errorMessage = '';
 
   @override
   void initState() {
     super.initState();
-    isDarkMode = widget.isDarkMode;
+    isDarkMode = Provider.of<ThemeNotifier>(context, listen: false).isDarkMode;
+    print("GOT isDarkMode: $isDarkMode");
   }
 
   // function to change dark mode (true/false)
   void toggleDarkMode(bool value) {
+    print("TOGGLING DARK MODE TO $value");
+    Provider.of<ThemeNotifier>(context, listen: false).toggleTheme(value);
     setState(() {
       isDarkMode = value;
-      widget.toggleTheme(isDarkMode);
+      print("TOGGLED DARK MODE TO $isDarkMode");
     });
   }
 

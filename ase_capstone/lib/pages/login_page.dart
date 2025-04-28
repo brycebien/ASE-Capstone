@@ -1,9 +1,11 @@
 import 'package:ase_capstone/components/my_button.dart';
+import 'package:ase_capstone/models/theme_notifier.dart';
 import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ase_capstone/components/textfield.dart';
+import 'package:provider/provider.dart';
 
 class LoginPage extends StatefulWidget {
   final Function()? onTap;
@@ -43,6 +45,7 @@ class _LoginPageState extends State<LoginPage> {
 
     // send user to map page upon successful login
     if (mounted) {
+      Provider.of<ThemeNotifier>(context, listen: false).setTheme();
       Navigator.pushNamed(context, '/map');
     }
   }

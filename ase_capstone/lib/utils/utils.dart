@@ -113,4 +113,39 @@ class Utils {
       {required String address}) async {
     return await DirectionsHandler().getDirectionFromAddress(address: address);
   }
+
+  // static void setTheme(
+  //     {required BuildContext context, required Map<String, dynamic> theme}) {
+  //   Provider.of<ThemeNotifier>(context, listen: false).setTheme(
+  //     themeData: ThemeData(
+  //       brightness:
+  //           theme['brightness'] == 'dark' ? Brightness.dark : Brightness.light,
+  //       appBarTheme: AppBarTheme(
+  //         backgroundColor: Color(theme['appBarBackgroundColor']),
+  //         foregroundColor: Color(theme['appBarForegroundColor']),
+  //         titleTextStyle: TextStyle(
+  //           fontSize: 26,
+  //           fontWeight: FontWeight.bold,
+  //           color: Color(theme['appBarTitleColor']),
+  //         ),
+  //       ),
+  //       colorScheme: ColorScheme.dark(
+  //         // main background color
+  //         surface: Color(theme['surfaceColor']),
+
+  //         // primary color (app bar, buttons)
+  //         primary: Color(theme['primaryColor']),
+
+  //         // hint text (such as forgot password)
+  //         secondary: Color(theme['secondaryColor']),
+
+  //         // Things like button text (text on primary color)
+  //         tertiary: Color(
+  //           theme['tertiaryColor'],
+  //         ),
+  //       ),
+  //     ),
+  //     isDarkMode: theme['brightness'] == 'dark',
+  //   );
+  // }
 }
