@@ -72,6 +72,11 @@ flutter:
   assets:
       - assets/map_dark_theme.json
       - assets/images/building.png
+      - assets/images/accident.png
+      - assets/images/construction.png
+      - assets/images/wildlife.png
+      - assets/images/special_event.png
+      - assets/images/default_event.png
       - .env
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg

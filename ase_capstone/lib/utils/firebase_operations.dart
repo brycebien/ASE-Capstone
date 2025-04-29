@@ -57,14 +57,13 @@ class FirestoreService {
   Future<void> createPin({
     required LocationData currentLocation,
     required String markerTitle,
-    required double markerColor,
   }) async {
     await FirebaseFirestore.instance.collection('pins').add({
       'latitude': currentLocation.latitude,
       'longitude': currentLocation.longitude,
       'title': markerTitle,
-      'color': markerColor.toDouble(), // Ensure color is stored as double
       'timestamp': FieldValue.serverTimestamp(),
+      'category': markerTitle, // Store the category
       'yesVotes': 0,
       'noVotes': 0,
     });
