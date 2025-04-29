@@ -333,9 +333,8 @@ class _MapPageState extends State<MapPage> {
     FirebaseFirestore.instance.collection('pins').snapshots().listen(
       (snapshot) {
         setState(() {
-          _markers.removeWhere((element) =>
-              element.markerId.value != 'destinationMarker'); // Clear existing markers before updating
-          for (var doc in snapshot.docs) {
+          // Create a new set of event markers from the Firestore snapshot
+          final newEventMarkers = snapshot.docs.map((doc) {
             final data = doc.data();
             if (data.containsKey('latitude') &&
                 data.containsKey('longitude') &&
@@ -343,27 +342,40 @@ class _MapPageState extends State<MapPage> {
                 data.containsKey('yesVotes') &&
                 data.containsKey('noVotes') &&
                 data.containsKey('category')) {
-              final eventType = data['eventType'] as String;
+              final noVotes = data['noVotes'] as int;
+
+              // Check if the pin has 5 or more "No" votes
+              if (noVotes >= 5) {
+                // Delete the pin from the database
+                FirebaseFirestore.instance.collection('pins').doc(doc.id).delete();
+                return null; // Do not add this marker to the map
+              }
+
+              final eventType = data['category'] as String;
               final customIcon = _customEvent(eventType);
 
-              _markers.add(
-                Marker(
-                  markerId: MarkerId(doc.id),
-                  position: LatLng(
-                    (data['latitude'] as num).toDouble(),
-                    (data['longitude'] as num).toDouble(),
-                  ),
-                  icon: customIcon, // Use the correct custom icon
-                  infoWindow: InfoWindow(
-                    title: data['title'],
-                    snippet: 'Yes: ${data['yesVotes']} No: ${data['noVotes']}',
-                    onTap: () => _showVoteDialog(
-                        doc.id, data['yesVotes'], data['noVotes']),
-                  ),
+              return Marker(
+                markerId: MarkerId(doc.id),
+                position: LatLng(
+                  (data['latitude'] as num).toDouble(),
+                  (data['longitude'] as num).toDouble(),
+                ),
+                icon: customIcon,
+                infoWindow: InfoWindow(
+                  title: data['title'],
+                  snippet: 'Yes: ${data['yesVotes']} No: ${data['noVotes']}',
+                  onTap: () => _showVoteDialog(
+                      doc.id, data['yesVotes'], data['noVotes']),
                 ),
               );
             }
-          }
+            return null;
+          }).whereType<Marker>().toSet();
+
+          // Preserve existing building markers and add new event markers
+          _markers
+            ..removeWhere((marker) => marker.markerId.value.startsWith('event-'))
+            ..addAll(newEventMarkers);
         });
       },
       onError: (error) {
