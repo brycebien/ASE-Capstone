@@ -445,6 +445,22 @@ class FirestoreService {
         throw Exception('User document does not exist.');
       }
       final String university = userDoc.get('university');
+      
+      // Fetch the event URL from the university document
+      final universityDoc = await FirebaseFirestore.instance
+          .collection('universities')
+          .doc(university)
+          .get();
+
+      if (!universityDoc.exists) {
+        throw Exception('University document does not exist.');
+      }
+
+      // Return the eventUrl field
+      return universityDoc.data()?['eventUrl'] ??
+          'https://default-url.com'; // Provide a default URL if none exists
+    } catch (e) {
+      throw Exception('Error fetching event URL: $e');
 
       // Fetch the event URL from the university document
       final universityDoc = await FirebaseFirestore.instance
@@ -461,6 +477,76 @@ class FirestoreService {
           'https://default-url.com'; // Provide a default URL if none exists
     } catch (e) {
       throw Exception('Error fetching event URL: $e');
+    }
+  }
+
+  /*
+  
+  NOTIFICATIONS
+  
+  */
+
+  Future<void> addNotification({
+    required String userId,
+    required String message,
+    String type = 'general',
+  }) async {
+    await _usersCollection.doc(userId).collection('notifications').add({
+      'message': message,
+      'timestamp': FieldValue.serverTimestamp(),
+      'read': false,
+      'type': type,
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> getNotifications({
+    required String userId,
+  }) async {
+    final snapshot = await _usersCollection
+        .doc(userId)
+        .collection('notifications')
+        .orderBy('timestamp', descending: true)
+        .get();
+
+    return snapshot.docs
+        .map((doc) => {
+              'id': doc.id,
+              ...doc.data(),
+            })
+        .toList();
+  }
+
+  Future<int> getUnreadNotificationCount({required String userId}) async {
+    final snapshot = await _usersCollection
+        .doc(userId)
+        .collection('notifications')
+        .where('read', isEqualTo: false)
+        .get();
+
+    return snapshot.docs.length;
+  }
+
+  Future<void> markAllNotificationsAsRead({required String userId}) async {
+    final snapshot = await _usersCollection
+        .doc(userId)
+        .collection('notifications')
+        .where('read', isEqualTo: false)
+        .get();
+
+    for (var doc in snapshot.docs) {
+      await doc.reference.update({'read': true});
+    }
+  }
+
+  Future<void> clearNotifications({
+    required String userId,
+  }) async {
+    final snapshot =
+        await _usersCollection.doc(userId).collection('notifications').get();
+
+    for (var doc in snapshot.docs) {
+      await doc.reference.delete();
+
     }
   }
 }

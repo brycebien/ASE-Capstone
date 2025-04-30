@@ -33,7 +33,8 @@ class SettingsPageState extends State<SettingsPage> {
   @override
   void initState() {
     super.initState();
-    isDarkMode = Provider.of<ThemeNotifier>(context, listen: false).isDarkMode;
+    isDarkMode = widget.isDarkMode;
+    _loadNotificationSettings();
   }
 
   // function to change dark mode (true/false)
@@ -144,7 +145,98 @@ class SettingsPageState extends State<SettingsPage> {
 
   void changeUserIcon() {}
 
-  void manageNotifications() {}
+  bool notifyAll = true;
+  bool notifyClassStart = true;
+  bool notifyEvents = true;
+  final User? currentUser = FirebaseAuth.instance.currentUser;
+
+  void _loadNotificationSettings() async {
+    final data = await FirestoreService().getUser(userId: user!.uid);
+    if (data.containsKey('notifications')) {
+      final notif = data['notifications'];
+      setState(() {
+        notifyAll = notif['all'] ?? true;
+        notifyClassStart = notif['classStart'] ?? true;
+        notifyEvents = notif['event'] ?? true;
+      });
+    }
+  }
+
+  void manageNotifications() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            Future<void> saveToFirestore() async {
+              await FirestoreService().updateUserField(
+                userId: user!.uid,
+                field: 'notifications',
+                value: {
+                  'all': notifyAll,
+                  'classStart': notifyClassStart,
+                  'event': notifyEvents,
+                },
+              );
+            }
+
+            return AlertDialog(
+              title: Text('Notification Settings'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SwitchListTile(
+                    title: Text('Enable All Notifications'),
+                    value: notifyAll,
+                    onChanged: (value) async {
+                      setModalState(() {
+                        notifyAll = value;
+                        if (!notifyAll) {
+                          notifyClassStart = false;
+                          notifyEvents = false;
+                        }
+                      });
+                      await saveToFirestore();
+                    },
+                  ),
+                  SwitchListTile(
+                    title: Text('Class Start Times'),
+                    value: notifyClassStart,
+                    onChanged: notifyAll
+                        ? (value) async {
+                            setModalState(() {
+                              notifyClassStart = value;
+                            });
+                            await saveToFirestore();
+                          }
+                        : null,
+                  ),
+                  SwitchListTile(
+                    title: Text('Event Times'),
+                    value: notifyEvents,
+                    onChanged: notifyAll
+                        ? (value) async {
+                            setModalState(() {
+                              notifyEvents = value;
+                            });
+                            await saveToFirestore();
+                          }
+                        : null,
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Close'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

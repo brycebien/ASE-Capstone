@@ -45,6 +45,7 @@ class _MapPageState extends State<MapPage> {
   String? _selectedBuilding;
   final List<Map<String, dynamic>> _buildings = [];
   bool _showBuildingInfo = false;
+  int _unreadCount = 0;
 
   final Set<String> _votedPins = {};
   LatLng? destination;
@@ -68,6 +69,7 @@ class _MapPageState extends State<MapPage> {
     _loadMapStyle(); // load the map's color theme (light or dark mode)
     _listenToPins(); // check for pins in the database
     _checkExpiredPins(); // check that no pins are expired (older than 24 hrs)
+    _loadUnreadNotificationCount();
     _checkUserUniversity(); // check that he user has a university chosen
     _checkForDirections(); // check if the user has a destination set
     _checkUserAdmin(); // check if the user is an admin
@@ -455,6 +457,14 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
+  void _loadUnreadNotificationCount() async {
+    final count =
+        await FirestoreService().getUnreadNotificationCount(userId: user.uid);
+    setState(() {
+      _unreadCount = count;
+    });
+  }
+
   // get the map style from the json file as a string
   Future _loadMapStyle() async {
     _mapStyleString = await rootBundle.loadString('assets/map_dark_theme.json');
@@ -679,6 +689,72 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
+  void _showNotificationsPopup() async {
+    final userId = FirebaseAuth.instance.currentUser!.uid;
+
+    // Get notifications from Firestore
+    final List<Map<String, dynamic>> notifications =
+        await FirestoreService().getNotifications(userId: userId);
+
+    // Mark all as read when opening the popup
+    await FirestoreService().markAllNotificationsAsRead(userId: userId);
+
+    // Refresh the unread badge count
+    _loadUnreadNotificationCount();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Notifications'),
+          content: notifications.isEmpty
+              ? Text('No new notifications.')
+              : SizedBox(
+                  width: double.maxFinite,
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: notifications.length,
+                    itemBuilder: (context, index) {
+                      return ListTile(
+                        leading: Icon(Icons.notifications),
+                        title: Text(notifications[index]['message']),
+                        subtitle: notifications[index]['timestamp'] != null
+                            ? Text(
+                                (notifications[index]['timestamp'] as Timestamp)
+                                    .toDate()
+                                    .toLocal()
+                                    .toString(),
+                                style: TextStyle(fontSize: 12),
+                              )
+                            : null,
+                      );
+                    },
+                  ),
+                ),
+          actions: [
+            if (notifications.isNotEmpty)
+              TextButton(
+                onPressed: () async {
+                  await FirestoreService().clearNotifications(userId: userId);
+                  Navigator.of(context).pop();
+                  _loadUnreadNotificationCount(); // also reset the badge
+                  Utils.displayMessage(
+                    context: context,
+                    message: 'Notifications cleared.',
+                  );
+                },
+                child: Text('Clear All'),
+              ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _getDirections({required LatLng destination}) async {
     try {
       final directions = await DirectionsHandler().getDirections(
@@ -762,6 +838,32 @@ class _MapPageState extends State<MapPage> {
       key: _scaffoldKey,
       appBar: AppBar(
         actions: [
+          IconButton(
+            icon: Icon(Icons.notifications),
+            tooltip: 'View Notifications',
+            onPressed: _showNotificationsPopup,
+          ),
+          if (_unreadCount > 0)
+            Positioned(
+              right: 8,
+              top: 8,
+              child: Container(
+                padding: EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
+                constraints: BoxConstraints(minWidth: 20, minHeight: 20),
+                child: Text(
+                  '$_unreadCount',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
           IconButton(onPressed: signUserOut, icon: Icon(Icons.logout)),
         ],
         title: Text('Campus Compass'),
