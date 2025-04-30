@@ -606,30 +606,33 @@ class _MapPageState extends State<MapPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: Image.asset('assets/images/accident.png', width: 24),
+                leading: Image.asset('assets/images/accident.png', width: 50),
                 title: const Text("Accident"),
                 onTap: () {
                   Navigator.pop(context, "Accident");
                 },
               ),
+              SizedBox(height: 15),
               ListTile(
                 leading:
-                    Image.asset('assets/images/construction.png', width: 24),
+                    Image.asset('assets/images/construction.png', width: 50),
                 title: const Text("Construction"),
                 onTap: () {
                   Navigator.pop(context, "Construction");
                 },
               ),
+              SizedBox(height: 15),
               ListTile(
-                leading: Image.asset('assets/images/wildlife.png', width: 24),
+                leading: Image.asset('assets/images/wildlife.png', width: 50),
                 title: const Text("Wildlife"),
                 onTap: () {
                   Navigator.pop(context, "Wildlife");
                 },
               ),
+              SizedBox(height: 15),
               ListTile(
                 leading:
-                    Image.asset('assets/images/special_event.png', width: 24),
+                    Image.asset('assets/images/special_event.png', width: 50),
                 title: const Text("Special Event"),
                 onTap: () {
                   Navigator.pop(context, "Special Event");
