@@ -8,10 +8,12 @@ import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:location/location.dart';
 import 'dart:async';
+import 'dart:ui' as ui;
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -37,7 +39,7 @@ class _MapPageState extends State<MapPage> {
   String? _selectedBuilding;
   final List<Map<String, dynamic>> _buildings = [];
   bool _showBuildingInfo = false;
-
+  final Map<String, BitmapDescriptor> _eventIcons = {};
   final Set<String> _votedPins = {};
   LatLng? destination;
   Directions? _info;
@@ -45,6 +47,11 @@ class _MapPageState extends State<MapPage> {
   @override
   void initState() {
     super.initState();
+    _preloadEventIcons().then((_) {
+      debugPrint("Event icons preloaded successfully.");
+    }).catchError((e) {
+      debugPrint("Failed to preload event icons: $e");
+    });
     _getCurrentLocation(); // get the user's location
     _loadMapStyle(); // load the map's color theme (light or dark mode)
     _listenToPins(); // check for pins in the database
@@ -326,34 +333,50 @@ class _MapPageState extends State<MapPage> {
     FirebaseFirestore.instance.collection('pins').snapshots().listen(
       (snapshot) {
         setState(() {
-          _markers.removeWhere((element) =>
-              element.markerId.value !=
-              'destinationMarker'); // Clear existing markers before updating
-          for (var doc in snapshot.docs) {
+          // Create a new set of event markers from the Firestore snapshot
+          final newEventMarkers = snapshot.docs.map((doc) {
             final data = doc.data();
             if (data.containsKey('latitude') &&
                 data.containsKey('longitude') &&
-                data.containsKey('color') &&
                 data.containsKey('title') &&
                 data.containsKey('yesVotes') &&
-                data.containsKey('noVotes')) {
-              _markers.add(
-                Marker(
-                  markerId: MarkerId(doc.id),
-                  position: LatLng((data['latitude'] as num).toDouble(),
-                      (data['longitude'] as num).toDouble()),
-                  icon: BitmapDescriptor.defaultMarkerWithHue(
-                      (data['color'] as num).toDouble()),
-                  infoWindow: InfoWindow(
-                    title: data['title'],
-                    snippet: 'Yes: ${data['yesVotes']} No: ${data['noVotes']}',
-                    onTap: () => _showVoteDialog(
-                        doc.id, data['yesVotes'], data['noVotes']),
-                  ),
+                data.containsKey('noVotes') &&
+                data.containsKey('category')) {
+              final noVotes = data['noVotes'] as int;
+
+              // Check if the pin has 5 or more "No" votes
+              if (noVotes >= 5) {
+                // Delete the pin from the database
+                FirebaseFirestore.instance.collection('pins').doc(doc.id).delete();
+                 _markers.removeWhere((marker) => marker.markerId.value == doc.id);
+                return null; // Do not add this marker to the map
+              }
+
+              final eventType = data['category'] as String;
+              final customIcon = _customEvent(eventType);
+
+              return Marker(
+                markerId: MarkerId(doc.id),
+                position: LatLng(
+                  (data['latitude'] as num).toDouble(),
+                  (data['longitude'] as num).toDouble(),
+                ),
+                icon: customIcon,
+                infoWindow: InfoWindow(
+                  title: data['title'],
+                  snippet: 'Yes: ${data['yesVotes']} No: ${data['noVotes']}',
+                  onTap: () => _showVoteDialog(
+                      doc.id, data['yesVotes'], data['noVotes']),
                 ),
               );
             }
-          }
+            return null;
+          }).whereType<Marker>().toSet();
+
+          // Preserve existing building markers and add new event markers
+          _markers
+            ..removeWhere((marker) => marker.markerId.value.startsWith('event-'))
+            ..addAll(newEventMarkers);
         });
       },
       onError: (error) {
@@ -367,6 +390,34 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
+  Future<void> _preloadEventIcons() async {
+    try {
+      _eventIcons["Accident"] = await BitmapDescriptor.asset(
+        const ImageConfiguration(size: Size(24, 24)),
+        'assets/images/accident.png',
+      );
+      _eventIcons["Construction"] = await BitmapDescriptor.asset(
+        const ImageConfiguration(size: Size(24, 24)),
+        'assets/images/construction.png',
+      );
+      _eventIcons["Wildlife"] = await BitmapDescriptor.asset(
+        const ImageConfiguration(size: Size(24, 24)),
+        'assets/images/wildlife.png',
+      );
+      _eventIcons["Special Event"] = await BitmapDescriptor.asset(
+        const ImageConfiguration(size: Size(24, 24)),
+        'assets/images/special_event.png',
+      );
+      _eventIcons["Default"] = await BitmapDescriptor.asset(
+        const ImageConfiguration(size: Size(24, 24)),
+        'assets/images/default_event.png',
+      );
+      debugPrint("Event icons preloaded successfully: $_eventIcons");
+    } catch (e) {
+      debugPrint("Failed to preload event icons: $e");
+    }
+  }
+
   void _addEventMarker(LatLng position) async {
     if (_currentLocation == null) {
       Utils.displayMessage(
@@ -376,67 +427,94 @@ class _MapPageState extends State<MapPage> {
       return;
     }
 
-    String markerTitle = "Reported Event";
-    double markerColor = BitmapDescriptor.hueOrange;
-
-    await showDialog(
+    // Show the dialog to select the event type
+    String? selectedCategory = await showDialog<String>(
       context: context,
       builder: (BuildContext context) {
-        TextEditingController nameController = TextEditingController();
         return AlertDialog(
-          title: Text("Customize Event Marker"),
+          title: const Text("Select Event Type"),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(labelText: "Event Name"),
-              ),
-              DropdownButton<double>(
-                value: markerColor,
-                items: [
-                  DropdownMenuItem(
-                    value: BitmapDescriptor.hueOrange,
-                    child: Text("Orange"),
-                  ),
-                  DropdownMenuItem(
-                    value: BitmapDescriptor.hueRed,
-                    child: Text("Red"),
-                  ),
-                  DropdownMenuItem(
-                    value: BitmapDescriptor.hueBlue,
-                    child: Text("Blue"),
-                  ),
-                ],
-                onChanged: (value) {
-                  if (value != null) {
-                    markerColor = value;
-                  }
+              ListTile(
+                leading: Image.asset('assets/images/accident.png', width: 24),
+                title: const Text("Accident"),
+                onTap: () {
+                  Navigator.pop(context, "Accident");
                 },
-              )
+              ),
+              ListTile(
+                leading: Image.asset('assets/images/construction.png', width: 24),
+                title: const Text("Construction"),
+                onTap: () {
+                  Navigator.pop(context, "Construction");
+                },
+              ),
+              ListTile(
+                leading: Image.asset('assets/images/wildlife.png', width: 24),
+                title: const Text("Wildlife"),
+                onTap: () {
+                  Navigator.pop(context, "Wildlife");
+                },
+              ),
+              ListTile(
+                leading: Image.asset('assets/images/special_event.png', width: 24),
+                title: const Text("Special Event"),
+                onTap: () {
+                  Navigator.pop(context, "Special Event");
+                },
+              ),
             ],
           ),
-          actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(context), child: Text("Cancel")),
-            TextButton(
-              onPressed: () {
-                if (nameController.text.isNotEmpty) {
-                  markerTitle = nameController.text;
-                }
-                _firestoreServices.createPin(
-                  currentLocation: _currentLocation!,
-                  markerTitle: markerTitle,
-                  markerColor: markerColor,
-                );
-                Navigator.pop(context);
-              },
-              child: Text("Save"),
-            ),
-          ],
         );
       },
     );
+
+    if (selectedCategory == null) {
+      return; // User canceled the dialog
+    }
+
+    // Load the custom icon
+    BitmapDescriptor? customIcon;
+    try {
+      customIcon = _customEvent(selectedCategory);
+      if (customIcon == null) {
+        throw Exception("Custom icon is null for event type: $selectedCategory");
+      }
+    } catch (e) {
+      Utils.displayMessage(
+        context: context,
+        message: 'Failed to load event icon: $e',
+      );
+      customIcon = BitmapDescriptor.defaultMarker; // Fallback to default marker
+    }
+
+    // Add the marker to Firestore
+    await _firestoreServices.createPin(
+      currentLocation: _currentLocation!,
+      markerTitle: selectedCategory,
+    );
+
+    // Add the marker to the map
+    setState(() {
+      _markers.add(
+        Marker(
+          markerId: MarkerId('event-${DateTime.now().millisecondsSinceEpoch}'),
+          position: position,
+          icon: customIcon ?? BitmapDescriptor.defaultMarker, // Use the preloaded custom icon or fallback
+          infoWindow: InfoWindow(
+            title: selectedCategory,
+            snippet: "Category: $selectedCategory",
+          ),
+        ),
+      );
+    });
+  }
+
+  BitmapDescriptor _customEvent(String eventType) {
+    final icon = _eventIcons[eventType] ?? _eventIcons["Default"]!;
+    debugPrint("Custom event icon for $eventType: $icon");
+    return icon;
   }
 
   void _showVoteDialog(String markerId, int yesVotes, int noVotes) {
