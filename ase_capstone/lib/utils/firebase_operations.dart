@@ -107,6 +107,20 @@ class FirestoreService {
     });
   }
 
+  // add notification
+  Future<void> addNotification({
+    required String userId,
+    required String message,
+    String type = 'general',
+  }) async {
+    await _usersCollection.doc(userId).collection('notifications').add({
+      'message': message,
+      'timestamp': FieldValue.serverTimestamp(),
+      'read': false,
+      'type': type,
+    });
+  }
+
   /*
   
     READ
@@ -252,6 +266,35 @@ class FirestoreService {
         .toList();
   }
 
+  // get notifications
+  Future<List<Map<String, dynamic>>> getNotifications({
+    required String userId,
+  }) async {
+    final snapshot = await _usersCollection
+        .doc(userId)
+        .collection('notifications')
+        .orderBy('timestamp', descending: true)
+        .get();
+
+    return snapshot.docs
+        .map((doc) => {
+              'id': doc.id,
+              ...doc.data(),
+            })
+        .toList();
+  }
+
+  // get unread notifications count
+  Future<int> getUnreadNotificationCount({required String userId}) async {
+    final snapshot = await _usersCollection
+        .doc(userId)
+        .collection('notifications')
+        .where('read', isEqualTo: false)
+        .get();
+
+    return snapshot.docs.length;
+  }
+
   /*
   
     UPDATE
@@ -344,6 +387,19 @@ class FirestoreService {
         .update(university);
   }
 
+  // mark all notifications as read
+  Future<void> markAllNotificationsAsRead({required String userId}) async {
+    final snapshot = await _usersCollection
+        .doc(userId)
+        .collection('notifications')
+        .where('read', isEqualTo: false)
+        .get();
+
+    for (var doc in snapshot.docs) {
+      await doc.reference.update({'read': true});
+    }
+  }
+
   /*
   
     DELETE
@@ -415,64 +471,7 @@ class FirestoreService {
     }
   }
 
-  /*
-  
-  NOTIFICATIONS
-  
-  */
-
-  Future<void> addNotification({
-    required String userId,
-    required String message,
-    String type = 'general',
-  }) async {
-    await _usersCollection.doc(userId).collection('notifications').add({
-      'message': message,
-      'timestamp': FieldValue.serverTimestamp(),
-      'read': false,
-      'type': type,
-    });
-  }
-
-  Future<List<Map<String, dynamic>>> getNotifications({
-    required String userId,
-  }) async {
-    final snapshot = await _usersCollection
-        .doc(userId)
-        .collection('notifications')
-        .orderBy('timestamp', descending: true)
-        .get();
-
-    return snapshot.docs
-        .map((doc) => {
-              'id': doc.id,
-              ...doc.data(),
-            })
-        .toList();
-  }
-
-  Future<int> getUnreadNotificationCount({required String userId}) async {
-    final snapshot = await _usersCollection
-        .doc(userId)
-        .collection('notifications')
-        .where('read', isEqualTo: false)
-        .get();
-
-    return snapshot.docs.length;
-  }
-
-  Future<void> markAllNotificationsAsRead({required String userId}) async {
-    final snapshot = await _usersCollection
-        .doc(userId)
-        .collection('notifications')
-        .where('read', isEqualTo: false)
-        .get();
-
-    for (var doc in snapshot.docs) {
-      await doc.reference.update({'read': true});
-    }
-  }
-
+  // clear notifications
   Future<void> clearNotifications({
     required String userId,
   }) async {
