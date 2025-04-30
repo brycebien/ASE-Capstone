@@ -1,17 +1,20 @@
 import 'package:ase_capstone/components/textfield.dart';
+import 'package:ase_capstone/models/theme_notifier.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ase_capstone/utils/utils.dart';
+import 'package:provider/provider.dart';
 
 class SettingsPage extends StatefulWidget {
-  final Function toggleTheme;
-  final bool isDarkMode;
+  final Function? toggleTheme;
+  final bool? isDarkMode;
 
   const SettingsPage({
     super.key,
-    required this.toggleTheme,
-    required this.isDarkMode,
+    this.toggleTheme,
+    this.isDarkMode,
   });
 
   @override
@@ -24,7 +27,7 @@ class SettingsPageState extends State<SettingsPage> {
   TextEditingController newPasswordController = TextEditingController();
   TextEditingController confirmPasswordController = TextEditingController();
   final User? user = FirebaseAuth.instance.currentUser!;
-  bool isDarkMode = false;
+  late bool isDarkMode;
   String _errorMessage = '';
 
   @override
@@ -36,9 +39,9 @@ class SettingsPageState extends State<SettingsPage> {
 
   // function to change dark mode (true/false)
   void toggleDarkMode(bool value) {
+    Provider.of<ThemeNotifier>(context, listen: false).toggleTheme(value);
     setState(() {
       isDarkMode = value;
-      widget.toggleTheme(isDarkMode);
     });
   }
 
@@ -241,26 +244,42 @@ class SettingsPageState extends State<SettingsPage> {
       appBar: AppBar(
         title: Text('General'),
       ),
-      body: ListView(
-        padding: EdgeInsets.zero,
-        children: <Widget>[
-          SwitchListTile(
-            title: Text('Dark Mode'),
-            value: isDarkMode,
-            onChanged: toggleDarkMode,
-            secondary: Icon(Icons.dark_mode),
-          ),
-          ListTile(
-            leading: Icon(Icons.lock),
-            title: Text('Change Password'),
-            onTap: changePasswordDialog,
-          ),
-          ListTile(
-            leading: Icon(Icons.notifications),
-            title: Text('Notifications'),
-            onTap: manageNotifications,
-          ),
-        ],
+      body: Padding(
+        padding: kIsWeb
+            ? EdgeInsets.symmetric(
+                horizontal: MediaQuery.of(context).size.width > 500
+                    ? MediaQuery.of(context).size.width * .3
+                    : 20,
+              )
+            : EdgeInsets.all(8),
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            SwitchListTile(
+              title: Text('Dark Mode'),
+              value: isDarkMode,
+              onChanged: toggleDarkMode,
+              secondary: Icon(Icons.dark_mode),
+            ),
+            ListTile(
+              leading: Icon(Icons.lock),
+              title: Text('Change Password'),
+              onTap: changePasswordDialog,
+            ),
+            ListTile(
+              leading: Icon(Icons.notifications),
+              title: Text('Notifications'),
+              onTap: manageNotifications,
+            ),
+            ListTile(
+              leading: Icon(Icons.palette),
+              title: Text('Change Theme'),
+              onTap: () {
+                Navigator.of(context).pushNamed('/theme-selection');
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

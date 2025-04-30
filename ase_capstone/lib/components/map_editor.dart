@@ -1,9 +1,13 @@
 import 'package:ase_capstone/components/bottom_dialog.dart';
+import 'package:ase_capstone/components/my_button.dart';
 import 'package:ase_capstone/components/search_buildings.dart';
+import 'package:ase_capstone/components/search_resources.dart';
 import 'package:ase_capstone/components/textfield.dart';
 import 'package:ase_capstone/models/directions_handler.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:ase_capstone/utils/utils.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -21,8 +25,10 @@ class MapEditor extends StatefulWidget {
 
 class _MapEditorState extends State<MapEditor> {
   final FirestoreService _firestoreServices = FirestoreService();
+  final User user = FirebaseAuth.instance.currentUser!;
   GoogleMapController? _controller;
   bool _isLoading = true;
+  bool _isPublic = false;
 
   // university variables
   Map<String, dynamic>? _university;
@@ -36,6 +42,19 @@ class _MapEditorState extends State<MapEditor> {
   final TextEditingController _buildingCodeController = TextEditingController();
   final TextEditingController _buildingAddressController =
       TextEditingController();
+
+  // new resource controllers
+  final TextEditingController _resourceNameController = TextEditingController();
+  final TextEditingController _resourceRoomController = TextEditingController();
+  final TextEditingController _resourceDescriptionController =
+      TextEditingController();
+  String? _selectedResourceBuilding;
+  List<Map<String, dynamic>> _resources = [];
+
+  // engagement link
+  final TextEditingController _engagementLinkController =
+      TextEditingController();
+  String? _engagementLink;
 
   List<dynamic> _buildings = [];
   final List<Marker> _buildingMarkers = [];
@@ -63,7 +82,7 @@ class _MapEditorState extends State<MapEditor> {
     {
       'step': 4,
       'message':
-          'Long press on the map to create a building. You can also edit or delete buildings by tapping on them.',
+          '${kIsWeb ? 'Click the create new building button' : 'Long press on the map'} to create a building. You can also edit or delete buildings by tapping on them.',
     },
     {
       'step': 5,
@@ -82,8 +101,13 @@ class _MapEditorState extends State<MapEditor> {
   final TextEditingController _universityAbbrevController =
       TextEditingController();
 
+  // web only variables
+  final GlobalKey buildingLocationMarkerKey = GlobalKey();
+  bool _showDialog = false;
+
   @override
   void initState() {
+    super.initState();
     setState(() {
       _university = widget.university;
       if (_university == null) {
@@ -99,7 +123,15 @@ class _MapEditorState extends State<MapEditor> {
         _isLoading = false;
       });
     }
-    super.initState();
+    // check if the user is an admin (for saving universities publically)
+    _checkUserAdmin();
+  }
+
+  Future<void> _checkUserAdmin() async {
+    bool isAdmin = await _firestoreServices.isAdmin(userId: user.uid);
+    setState(() {
+      _isPublic = isAdmin;
+    });
   }
 
   void _setUniversityVariables() async {
@@ -119,6 +151,9 @@ class _MapEditorState extends State<MapEditor> {
           _university!['northEastBound']['longitude'],
         );
         _buildings = _university!['buildings'];
+        List<dynamic> resourceData = _university!['resources'] ?? [];
+        _resources = (resourceData.cast<Map<String, dynamic>>());
+        _engagementLink = _university!['eventUrl'];
       });
 
       // add markers for each building (this is async because it may take a while to load all markers)
@@ -207,7 +242,10 @@ class _MapEditorState extends State<MapEditor> {
   }
 
   Future<void> _showStartTutorialDialog() async {
-    return showDialog(
+    setState(() {
+      _showDialog = true;
+    });
+    await showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
@@ -230,10 +268,16 @@ class _MapEditorState extends State<MapEditor> {
             ],
           );
         });
+    setState(() {
+      _showDialog = false;
+    });
   }
 
-  void _startBuildingTutorial() {
-    showDialog(
+  void _startBuildingTutorial() async {
+    setState(() {
+      _showDialog = true;
+    });
+    await showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
@@ -242,7 +286,7 @@ class _MapEditorState extends State<MapEditor> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Text(
-                  'Next, long press on the map to create a building.',
+                  'Next, ${kIsWeb ? 'press the create new building button' : 'long press on the map'} to create a building.',
                 ),
               ],
             ),
@@ -256,6 +300,9 @@ class _MapEditorState extends State<MapEditor> {
             ],
           );
         });
+    setState(() {
+      _showDialog = false;
+    });
   }
 
   //////////////////////////////////
@@ -266,8 +313,11 @@ class _MapEditorState extends State<MapEditor> {
     required String title,
     String? message,
     Function? callBack,
-  }) {
-    showDialog(
+  }) async {
+    setState(() {
+      _showDialog = true;
+    });
+    await showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
@@ -284,9 +334,12 @@ class _MapEditorState extends State<MapEditor> {
             ],
           );
         });
+    setState(() {
+      _showDialog = false;
+    });
   }
 
-  void _setUniversityLocation(LatLng location) {
+  void _setUniversityLocation(LatLng location) async {
     // user already has a location selected (setting bounds)
     if (_universityLocation != null) {
       if (_southWestBound == null) {
@@ -347,7 +400,10 @@ class _MapEditorState extends State<MapEditor> {
     } else {
       if (_isTutorial) {
         // Setting university location
-        showDialog(
+        setState(() {
+          _showDialog = true;
+        });
+        await showDialog(
             context: context,
             builder: (BuildContext context) {
               return AlertDialog(
@@ -374,6 +430,9 @@ class _MapEditorState extends State<MapEditor> {
                 ],
               );
             });
+        setState(() {
+          _showDialog = false;
+        });
       }
 
       // set and zoom to university location
@@ -395,8 +454,11 @@ class _MapEditorState extends State<MapEditor> {
     }
   }
 
-  void _deleteUniversityLocation() {
-    showDialog(
+  void _deleteUniversityLocation() async {
+    setState(() {
+      _showDialog = true;
+    });
+    await showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
@@ -424,6 +486,9 @@ class _MapEditorState extends State<MapEditor> {
             ],
           );
         });
+    setState(() {
+      _showDialog = false;
+    });
   }
 
   void _setUniversityBounds() {
@@ -596,8 +661,9 @@ class _MapEditorState extends State<MapEditor> {
         builder: (BuildContext context) {
           return AlertDialog(
             title: const Text('Delete Building'),
-            content:
-                Text('Are you sure you want to delete ${building['name']}?'),
+            content: Text(
+                'Are you sure you want to delete ${building['name']}?\n\n'
+                'This will also delete all resources associated with this building.'),
             actions: [
               TextButton(
                 onPressed: () {
@@ -624,6 +690,10 @@ class _MapEditorState extends State<MapEditor> {
                             building['address'].longitude ==
                                 buildingLocation.longitude;
                       }
+                    });
+
+                    _resources.removeWhere((resource) {
+                      return resource['building'] == building['name'];
                     });
                   });
                   Navigator.of(context).pop();
@@ -763,6 +833,7 @@ class _MapEditorState extends State<MapEditor> {
   void _saveUniversity() async {
     final navigator = Navigator.of(context);
     if (_isCreate) {
+      // CREATE UNIVERSITY
       // ask user for university name and abbreviation
       await showDialog(
           context: context,
@@ -793,6 +864,7 @@ class _MapEditorState extends State<MapEditor> {
                       _universityNameController.clear();
                     });
                     Navigator.of(context).pop();
+                    return;
                   },
                   child: const Text('Cancel'),
                 ),
@@ -805,7 +877,71 @@ class _MapEditorState extends State<MapEditor> {
                         message: 'Please fill out all fields.',
                       );
                     } else {
-                      Navigator.of(context).pop();
+                      // SAVE UNIVERSITY TO FIRESTORE
+                      // convert building addresses to doubles for firestore
+                      setState(() {
+                        for (var building in _buildings) {
+                          if (building['address'] is Map<String, dynamic>) {
+                            // if the address has already been converted skip it
+                            continue;
+                          } else {
+                            LatLng address = building['address'] as LatLng;
+                            building['address'] = {
+                              'latitude': address.latitude.toDouble(),
+                              'longitude': address.longitude.toDouble(),
+                            };
+                          }
+                        }
+                      });
+                      try {
+                        await _firestoreServices.createUniversity(
+                          university: {
+                            'name': _universityNameController.text,
+                            'abbreviation': _universityAbbrevController.text,
+                            'location': {
+                              'latitude':
+                                  _universityLocation!.latitude.toDouble(),
+                              'longitude':
+                                  _universityLocation!.longitude.toDouble()
+                            },
+                            'southWestBound': {
+                              'latitude': _southWestBound!.latitude.toDouble(),
+                              'longitude': _southWestBound!.longitude.toDouble()
+                            },
+                            'northEastBound': {
+                              'latitude': _northEastBound!.latitude.toDouble(),
+                              'longitude': _northEastBound!.longitude.toDouble()
+                            },
+                            'buildings': _buildings,
+                            'resources': _resources,
+                            'eventUrl': _engagementLink,
+                            'isPublic': _isPublic,
+                            'createdBy': user.uid,
+                          },
+                        );
+                      } catch (e) {
+                        navigator.pop();
+                        setState(() {
+                          Utils.displayMessage(
+                            context: context,
+                            message:
+                                'Error creating university: ${e.toString()}',
+                          );
+                        });
+                        return;
+                      }
+
+                      // send the user back to the development page
+                      navigator.popUntil((route) =>
+                          route.settings.name == '/development-page');
+                      navigator.pushReplacementNamed('/development-page');
+
+                      // show create success dialog
+                      _showSuccessDialog(
+                        title: 'University Created Successfully!',
+                        message:
+                            'Your university has been created successfully. You can now view it on the development page.',
+                      );
                     }
                   },
                   child: const Text('Save'),
@@ -814,106 +950,91 @@ class _MapEditorState extends State<MapEditor> {
             );
           });
     } else {
+      // EDIT UNIVERSITY
       // show confirm dialog
-    }
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Save University'),
+              content: const Text(
+                  'Are you sure you want to save the changes to this university?'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    // convert building addresses to doubles for firestore
+                    setState(() {
+                      for (var building in _buildings) {
+                        if (building['address'] is Map<String, dynamic>) {
+                          // if the address has already been converted skip it
+                          continue;
+                        } else {
+                          LatLng address = building['address'] as LatLng;
+                          building['address'] = {
+                            'latitude': address.latitude.toDouble(),
+                            'longitude': address.longitude.toDouble(),
+                          };
+                        }
+                      }
+                    });
+                    try {
+                      await _firestoreServices.updateUniversity(
+                        name: _university!['name'],
+                        university: {
+                          'name': _university!['name'],
+                          'abbreviation': _university!['abbreviation'],
+                          'location': {
+                            'latitude':
+                                _universityLocation!.latitude.toDouble(),
+                            'longitude':
+                                _universityLocation!.longitude.toDouble()
+                          },
+                          'southWestBound': {
+                            'latitude': _southWestBound!.latitude.toDouble(),
+                            'longitude': _southWestBound!.longitude.toDouble()
+                          },
+                          'northEastBound': {
+                            'latitude': _northEastBound!.latitude.toDouble(),
+                            'longitude': _northEastBound!.longitude.toDouble()
+                          },
+                          'buildings': _buildings,
+                          'resources': _resources,
+                          'eventUrl': _engagementLink,
+                        },
+                      );
+                    } catch (e) {
+                      setState(() {
+                        Utils.displayMessage(
+                          context: context,
+                          message: 'Error saving university: ${e.toString()}',
+                        );
+                      });
+                      return;
+                    }
 
-    // SAVE UNIVERSITY TO FIRESTORE
-    // convert building addresses to doubles for firestore
-    setState(() {
-      for (var building in _buildings) {
-        if (building['address'] is Map<String, dynamic>) {
-          // if the address has already been converted skip it
-          continue;
-        } else {
-          LatLng address = building['address'] as LatLng;
-          building['address'] = {
-            'latitude': address.latitude.toDouble(),
-            'longitude': address.longitude.toDouble(),
-          };
-        }
-      }
-    });
-    if (_isCreate) {
-      try {
-        await _firestoreServices.createUniversity(
-          university: {
-            'name': _universityNameController.text,
-            'abbreviation': _universityAbbrevController.text,
-            'location': {
-              'latitude': _universityLocation!.latitude.toDouble(),
-              'longitude': _universityLocation!.longitude.toDouble()
-            },
-            'southWestBound': {
-              'latitude': _southWestBound!.latitude.toDouble(),
-              'longitude': _southWestBound!.longitude.toDouble()
-            },
-            'northEastBound': {
-              'latitude': _northEastBound!.latitude.toDouble(),
-              'longitude': _northEastBound!.longitude.toDouble()
-            },
-            'buildings': _buildings,
-          },
-        );
-      } catch (e) {
-        navigator.pop();
-        setState(() {
-          Utils.displayMessage(
-            context: context,
-            message: 'Error creating university: ${e.toString()}',
-          );
-        });
-        return;
-      }
-    } else {
-      try {
-        await _firestoreServices.updateUniversity(
-          name: _university!['name'],
-          university: {
-            'name': _university!['name'],
-            'abbreviation': _university!['abbreviation'],
-            'location': {
-              'latitude': _universityLocation!.latitude.toDouble(),
-              'longitude': _universityLocation!.longitude.toDouble()
-            },
-            'southWestBound': {
-              'latitude': _southWestBound!.latitude.toDouble(),
-              'longitude': _southWestBound!.longitude.toDouble()
-            },
-            'northEastBound': {
-              'latitude': _northEastBound!.latitude.toDouble(),
-              'longitude': _northEastBound!.longitude.toDouble()
-            },
-            'buildings': _buildings,
-          },
-        );
-      } catch (e) {
-        setState(() {
-          Utils.displayMessage(
-            context: context,
-            message: 'Error saving university: ${e.toString()}',
-          );
-        });
-        return;
-      }
-    }
+                    // send the user back to the development page
+                    navigator.popUntil(
+                        (route) => route.settings.name == '/development-page');
+                    navigator.pushReplacementNamed('/development-page');
 
-    // send the user back to the development page
-    navigator.popUntil((route) => route.settings.name == '/development-page');
-    navigator.pushReplacementNamed('/development-page');
-
-    if (_isCreate) {
-      // show create success dialog
-      _showSuccessDialog(
-        title: 'University Created Successfully!',
-        message:
-            'Your university has been created successfully. You can now view it on the development page.',
-      );
-    } else {
-      // show edit success dialog
-      _showSuccessDialog(
-        title: '${_university!['name']} Updated Successfully!',
-        message: '${_university!['name']} has been updated successfully!',
-      );
+                    // show edit success dialog
+                    _showSuccessDialog(
+                      title: '${_university!['name']} Updated Successfully!',
+                      message:
+                          '${_university!['name']} has been updated successfully!',
+                    );
+                  },
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          });
     }
   }
 
@@ -947,6 +1068,204 @@ class _MapEditorState extends State<MapEditor> {
     }
   }
 
+  void _engagementLinkDialog() async {
+    setState(() {
+      _showDialog = true;
+    });
+    await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Engagement Link'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                    'Enter the link to the universities engagement site (optional).'),
+                _engagementLink != null
+                    ? Text('\nCurrent Engagement Link:\n${_engagementLink!}')
+                    : SizedBox(),
+                SizedBox(height: 10),
+                MyTextField(
+                  controller: _engagementLinkController,
+                  hintText: 'link to the universities engagement site',
+                  obscureText: false,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  _engagementLinkController.clear();
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  if (_engagementLinkController.text.isEmpty) {
+                    Utils.displayMessage(
+                      context: context,
+                      message: 'Please enter a link.',
+                    );
+                  } else {
+                    setState(() {
+                      _engagementLink = _engagementLinkController.text;
+                    });
+                    if (mounted) {
+                      Navigator.of(context).pop();
+                    }
+                  }
+                },
+                child: const Text('Confirm'),
+              ),
+            ],
+          );
+        });
+    setState(() {
+      _showDialog = false;
+    });
+  }
+
+  Future<void> _addResourcesDialog() async {
+    setState(() {
+      _showDialog = true;
+    });
+    await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Add Resources'),
+            ),
+            body: Padding(
+              padding: kIsWeb
+                  ? EdgeInsets.symmetric(
+                      horizontal: MediaQuery.of(context).size.width * .3)
+                  : const EdgeInsets.all(8.0),
+              child: Center(
+                child: Column(
+                  children: [
+                    // resource name
+                    MyTextField(
+                      controller: _resourceNameController,
+                      hintText: 'Resource Name',
+                      obscureText: false,
+                    ),
+                    SizedBox(height: 20),
+
+                    // resource link (not required)
+                    // MyTextField(
+                    //   controller: _resourceLinkController,
+                    //   hintText: 'Resource Link (not required)',
+                    //   obscureText: false,
+                    // ),
+                    // SizedBox(height: 20),
+
+                    // resource location (building)
+                    Autocomplete<Map<String, dynamic>>(
+                      optionsBuilder: (TextEditingValue textEditingValue) {
+                        if (textEditingValue.text.isEmpty) {
+                          return const Iterable<Map<String, dynamic>>.empty();
+                        }
+                        return _buildings.where((building) {
+                          return building['name']
+                              .toLowerCase()
+                              .contains(textEditingValue.text.toLowerCase());
+                        }).cast<Map<String, dynamic>>();
+                      },
+                      displayStringForOption: (Map<String, dynamic> building) =>
+                          building['name'],
+                      onSelected: (Map<String, dynamic> selectedBuilding) {
+                        setState(() {
+                          _selectedResourceBuilding = selectedBuilding['name'];
+                        });
+                      },
+                      fieldViewBuilder: (BuildContext context,
+                          TextEditingController textEditingController,
+                          FocusNode focusNode,
+                          VoidCallback onFieldSubmitted) {
+                        return TextFormField(
+                          controller: textEditingController,
+                          focusNode: focusNode,
+                          decoration: InputDecoration(
+                            labelText: 'Resource Building',
+                            border: OutlineInputBorder(),
+                          ),
+                        );
+                      },
+                    ),
+                    SizedBox(height: 20),
+
+                    // room number
+                    MyTextField(
+                      controller: _resourceRoomController,
+                      hintText: 'Room number',
+                      obscureText: false,
+                      isNumber: true,
+                    ),
+                    SizedBox(height: 20),
+
+                    // description (optional)
+                    MyTextField(
+                      controller: _resourceDescriptionController,
+                      hintText: 'Description (optional)',
+                      obscureText: false,
+                    ),
+                    SizedBox(height: 50),
+
+                    // submit button
+                    MyButton(
+                      buttonText: 'Save Resource',
+                      onTap: () {
+                        if (_resourceNameController.text.isEmpty ||
+                            _selectedResourceBuilding == null ||
+                            _resourceRoomController.text.isEmpty) {
+                          Utils.displayMessage(
+                            context: context,
+                            message: 'Please fill out all fields.',
+                          );
+                        } else {
+                          // add resource to resource map to university
+                          Map<String, dynamic> resource = {
+                            'name': _resourceNameController.text,
+                            'building': _selectedResourceBuilding!,
+                            'room': _resourceRoomController.text,
+                            'description': _resourceDescriptionController.text,
+                          };
+                          setState(() {
+                            _resources.add(resource);
+                          });
+                          if (mounted) {
+                            Navigator.of(context).pop();
+                          }
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        });
+    setState(() {
+      _showDialog = false;
+    });
+  }
+
+  void _editResource(resource, newResource) {
+    setState(() {
+      _resources.removeWhere((res) => res['name'] == resource['name']);
+      _resources.add(newResource);
+    });
+  }
+
+  void _deleteResource(resource) async {
+    setState(() {
+      _resources.removeWhere((res) => res['name'] == resource['name']);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -969,33 +1288,93 @@ class _MapEditorState extends State<MapEditor> {
               padding: const EdgeInsets.fromLTRB(8, 20, 8, 8),
               child: Stack(
                 children: [
-                  GoogleMap(
-                    onMapCreated: _onMapCreated,
-                    initialCameraPosition: CameraPosition(
-                      target: LatLng(40, -96),
+                  Padding(
+                    padding: kIsWeb
+                        ? const EdgeInsets.only(bottom: 200, top: 50)
+                        : EdgeInsets.zero,
+                    child: GoogleMap(
+                      onMapCreated: _onMapCreated,
+                      initialCameraPosition: CameraPosition(
+                        target: LatLng(40, -96),
+                      ),
+                      minMaxZoomPreference:
+                          _zoomPreference ?? MinMaxZoomPreference.unbounded,
+                      markers: Set<Marker>.of(_buildingMarkers),
+                      zoomControlsEnabled: false,
+                      rotateGesturesEnabled: false,
+                      onTap:
+                          !_showDialog ? _setUniversityLocation : (location) {},
+                      cameraTargetBounds:
+                          _southWestBound != null && _northEastBound != null
+                              ? CameraTargetBounds(
+                                  LatLngBounds(
+                                    southwest: _southWestBound!,
+                                    northeast: _northEastBound!,
+                                  ),
+                                )
+                              : CameraTargetBounds.unbounded,
+                      onLongPress: _createBuilding,
+                      webGestureHandling: _showDialog
+                          ? WebGestureHandling.none
+                          : WebGestureHandling.auto,
                     ),
-                    minMaxZoomPreference:
-                        _zoomPreference ?? MinMaxZoomPreference.unbounded,
-                    markers: Set<Marker>.of(_buildingMarkers),
-                    zoomControlsEnabled: false,
-                    rotateGesturesEnabled: false,
-                    onTap: _setUniversityLocation,
-                    cameraTargetBounds:
-                        _southWestBound != null && _northEastBound != null
-                            ? CameraTargetBounds(
-                                LatLngBounds(
-                                  southwest: _southWestBound!,
-                                  northeast: _northEastBound!,
-                                ),
-                              )
-                            : CameraTargetBounds.unbounded,
-                    onLongPress: _createBuilding,
                   ),
+                  if (kIsWeb && _universityLocation != null)
+                    Stack(
+                      children: (_universityLocation != null &&
+                              _southWestBound != null &&
+                              _northEastBound != null)
+                          ? [
+                              Center(
+                                child: Icon(
+                                  key: buildingLocationMarkerKey,
+                                  Icons.location_pin,
+                                  size: 50,
+                                  color: Colors.purple[400],
+                                ),
+                              ),
+                              Positioned(
+                                top: 0,
+                                child: SizedBox(
+                                  height: 25,
+                                  width: 250,
+                                  child: FloatingActionButton(
+                                    onPressed: () async {
+                                      if (_controller != null) {
+                                        RenderBox box =
+                                            buildingLocationMarkerKey
+                                                    .currentContext!
+                                                    .findRenderObject()
+                                                as RenderBox;
+                                        Offset position =
+                                            box.localToGlobal(Offset.zero);
+                                        double y = position.dy;
+                                        double x = position.dx;
+                                        LatLng latLng =
+                                            await _controller!.getLatLng(
+                                          ScreenCoordinate(
+                                            // modifing x and y to center the pin on purple marker
+                                            x: x.toInt() + 20,
+                                            y: y.toInt() - 90,
+                                          ),
+                                        );
+
+                                        _createBuilding(latLng);
+                                      }
+                                    },
+                                    child: Text(
+                                        'Create new building on purple pin'),
+                                  ),
+                                ),
+                              ),
+                            ]
+                          : [],
+                    ),
                   // INSTRUCTIONS FOR USER
                   _currentInstructions == null
                       ? Text('')
                       : Padding(
-                          padding: const EdgeInsets.all(8.0),
+                          padding: const EdgeInsets.fromLTRB(8, 30, 8, 8),
                           child: Align(
                             alignment: Alignment.topCenter,
                             child: Container(
@@ -1025,15 +1404,61 @@ class _MapEditorState extends State<MapEditor> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
+                        if (_resources.isNotEmpty)
+                          Container(
+                            padding: EdgeInsets.only(left: 10),
+                            color: Colors.black,
+                            child: Row(
+                              children: [
+                                Text('Resources: (${_resources.length})'),
+                                IconButton(
+                                  onPressed: () async {
+                                    setState(() {
+                                      _showDialog = true;
+                                    });
+                                    await showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return SearchResources(
+                                            data: _resources,
+                                            buildings: _buildings,
+                                            onEdit: _editResource,
+                                            onDelete: _deleteResource,
+                                          );
+                                        });
+                                    setState(() {
+                                      _showDialog = false;
+                                    });
+                                  },
+                                  icon: Icon(
+                                    Icons.arrow_forward_ios,
+                                    size: 20,
+                                    color: Colors.blue[400],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         _buildings.isNotEmpty
                             ? Container(
                                 padding: EdgeInsets.only(left: 10),
                                 color: Colors.black,
                                 child: Row(
                                   children: [
+                                    IconButton(
+                                      onPressed: _addResourcesDialog,
+                                      icon: Icon(
+                                        Icons.menu_book,
+                                        size: 20,
+                                        color: Colors.green[500],
+                                      ),
+                                    ),
                                     Text('Buildings: (${_buildings.length})'),
                                     IconButton(
                                       onPressed: () async {
+                                        setState(() {
+                                          _showDialog = true;
+                                        });
                                         Map<String, dynamic>? result =
                                             await showDialog(
                                           context: context,
@@ -1049,6 +1474,10 @@ class _MapEditorState extends State<MapEditor> {
                                             result: result,
                                           );
                                         }
+
+                                        setState(() {
+                                          _showDialog = false;
+                                        });
 
                                         // clear instructions for buildings
                                         if (_isTutorial) {
@@ -1166,6 +1595,15 @@ class _MapEditorState extends State<MapEditor> {
                                 color: Colors.black,
                                 child: Row(
                                   children: [
+                                    IconButton(
+                                      onPressed: _engagementLinkDialog,
+                                      icon: Icon(
+                                        Icons.public,
+                                        size: 20,
+                                        color: const Color.fromARGB(
+                                            255, 219, 201, 0),
+                                      ),
+                                    ),
                                     IconButton(
                                         icon: Icon(
                                           Icons.location_on,

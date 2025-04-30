@@ -1,3 +1,4 @@
+import 'package:ase_capstone/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -23,30 +24,36 @@ class _EventPageState extends State<EventPage> {
 
   Future<void> _fetchEventUrl() async {
     try {
-      final url = await _firestoreService.getEventUrl(userId: user.uid); // Fetch URL from Firestore
+      final url = await _firestoreService.getEventUrl(
+          userId: user.uid); // Fetch URL from Firestore
       if (url.isEmpty || url == 'https://default-url.com') {
-      // Handle case where no event URL is available
-      setState(() {
-        _eventUrl = null;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('This university has no event URL.')),
-    );
+        // Handle case where no event URL is available
+        setState(() {
+          _eventUrl = null;
+        });
+        if (mounted) {
+          Utils.displayMessage(
+            context: context,
+            message: 'This university has no event URL.',
+          );
+        }
       } else {
         setState(() {
           _eventUrl = url;
         });
       }
     } catch (e) {
-    print('Error fetching event URL: $e'); // Log the error
-    setState(() {
-      _eventUrl = null; // Handle error by setting URL to null
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Failed to load the event URL.')),
-    );
+      setState(() {
+        _eventUrl = null; // Handle error by setting URL to null
+      });
+      if (mounted) {
+        Utils.displayMessage(
+          context: context,
+          message: 'Failed to load the event URL.',
+        );
+      }
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -55,18 +62,18 @@ class _EventPageState extends State<EventPage> {
         title: const Text('Event Page'),
       ),
       body: _eventUrl == null
-        ? const Center(
-            child: Text(
-              'This university has no event URL.',
-              style: TextStyle(fontSize: 16),
-              textAlign: TextAlign.center,
+          ? const Center(
+              child: Text(
+                'This university has no event URL.',
+                style: TextStyle(fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+            )
+          : InAppWebView(
+              initialUrlRequest: URLRequest(
+                url: WebUri(_eventUrl!), // Use the fetched URL
+              ),
             ),
-          )
-        : InAppWebView(
-            initialUrlRequest: URLRequest(
-              url: WebUri(_eventUrl!), // Use the fetched URL
-            ),
-          ),
-  );
-}
+    );
+  }
 }

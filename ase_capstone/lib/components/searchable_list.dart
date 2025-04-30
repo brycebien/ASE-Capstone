@@ -1,5 +1,6 @@
 import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class SearchableList extends StatefulWidget {
@@ -7,8 +8,9 @@ class SearchableList extends StatefulWidget {
   final List<String> keys;
   final Widget? trailing;
   final bool includePriorityBuildings;
-  final String? prependSubtitle;
+  final List<String>? prependSubtitle;
   final Function? onSelected;
+  final String? searchBarHint;
 
   const SearchableList({
     super.key,
@@ -18,6 +20,7 @@ class SearchableList extends StatefulWidget {
     this.includePriorityBuildings = false,
     this.prependSubtitle,
     this.onSelected,
+    this.searchBarHint,
   });
 
   @override
@@ -77,7 +80,14 @@ class _SearchableListState extends State<SearchableList> {
     String subtitle = "";
     if (widget.keys.length > 1) {
       for (var i = 1; i < widget.keys.length; i++) {
+        try {
+          subtitle += widget.prependSubtitle?[i - 1] ?? '';
+        } catch (e) {
+          continue; // skip if prependSubtitle is not provided
+        }
+
         subtitle += '${_foundItems[index][widget.keys[i]]}';
+
         if (i + 1 != widget.keys.length) {
           subtitle += '\n'; // add a new line if not the last key
         }
@@ -92,11 +102,17 @@ class _SearchableListState extends State<SearchableList> {
   Widget build(BuildContext context) {
     return Column(children: [
       Padding(
-        padding: const EdgeInsets.all(8),
+        padding: kIsWeb
+            ? EdgeInsets.symmetric(
+                horizontal: MediaQuery.of(context).size.width > 800
+                    ? MediaQuery.of(context).size.width * .3
+                    : 20,
+              )
+            : EdgeInsets.all(8),
         child: TextField(
           controller: _searchController,
-          decoration: const InputDecoration(
-            labelText: 'Search',
+          decoration: InputDecoration(
+            labelText: widget.searchBarHint ?? 'Search',
             suffixIcon: Icon(Icons.search),
           ),
           onChanged: (value) {
@@ -109,36 +125,45 @@ class _SearchableListState extends State<SearchableList> {
       if (widget.includePriorityBuildings && _favoriteItems.isNotEmpty)
         SizedBox(height: 10),
       if (widget.includePriorityBuildings && _favoriteItems.isNotEmpty)
-        ExpansionTile(
-          title: const Text('Favorite Buildings'),
-          children: [
-            ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.3,
-              ),
-              child: ListView(
-                shrinkWrap: true,
-                children: _favoriteItems.map((item) {
-                  return ListTile(
-                    title: Text(item),
-                    onTap: () {
-                      if (widget.onSelected != null) {
-                        widget.onSelected!(widget.items.firstWhere((element) {
-                          return element[widget.keys[0]] == item;
-                        }));
-                      } else {
-                        setState(() {
-                          _foundItems = widget.items.where((element) {
+        Padding(
+          padding: kIsWeb
+              ? EdgeInsets.symmetric(
+                  horizontal: MediaQuery.of(context).size.width > 800
+                      ? MediaQuery.of(context).size.width * .3
+                      : 20,
+                )
+              : EdgeInsets.all(8),
+          child: ExpansionTile(
+            title: const Text('Favorite Buildings'),
+            children: [
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.3,
+                ),
+                child: ListView(
+                  shrinkWrap: true,
+                  children: _favoriteItems.map((item) {
+                    return ListTile(
+                      title: Text(item),
+                      onTap: () {
+                        if (widget.onSelected != null) {
+                          widget.onSelected!(widget.items.firstWhere((element) {
                             return element[widget.keys[0]] == item;
-                          }).toList();
-                        });
-                      }
-                    },
-                  );
-                }).toList(),
+                          }));
+                        } else {
+                          setState(() {
+                            _foundItems = widget.items.where((element) {
+                              return element[widget.keys[0]] == item;
+                            }).toList();
+                          });
+                        }
+                      },
+                    );
+                  }).toList(),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
 
       // SEARCHABLE LIST
@@ -149,14 +174,19 @@ class _SearchableListState extends State<SearchableList> {
             return Column(
               children: [
                 Padding(
-                    padding: const EdgeInsets.all(8.0),
+                    padding: kIsWeb
+                        ? EdgeInsets.symmetric(
+                            horizontal: MediaQuery.of(context).size.width > 800
+                                ? MediaQuery.of(context).size.width * .3
+                                : 20,
+                          )
+                        : EdgeInsets.all(8),
                     child: Card(
                       key: ValueKey(_foundItems[index][widget.keys[0]]),
                       elevation: 8,
                       child: ListTile(
                         title: Text(_foundItems[index][widget.keys[0]]),
-                        subtitle: Text(
-                            '${widget.prependSubtitle ?? ''} ${_getItemsSubtitle(index: index)}'),
+                        subtitle: Text(_getItemsSubtitle(index: index)),
                         trailing: widget.trailing ??
                             IconButton(
                               icon: Icon(
