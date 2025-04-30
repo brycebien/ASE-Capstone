@@ -8,12 +8,10 @@ import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:location/location.dart';
 import 'dart:async';
-import 'dart:ui' as ui;
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -334,48 +332,57 @@ class _MapPageState extends State<MapPage> {
       (snapshot) {
         setState(() {
           // Create a new set of event markers from the Firestore snapshot
-          final newEventMarkers = snapshot.docs.map((doc) {
-            final data = doc.data();
-            if (data.containsKey('latitude') &&
-                data.containsKey('longitude') &&
-                data.containsKey('title') &&
-                data.containsKey('yesVotes') &&
-                data.containsKey('noVotes') &&
-                data.containsKey('category')) {
-              final noVotes = data['noVotes'] as int;
+          final newEventMarkers = snapshot.docs
+              .map((doc) {
+                final data = doc.data();
+                if (data.containsKey('latitude') &&
+                    data.containsKey('longitude') &&
+                    data.containsKey('title') &&
+                    data.containsKey('yesVotes') &&
+                    data.containsKey('noVotes') &&
+                    data.containsKey('category')) {
+                  final noVotes = data['noVotes'] as int;
 
-              // Check if the pin has 5 or more "No" votes
-              if (noVotes >= 5) {
-                // Delete the pin from the database
-                FirebaseFirestore.instance.collection('pins').doc(doc.id).delete();
-                 _markers.removeWhere((marker) => marker.markerId.value == doc.id);
-                return null; // Do not add this marker to the map
-              }
+                  // Check if the pin has 5 or more "No" votes
+                  if (noVotes >= 5) {
+                    // Delete the pin from the database
+                    FirebaseFirestore.instance
+                        .collection('pins')
+                        .doc(doc.id)
+                        .delete();
+                    _markers.removeWhere(
+                        (marker) => marker.markerId.value == doc.id);
+                    return null; // Do not add this marker to the map
+                  }
 
-              final eventType = data['category'] as String;
-              final customIcon = _customEvent(eventType);
+                  final eventType = data['category'] as String;
+                  final customIcon = _customEvent(eventType);
 
-              return Marker(
-                markerId: MarkerId(doc.id),
-                position: LatLng(
-                  (data['latitude'] as num).toDouble(),
-                  (data['longitude'] as num).toDouble(),
-                ),
-                icon: customIcon,
-                infoWindow: InfoWindow(
-                  title: data['title'],
-                  snippet: 'Yes: ${data['yesVotes']} No: ${data['noVotes']}',
-                  onTap: () => _showVoteDialog(
-                      doc.id, data['yesVotes'], data['noVotes']),
-                ),
-              );
-            }
-            return null;
-          }).whereType<Marker>().toSet();
+                  return Marker(
+                    markerId: MarkerId(doc.id),
+                    position: LatLng(
+                      (data['latitude'] as num).toDouble(),
+                      (data['longitude'] as num).toDouble(),
+                    ),
+                    icon: customIcon,
+                    infoWindow: InfoWindow(
+                      title: data['title'],
+                      snippet:
+                          'Yes: ${data['yesVotes']} No: ${data['noVotes']}',
+                      onTap: () => _showVoteDialog(
+                          doc.id, data['yesVotes'], data['noVotes']),
+                    ),
+                  );
+                }
+                return null;
+              })
+              .whereType<Marker>()
+              .toSet();
 
           // Preserve existing building markers and add new event markers
           _markers
-            ..removeWhere((marker) => marker.markerId.value.startsWith('event-'))
+            ..removeWhere(
+                (marker) => marker.markerId.value.startsWith('event-'))
             ..addAll(newEventMarkers);
         });
       },
@@ -412,7 +419,6 @@ class _MapPageState extends State<MapPage> {
         const ImageConfiguration(size: Size(24, 24)),
         'assets/images/default_event.png',
       );
-      debugPrint("Event icons preloaded successfully: $_eventIcons");
     } catch (e) {
       debugPrint("Failed to preload event icons: $e");
     }
@@ -444,7 +450,8 @@ class _MapPageState extends State<MapPage> {
                 },
               ),
               ListTile(
-                leading: Image.asset('assets/images/construction.png', width: 24),
+                leading:
+                    Image.asset('assets/images/construction.png', width: 24),
                 title: const Text("Construction"),
                 onTap: () {
                   Navigator.pop(context, "Construction");
@@ -458,7 +465,8 @@ class _MapPageState extends State<MapPage> {
                 },
               ),
               ListTile(
-                leading: Image.asset('assets/images/special_event.png', width: 24),
+                leading:
+                    Image.asset('assets/images/special_event.png', width: 24),
                 title: const Text("Special Event"),
                 onTap: () {
                   Navigator.pop(context, "Special Event");
@@ -466,6 +474,14 @@ class _MapPageState extends State<MapPage> {
               ),
             ],
           ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text("Cancel"),
+            ),
+          ],
         );
       },
     );
@@ -478,14 +494,13 @@ class _MapPageState extends State<MapPage> {
     BitmapDescriptor? customIcon;
     try {
       customIcon = _customEvent(selectedCategory);
-      if (customIcon == null) {
-        throw Exception("Custom icon is null for event type: $selectedCategory");
-      }
     } catch (e) {
-      Utils.displayMessage(
-        context: context,
-        message: 'Failed to load event icon: $e',
-      );
+      if (mounted) {
+        Utils.displayMessage(
+          context: context,
+          message: 'Failed to load event icon: $e',
+        );
+      }
       customIcon = BitmapDescriptor.defaultMarker; // Fallback to default marker
     }
 
@@ -501,7 +516,9 @@ class _MapPageState extends State<MapPage> {
         Marker(
           markerId: MarkerId('event-${DateTime.now().millisecondsSinceEpoch}'),
           position: position,
-          icon: customIcon ?? BitmapDescriptor.defaultMarker, // Use the preloaded custom icon or fallback
+          icon: customIcon ??
+              BitmapDescriptor
+                  .defaultMarker, // Use the preloaded custom icon or fallback
           infoWindow: InfoWindow(
             title: selectedCategory,
             snippet: "Category: $selectedCategory",
