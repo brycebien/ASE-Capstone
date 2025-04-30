@@ -33,7 +33,9 @@ class SettingsPageState extends State<SettingsPage> {
   @override
   void initState() {
     super.initState();
-    isDarkMode = widget.isDarkMode;
+    if (widget.isDarkMode != null) {
+      isDarkMode = widget.isDarkMode!;
+    }
     _loadNotificationSettings();
   }
 
