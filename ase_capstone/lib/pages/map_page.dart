@@ -348,6 +348,7 @@ class _MapPageState extends State<MapPage> {
               if (noVotes >= 5) {
                 // Delete the pin from the database
                 FirebaseFirestore.instance.collection('pins').doc(doc.id).delete();
+                 _markers.removeWhere((marker) => marker.markerId.value == doc.id);
                 return null; // Do not add this marker to the map
               }
 
