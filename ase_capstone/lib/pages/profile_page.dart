@@ -1,6 +1,7 @@
 import 'package:ase_capstone/components/textfield.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:ase_capstone/utils/utils.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
@@ -137,10 +138,11 @@ class _ProfilePageState extends State<ProfilePage> {
                       value: usernameController.text,
                     );
                   }
-
                   _getUser();
 
-                  Navigator.pop(context);
+                  setState(() {
+                    Navigator.of(context).pop();
+                  });
                 } catch (e) {
                   setState(() {
                     Utils.displayMessage(
@@ -253,76 +255,85 @@ class _ProfilePageState extends State<ProfilePage> {
             ? const Center(child: CircularProgressIndicator())
             : _isLoading
                 ? Center(child: CircularProgressIndicator())
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      GestureDetector(
-                        onTap: changeProfilePicture,
-                        child: CircleAvatar(
-                          radius: 50,
-                          backgroundImage:
-                              _image != null ? FileImage(_image!) : null,
-                          child: _image != null
-                              ? null
-                              : const Icon(Icons.person, size: 50),
+                : Padding(
+                    padding: kIsWeb
+                        ? EdgeInsets.symmetric(
+                            horizontal: MediaQuery.of(context).size.width > 500
+                                ? MediaQuery.of(context).size.width * .3
+                                : 20,
+                          )
+                        : EdgeInsets.all(8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        GestureDetector(
+                          onTap: changeProfilePicture,
+                          child: CircleAvatar(
+                            radius: 50,
+                            backgroundImage:
+                                _image != null ? FileImage(_image!) : null,
+                            child: _image != null
+                                ? null
+                                : const Icon(Icons.person, size: 50),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        userData['username'],
-                        style: const TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        'Username: @${userData['username']}',
-                        style: const TextStyle(
-                            fontSize: 16, color: Colors.blueGrey),
-                      ),
-                      Text(user?.email ?? 'No Email',
-                          style: const TextStyle(color: Colors.grey)),
-                      const SizedBox(height: 20),
-                      ListTile(
-                        leading: const Icon(Icons.edit),
-                        title: const Text('Edit Profile'),
-                        onTap: editProfile,
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.camera_alt),
-                        title: const Text('Change Profile Picture'),
-                        onTap: changeProfilePicture,
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.delete, color: Colors.red),
-                        title: const Text('Delete Account',
-                            style: TextStyle(color: Colors.red)),
-                        onTap: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) {
-                              return AlertDialog(
-                                title: const Text('Confirm Deletion'),
-                                content: const Text(
-                                    'Are you sure you want to delete your account? This action cannot be undone.'),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: const Text('Cancel'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () async {
-                                      Navigator.pop(context);
-                                      await deleteAccount();
-                                    },
-                                    child: const Text('Delete',
-                                        style: TextStyle(color: Colors.red)),
-                                  ),
-                                ],
-                              );
-                            },
-                          );
-                        },
-                      ),
-                    ],
+                        const SizedBox(height: 16),
+                        Text(
+                          userData['username'],
+                          style: const TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          'Username: @${userData['username']}',
+                          style: const TextStyle(
+                              fontSize: 16, color: Colors.blueGrey),
+                        ),
+                        Text(user?.email ?? 'No Email',
+                            style: const TextStyle(color: Colors.grey)),
+                        const SizedBox(height: 20),
+                        ListTile(
+                          leading: const Icon(Icons.edit),
+                          title: const Text('Edit Profile'),
+                          onTap: editProfile,
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.camera_alt),
+                          title: const Text('Change Profile Picture'),
+                          onTap: changeProfilePicture,
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.delete, color: Colors.red),
+                          title: const Text('Delete Account',
+                              style: TextStyle(color: Colors.red)),
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  title: const Text('Confirm Deletion'),
+                                  content: const Text(
+                                      'Are you sure you want to delete your account? This action cannot be undone.'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () async {
+                                        Navigator.pop(context);
+                                        await deleteAccount();
+                                      },
+                                      child: const Text('Delete',
+                                          style: TextStyle(color: Colors.red)),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                   ),
       ),
     );

@@ -3,15 +3,20 @@ import 'package:ase_capstone/components/searchable_list.dart';
 import 'package:ase_capstone/components/settings_drawer.dart';
 import 'package:ase_capstone/models/directions.dart';
 import 'package:ase_capstone/models/directions_handler.dart';
+import 'package:ase_capstone/models/theme_notifier.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:location/location.dart';
+import 'package:location/location.dart' as loc;
+import 'package:geolocator/geolocator.dart';
 import 'dart:async';
+
+import 'package:provider/provider.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -23,14 +28,17 @@ class MapPage extends StatefulWidget {
 class _MapPageState extends State<MapPage> {
   final FirestoreService _firestoreServices = FirestoreService();
   final user = FirebaseAuth.instance.currentUser!;
+  bool _isAdmin = false;
+
   GoogleMapController? _controller;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late String _mapStyleString;
   String? _mapStyle;
-  LocationData? _currentLocation;
+  dynamic _currentLocation;
   final Set<Marker> _markers = {};
   bool _hasUniversity = false;
   bool isLoadingBuildingMarkers = true;
+  bool _isLoadingUser = true;
   String? _userUniversity;
   CameraPosition? _initialCameraPosition;
   CameraTargetBounds? _cameraTargetBounds;
@@ -43,15 +51,28 @@ class _MapPageState extends State<MapPage> {
   LatLng? destination;
   Directions? _info;
 
+  // web only variable (for handling gestures on the map when showing a dialog)
+  bool _showDialog = false;
+
   @override
   void initState() {
     super.initState();
-    _getCurrentLocation(); // get the user's location
+    Provider.of<ThemeNotifier>(context, listen: false)
+        .setTheme(); // set the theme based on the user's preference
+
+    _getCurrentLocation().then((_) {
+      _initializeUser();
+    }); // get the user's location
+  }
+
+  void _initializeUser() {
     _loadMapStyle(); // load the map's color theme (light or dark mode)
     _listenToPins(); // check for pins in the database
     _checkExpiredPins(); // check that no pins are expired (older than 24 hrs)
     _loadUnreadNotificationCount();
     _checkUserUniversity(); // check that he user has a university chosen
+    _checkForDirections(); // check if the user has a destination set
+    _checkUserAdmin(); // check if the user is an admin
   }
 
   @override
@@ -84,6 +105,13 @@ class _MapPageState extends State<MapPage> {
         });
       }
     }
+  }
+
+  Future<void> _checkUserAdmin() async {
+    bool isAdmin = await _firestoreServices.isAdmin(userId: user.uid);
+    setState(() {
+      _isAdmin = isAdmin;
+    });
   }
 
   void _setInitialCameraPosition() async {
@@ -143,6 +171,7 @@ class _MapPageState extends State<MapPage> {
           _hasUniversity = true;
           _userUniversity = universityName;
         }
+        _isLoadingUser = false;
       });
       _setInitialCameraPosition(); // set the camera position to the new university
       _setBuildingMarkers(
@@ -239,68 +268,192 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
-  void _getCurrentLocation() async {
-    Location location = Location();
+  Future<void> _getCurrentLocation() async {
+    // WEB LOCATION PERMISSIONS
+    if (kIsWeb) {
+      try {
+        final permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied ||
+            permission == LocationPermission.deniedForever) {
+          if (mounted) {
+            signUserOut();
+            Utils.displayMessage(
+              context: context,
+              message:
+                  'Location permissions are denied. You must enable location permissions to use this app.',
+            );
+          }
+          return;
+        }
 
-    // check if location services are enabled and ask user to enable location permissions if not
-    var serviceEnabled = await location.serviceEnabled();
-    if (!serviceEnabled) {
-      serviceEnabled = await location.requestService();
+        final Position position = await Geolocator.getCurrentPosition();
+        final loc.LocationData locationData = loc.LocationData.fromMap({
+          'latitude': position.latitude,
+          'longitude': position.longitude,
+        });
+        setState(() {
+          _currentLocation = locationData;
+        });
+
+        // --- disabled (updates the user's location every second -- not needed for web because we are not doing routes on it at this time) ---
+        // Geolocator.getPositionStream(
+        //   locationSettings: LocationSettings(
+        //     accuracy: LocationAccuracy.high,
+        //     distanceFilter: 10,
+        //   ),
+        // ).listen((Position position) {
+        //   setState(() {
+        //     _currentLocation = loc.LocationData.fromMap({
+        //       'latitude': position.latitude,
+        //       'longitude': position.longitude,
+        //     });
+        //   });
+        //   _checkForDirections();
+
+        //   // Add a marker for the user's location
+        //   final userMarker = Marker(
+        //     markerId: MarkerId('userLocation'),
+        //     position: LatLng(
+        //       _currentLocation!.latitude!,
+        //       _currentLocation!.longitude!,
+        //     ),
+        //     infoWindow: InfoWindow(
+        //       title: 'Your Location',
+        //     ),
+        //     icon:
+        //         BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+        //   );
+        //   setState(() {
+        //     _markers.add(userMarker);
+        //   });
+
+        //   // ---- disabled because it will move the camera to the user's location even if they are not on campus ----
+        //   // Move the camera to the updated location
+        //   // _controller?.animateCamera(CameraUpdate.newCameraPosition(
+        //   //   CameraPosition(
+        //   //     target: LatLng(
+        //   //       _currentLocation!.latitude!,
+        //   //       _currentLocation!.longitude!,
+        //   //     ),
+        //   //     zoom: 15.0,
+        //   //   ),
+        //   // ));
+        // });
+
+        // if (_currentLocation != null) {
+        //   final userMarker = Marker(
+        //     markerId: MarkerId('userLocation'),
+        //     position: LatLng(
+        //       _currentLocation!.latitude!,
+        //       _currentLocation!.longitude!,
+        //     ),
+        //     icon:
+        //         BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+        //   );
+
+        //   setState(() {
+        //     _markers.add(userMarker);
+        //   });
+
+        //   // Move the camera to the user's location
+        //   _controller?.animateCamera(CameraUpdate.newCameraPosition(
+        //     CameraPosition(
+        //       target: LatLng(
+        //         _currentLocation!.latitude!,
+        //         _currentLocation!.longitude!,
+        //       ),
+        //       zoom: 15.0,
+        //     ),
+        //   ));
+        // }
+      } catch (e) {
+        setState(() {
+          _currentLocation = loc.LocationData.fromMap({
+            'latitude': 0,
+            'longitude': 0,
+          }); // set location to 0,0 if error to allow the user in (only on web because location is not required)
+        });
+      }
+    } else {
+      // ANDROID LOCATION PERMISSIONS
+      loc.Location location = loc.Location();
+
+      // check if location services are enabled and ask user to enable location permissions if not
+      var serviceEnabled = await location.serviceEnabled();
       if (!serviceEnabled) {
-        return;
+        serviceEnabled = await location.requestService();
+        if (!serviceEnabled) {
+          return;
+        }
       }
-    }
 
-    // check if location permissions are granted and ask user to grant permissions if not
-    var permissionGranted = await location.hasPermission();
-    if (permissionGranted == PermissionStatus.denied) {
-      permissionGranted = await location.requestPermission();
-      if (permissionGranted != PermissionStatus.granted) {
-        return;
+      // check if location permissions are granted and ask user to grant permissions if not
+      var permissionGranted = await location.hasPermission();
+      if (permissionGranted == loc.PermissionStatus.denied) {
+        permissionGranted = await location.requestPermission();
+        if (permissionGranted != loc.PermissionStatus.granted) {
+          if (mounted) {
+            signUserOut();
+            Navigator.pushNamed(context, '/auth');
+            Utils.displayMessage(
+                context: context,
+                message:
+                    'You must enable location permissions to use this app.');
+          }
+        }
       }
-    }
 
-    // this stops the app from moving the camera to the user's location when the user does not move.
-    await location.changeSettings(
-      accuracy: LocationAccuracy.high, // high accuracy for better location
-      interval: 1000, // update location every second
-      distanceFilter: 10,
-    );
+      if (permissionGranted == loc.PermissionStatus.deniedForever) {
+        if (mounted) {
+          Navigator.of(context).pop();
+          Utils.displayMessage(
+              context: context,
+              message: 'You must enable location permissions to use this app.');
+        }
+      }
 
-    try {
-      // set current location to the user's location when the app starts
-      location.getLocation().then((value) {
+      // this stops the app from moving the camera to the user's location when the user does not move.
+      await location.changeSettings(
+        accuracy:
+            loc.LocationAccuracy.high, // high accuracy for better location
+        interval: 1000, // update location every second
+        distanceFilter: 10,
+      );
+
+      try {
+        // set current location to the user's location when the app starts
+        var userLocation = await location.getLocation();
         setState(() {
-          _currentLocation = value;
-        });
-      });
-
-      // update the current location when the user moves
-      location.onLocationChanged.listen((LocationData newLocation) {
-        setState(() {
-          _currentLocation = newLocation;
-          _checkForDirections();
+          _currentLocation = userLocation;
         });
 
-        // animate the camera to the user's location when the user moves/app is started
-        _controller?.animateCamera(CameraUpdate.newCameraPosition(
-          CameraPosition(
-            zoom: 20.0,
-            tilt: 50.0,
-            target: LatLng(
-              _currentLocation!.latitude!,
-              _currentLocation!.longitude!,
+        // update the current location when the user moves
+        location.onLocationChanged.listen((loc.LocationData newLocation) {
+          setState(() {
+            _currentLocation = newLocation;
+            _checkForDirections();
+          });
+
+          // animate the camera to the user's location when the user moves/app is started
+          _controller?.animateCamera(CameraUpdate.newCameraPosition(
+            CameraPosition(
+              zoom: 20.0,
+              tilt: 50.0,
+              target: LatLng(
+                _currentLocation!.latitude!,
+                _currentLocation!.longitude!,
+              ),
             ),
-          ),
-        ));
-      });
-    } catch (e) {
-      setState(() {
-        Utils.displayMessage(
-          context: context,
-          message: 'Unable to get location: $e',
-        );
-      });
+          ));
+        });
+      } catch (e) {
+        setState(() {
+          Utils.displayMessage(
+            context: context,
+            message: 'Unable to get location: $e',
+          );
+        });
+      }
     }
   }
 
@@ -326,7 +479,7 @@ class _MapPageState extends State<MapPage> {
   // update the map style when the theme changes
   void _updateMapStyle(GoogleMapController controller) {
     setState(() {
-      _mapStyle = Theme.of(context).brightness == Brightness.dark
+      _mapStyle = Provider.of<ThemeNotifier>(context, listen: false).isDarkMode
           ? _mapStyleString
           : null;
     });
@@ -337,8 +490,9 @@ class _MapPageState extends State<MapPage> {
       (snapshot) {
         setState(() {
           _markers.removeWhere((element) =>
-              element.markerId.value !=
-              'destinationMarker'); // Clear existing markers before updating
+              element.markerId.value != 'destinationMarker' &&
+              !element.markerId.value.contains(
+                  "building-")); // Clear existing markers before updating
           for (var doc in snapshot.docs) {
             final data = doc.data();
             if (data.containsKey('latitude') &&
@@ -389,6 +543,9 @@ class _MapPageState extends State<MapPage> {
     String markerTitle = "Reported Event";
     double markerColor = BitmapDescriptor.hueOrange;
 
+    setState(() {
+      _showDialog = true;
+    });
     await showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -447,9 +604,12 @@ class _MapPageState extends State<MapPage> {
         );
       },
     );
+    setState(() {
+      _showDialog = false;
+    });
   }
 
-  void _showVoteDialog(String markerId, int yesVotes, int noVotes) {
+  void _showVoteDialog(String markerId, int yesVotes, int noVotes) async {
     if (_votedPins.contains(markerId)) {
       Utils.displayMessage(
         context: context,
@@ -458,7 +618,10 @@ class _MapPageState extends State<MapPage> {
       return;
     }
 
-    showDialog(
+    setState(() {
+      _showDialog = true;
+    });
+    await showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
@@ -495,6 +658,9 @@ class _MapPageState extends State<MapPage> {
         );
       },
     );
+    setState(() {
+      _showDialog = false;
+    });
   }
 
   void _checkExpiredPins() async {
@@ -518,9 +684,9 @@ class _MapPageState extends State<MapPage> {
     await FirebaseAuth.instance.signOut();
 
     // navigate to login page
-    setState(() {
+    if (mounted) {
       Navigator.of(context).pushReplacementNamed('/');
-    });
+    }
   }
 
   void _showNotificationsPopup() async {
@@ -590,30 +756,49 @@ class _MapPageState extends State<MapPage> {
   }
 
   void _getDirections({required LatLng destination}) async {
-    final directions = await DirectionsHandler().getDirections(
-      origin: LatLng(
-        _currentLocation!.latitude!,
-        _currentLocation!.longitude!,
-      ),
-      destination: destination,
-    );
-    _markers.add(
-      Marker(
-        markerId: MarkerId('destinationMarker'),
-        position: destination,
-        icon: BitmapDescriptor.defaultMarkerWithHue(
-          BitmapDescriptor.hueViolet,
+    try {
+      final directions = await DirectionsHandler().getDirections(
+        origin: LatLng(
+          _currentLocation!.latitude!,
+          _currentLocation!.longitude!,
         ),
-      ),
-    );
-    setState(() {
-      _info = directions;
-    });
+        destination: destination,
+      );
+
+      _markers.add(
+        Marker(
+          markerId: MarkerId('destinationMarker'),
+          position: destination,
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueViolet,
+          ),
+        ),
+      );
+      setState(() {
+        _info = directions;
+      });
+    } catch (e) {
+      if (mounted) {
+        Utils.displayMessage(
+          context: context,
+          message:
+              'Sorry we couldn\'t find directions.\nThere is currently no route support for iOS or web.',
+        );
+      }
+    }
   }
 
   void _showUniversityPicker() async {
     List<Map<String, dynamic>> universities =
         await _firestoreServices.getUniversities();
+
+    if (!_isAdmin) {
+      setState(() {
+        universities = universities.where((university) {
+          return university['isPublic'] == true;
+        }).toList();
+      });
+    }
     String? result;
     if (mounted) {
       result = await Navigator.push(
@@ -686,7 +871,7 @@ class _MapPageState extends State<MapPage> {
       drawer: SafeArea(
         child: SettingsDrawer(user: user),
       ),
-      body: _currentLocation == null
+      body: _currentLocation == null || _isLoadingUser
           ? Center(
               child: CircularProgressIndicator(),
             )
@@ -710,43 +895,50 @@ class _MapPageState extends State<MapPage> {
                             _cameraTargetBounds == null ||
                             isLoadingBuildingMarkers)
                         ? Center(child: CircularProgressIndicator())
-                        : GoogleMap(
-                            onMapCreated: _onMapCreated,
-                            style: _mapStyle,
-                            initialCameraPosition: _initialCameraPosition!,
-                            rotateGesturesEnabled: true,
-                            myLocationButtonEnabled: true,
-                            zoomControlsEnabled:
-                                false, // Disable zoom controls (+/- buttons)
-                            myLocationEnabled: true,
-                            cameraTargetBounds: _cameraTargetBounds!,
-                            minMaxZoomPreference:
-                                MinMaxZoomPreference(15.0, 20.0),
-                            polylines: {
-                              if (_info != null)
-                                Polyline(
-                                  polylineId: PolylineId('route'),
-                                  points: _info!.polylineCoordinates
-                                      .map((e) =>
-                                          LatLng(e.latitude, e.longitude))
-                                      .toList(),
-                                  color: Colors.yellow,
-                                  width: 5,
-                                ),
-                            },
-                            markers: _markers,
-                            onTap: (location) {
-                              if (_showBuildingInfo) {
-                                setState(() {
-                                  _showBuildingInfo = false;
-                                });
-                              }
-                            },
-                            onLongPress: (LatLng tappedPoint) {
-                              _getDirections(destination: tappedPoint);
-                            },
+                        : Padding(
+                            padding: kIsWeb
+                                ? EdgeInsets.only(right: 80)
+                                : EdgeInsets.zero,
+                            child: GoogleMap(
+                              onMapCreated: _onMapCreated,
+                              style: _mapStyle,
+                              initialCameraPosition: _initialCameraPosition!,
+                              rotateGesturesEnabled: true,
+                              myLocationButtonEnabled: true,
+                              zoomControlsEnabled:
+                                  false, // Disable zoom controls (+/- buttons)
+                              myLocationEnabled: true,
+                              cameraTargetBounds: _cameraTargetBounds!,
+                              minMaxZoomPreference:
+                                  MinMaxZoomPreference(15.0, 20.0),
+                              polylines: {
+                                if (_info != null)
+                                  Polyline(
+                                    polylineId: PolylineId('route'),
+                                    points: _info!.polylineCoordinates
+                                        .map((e) =>
+                                            LatLng(e.latitude, e.longitude))
+                                        .toList(),
+                                    color: Colors.yellow,
+                                    width: 5,
+                                  ),
+                              },
+                              markers: _markers,
+                              onTap: _showDialog
+                                  ? (location) {
+                                      /*Leave empty (does not allow tap function on web)*/
+                                    }
+                                  : (location) {
+                                      /**Add tap functionality here */
+                                    },
+                              onLongPress: (LatLng tappedPoint) {
+                                _getDirections(destination: tappedPoint);
+                              },
+                              webGestureHandling: _showBuildingInfo
+                                  ? WebGestureHandling.none
+                                  : WebGestureHandling.auto,
+                            ),
                           ),
-
                     // Resources and Event buttons
                     Positioned(
                       bottom: 16,
@@ -765,7 +957,6 @@ class _MapPageState extends State<MapPage> {
                                     appBar: AppBar(
                                       title: Text('Buildings'),
                                     ),
-                                    // TODO: add prioritized buildings to list (user favoried buildings)
                                     body: SearchableList(
                                       items: _buildings,
                                       keys: ['name', 'code'],

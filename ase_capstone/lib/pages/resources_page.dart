@@ -1,8 +1,9 @@
 // lib/pages/resources_page.dart
+import 'package:ase_capstone/components/resource_details_dialog.dart';
 import 'package:ase_capstone/components/searchable_list.dart';
 import 'package:ase_capstone/utils/utils.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:ase_capstone/components/textfield.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -18,10 +19,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
   final FirestoreService _firestoreService = FirestoreService();
   List<Map<String, dynamic>> _resources = [];
 
-  final TextEditingController _newTitleController = TextEditingController();
-  final TextEditingController _newTypeController = TextEditingController();
-
-  String? _universityId;
+  late Map<String, dynamic> _university;
   bool isLoading = false;
 
   @override
@@ -36,101 +34,96 @@ class _ResourcesPageState extends State<ResourcesPage> {
     });
 
     final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) {
-      setState(() => isLoading = false);
-      return;
-    }
+    final Map<String, dynamic> userUniversity =
+        await _firestoreService.getUniversityByName(
+            name: await _firestoreService.getUserUniversity(userId: uid!));
 
-    final user = await _firestoreService.getUser(userId: uid);
-    final universityId = user['university'] as String?;
-
-    if (universityId == null) {
-      setState(() {
-        isLoading = false;
-      });
-      return;
-    }
+    setState(() {
+      _university = userUniversity;
+    });
 
     try {
-      List<Map<String, dynamic>> resources =
-          await _firestoreService.getResources(universityId: universityId);
+      List<Map<String, dynamic>> resources = await _firestoreService
+          .getResources(universityId: userUniversity['name']);
       setState(() {
         _resources = resources;
-        isLoading = false;
-        _universityId = universityId;
       });
     } catch (e) {
       setState(() {
         Utils.displayMessage(
           context: context,
-          message: 'Error loading resources, please try again later',
+          message: 'This University has no resources, please check back later',
         );
+      });
+    } finally {
+      setState(() {
         isLoading = false;
       });
     }
   }
 
-  void _createResourceDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Add New Resource'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              MyTextField(
-                controller: _newTitleController,
-                hintText: 'Title (e.g. Library)',
-                obscureText: false,
-              ),
-              SizedBox(height: 10),
-              MyTextField(
-                controller: _newTypeController,
-                hintText: 'Type (e.g. Study, Food, Parking)',
-                obscureText: false,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                _newTitleController.clear();
-                _newTypeController.clear();
-              },
-              child: Text('Clear'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () async {
-                if (_universityId == null) return;
+  // --- disabled because we don't want to allow users to add resources to db ---
+  // void _createResourceDialog() {
+  //   showDialog(
+  //     context: context,
+  //     builder: (BuildContext context) {
+  //       return AlertDialog(
+  //         title: const Text('Add New Resource'),
+  //         content: Column(
+  //           mainAxisSize: MainAxisSize.min,
+  //           children: [
+  //             MyTextField(
+  //               controller: _newTitleController,
+  //               hintText: 'Title (e.g. Library)',
+  //               obscureText: false,
+  //             ),
+  //             SizedBox(height: 10),
+  //             MyTextField(
+  //               controller: _newTypeController,
+  //               hintText: 'Type (e.g. Study, Food, Parking)',
+  //               obscureText: false,
+  //             ),
+  //           ],
+  //         ),
+  //         actions: [
+  //           TextButton(
+  //             onPressed: () {
+  //               _newTitleController.clear();
+  //               _newTypeController.clear();
+  //             },
+  //             child: Text('Clear'),
+  //           ),
+  //           TextButton(
+  //             onPressed: () {
+  //               Navigator.of(context).pop();
+  //             },
+  //             child: Text('Cancel'),
+  //           ),
+  //           TextButton(
+  //             onPressed: () async {
+  //               if (_universityId == null) return;
 
-                final newFieldValue = {
-                  'title': _newTitleController.text,
-                  'type': _newTypeController.text,
-                  'timestamp': DateTime.now(),
-                };
+  //               final newFieldValue = {
+  //                 'title': _newTitleController.text,
+  //                 'type': _newTypeController.text,
+  //                 'timestamp': DateTime.now(),
+  //               };
 
-                _firestoreService.addResource(
-                    resource: newFieldValue, uid: currentUser!.uid);
+  //               _firestoreService.addResource(
+  //                   resource: newFieldValue, uid: currentUser!.uid);
 
-                Navigator.of(context).pop();
-                _newTitleController.clear();
-                _newTypeController.clear();
-                _loadUniversityAndResources();
-              },
-              child: Text('Add'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  //               Navigator.of(context).pop();
+  //               _newTitleController.clear();
+  //               _newTypeController.clear();
+  //               _loadUniversityAndResources();
+  //             },
+  //             child: Text('Add'),
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -140,16 +133,35 @@ class _ResourcesPageState extends State<ResourcesPage> {
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
-          : SearchableList(
-              items: _resources,
-              keys: ['title', 'type'],
-              prependSubtitle: 'Type: ',
+          : Padding(
+              padding: kIsWeb
+                  ? EdgeInsets.symmetric(
+                      horizontal: MediaQuery.of(context).size.width * .3)
+                  : const EdgeInsets.symmetric(horizontal: 8.0),
+              child: SearchableList(
+                items: _resources,
+                searchBarHint:
+                    'Search by resource name, building, or room number',
+                keys: ['name', 'building', 'room'],
+                prependSubtitle: ['Building: ', 'Room: '],
+                onSelected: (resource) async {
+                  await showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return ResourceDetailsDialog(
+                          resource: resource,
+                          university: _university,
+                        );
+                      });
+                },
+              ),
             ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _createResourceDialog,
-        tooltip: 'Add Resource',
-        child: Icon(Icons.add),
-      ),
+      // --- disabled because we don't want to allow users to add resources to db ---
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: _createResourceDialog,
+      //   tooltip: 'Add Resource',
+      //   child: Icon(Icons.add),
+      // ),
     );
   }
 }

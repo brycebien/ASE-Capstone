@@ -108,11 +108,39 @@ class FirestoreService {
     });
   }
 
+  Future<void> addEventReminder({
+    required String userId,
+    required Map<String, dynamic> event,
+  }) async {
+    _usersCollection.doc(userId).update({
+      'eventReminders': FieldValue.arrayUnion([event])
+    });
+  }
+
   /*
   
     READ
     
   */
+
+  // get user theme
+  Future<Map<String, dynamic>> getUserTheme({
+    required String userId,
+    required String themeName,
+  }) async {
+    final DocumentSnapshot userDoc = await _usersCollection.doc(userId).get();
+    if (!userDoc.exists) {
+      throw Exception('User not found');
+    }
+
+    final data = userDoc.data() as Map<String, dynamic>?;
+
+    if (data == null || !data.containsKey('theme-$themeName')) {
+      return {};
+    }
+
+    return data['theme-$themeName'] as Map<String, dynamic>;
+  }
 
   // get universities
   Future<List<Map<String, dynamic>>> getUniversities() async {
@@ -259,6 +287,17 @@ class FirestoreService {
     
   */
 
+  // update user theme
+  Future<void> saveTheme({
+    required userId,
+    required Map<String, dynamic> theme,
+    required String themeName,
+  }) async {
+    await _usersCollection.doc(userId).update({
+      'theme-$themeName': theme,
+    });
+  }
+
   //update username
   Future<void> updateUserField({
     required String userId,
@@ -351,6 +390,15 @@ class FirestoreService {
     
   */
 
+  Future<void> deleteEventReminder({
+    required String userId,
+    required Map<String, dynamic> event,
+  }) async {
+    await _usersCollection.doc(userId).update({
+      'eventReminders': FieldValue.arrayRemove([event])
+    });
+  }
+
   Future<void> removeFavorite(
       {required String userId, String? building}) async {
     if (building != null) {
@@ -397,6 +445,22 @@ class FirestoreService {
         throw Exception('User document does not exist.');
       }
       final String university = userDoc.get('university');
+      
+      // Fetch the event URL from the university document
+      final universityDoc = await FirebaseFirestore.instance
+          .collection('universities')
+          .doc(university)
+          .get();
+
+      if (!universityDoc.exists) {
+        throw Exception('University document does not exist.');
+      }
+
+      // Return the eventUrl field
+      return universityDoc.data()?['eventUrl'] ??
+          'https://default-url.com'; // Provide a default URL if none exists
+    } catch (e) {
+      throw Exception('Error fetching event URL: $e');
 
       // Fetch the event URL from the university document
       final universityDoc = await FirebaseFirestore.instance
@@ -482,6 +546,7 @@ class FirestoreService {
 
     for (var doc in snapshot.docs) {
       await doc.reference.delete();
+
     }
   }
 }

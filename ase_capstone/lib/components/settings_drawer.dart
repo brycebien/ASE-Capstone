@@ -18,10 +18,10 @@ class SettingsDrawerState extends State<SettingsDrawer> {
   @override
   void initState() {
     super.initState();
-    _checkIfAdmin();
+    _checkUserAdmin();
   }
 
-  Future<void> _checkIfAdmin() async {
+  Future<void> _checkUserAdmin() async {
     bool isAdmin = await _firestoreService.isAdmin(userId: widget.user!.uid);
     setState(() {
       _isAdmin = isAdmin;
@@ -31,6 +31,16 @@ class SettingsDrawerState extends State<SettingsDrawer> {
   void _showUniversitySelectionDialog() async {
     List<Map<String, dynamic>> universities =
         await _firestoreService.getUniversities();
+
+    if (!_isAdmin) {
+      setState(() {
+        universities = universities.where((university) {
+          return university['isPublic'] == true ||
+              university['createdBy'] == widget.user!.uid;
+        }).toList();
+      });
+    }
+
     if (mounted) {
       await Navigator.push(
         context,
@@ -121,6 +131,16 @@ class SettingsDrawerState extends State<SettingsDrawer> {
             },
           ),
           ListTile(
+            leading: Icon(Icons.add_alert),
+            title: Text('Campus Event Reminders'),
+            onTap: () {
+              Navigator.pushNamed(
+                context,
+                '/reminders',
+              );
+            },
+          ),
+          ListTile(
             leading: Icon(Icons.public),
             title: Text('Campus Events'),
             onTap: () {
@@ -130,17 +150,16 @@ class SettingsDrawerState extends State<SettingsDrawer> {
               );
             },
           ),
-          if (_isAdmin)
-            ListTile(
-              leading: Icon(Icons.admin_panel_settings),
-              title: Text('Map Development Page'),
-              onTap: () {
-                Navigator.pushNamed(
-                  context,
-                  '/development-page',
-                );
-              },
-            ),
+          ListTile(
+            leading: Icon(Icons.admin_panel_settings),
+            title: Text('Map Development Page'),
+            onTap: () {
+              Navigator.pushNamed(
+                context,
+                '/development-page',
+              );
+            },
+          ),
         ],
       ),
     );

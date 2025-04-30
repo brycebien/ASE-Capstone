@@ -1,3 +1,4 @@
+import 'package:ase_capstone/components/resource_details_dialog.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -26,14 +27,52 @@ class _BuildingInfoState extends State<BuildingInfo> {
   bool _isFavorite = false;
   late Map<String, dynamic> _buildingInfo;
   bool _isLoading = true;
+  late Map<String, dynamic> _university;
+  late List<Map<String, dynamic>> _resources;
 
   @override
   void initState() {
     super.initState();
-    _setBuildingInfo();
+    _initializePage();
   }
 
-  void _setBuildingInfo() async {
+  void _initializePage() async {
+    await _initResources();
+    await _setBuildingInfo().then((_) {
+      setState(() {
+        _isLoading = false;
+      });
+    });
+  }
+
+  Future<void> _initResources() async {
+    try {
+      await _firestoreServices
+          .getUniversityByName(name: widget.university)
+          .then((value) {
+        setState(() {
+          _university = value;
+        });
+      });
+
+      List<dynamic> resources = _university['resources'].where((resource) {
+        return resource['building'] == widget.building;
+      }).toList();
+
+      setState(() {
+        _resources = resources.cast<Map<String, dynamic>>();
+      });
+    } catch (e) {
+      if (mounted) {
+        Utils.displayMessage(
+          context: context,
+          message: 'Error fetching university info: $e',
+        );
+      }
+    }
+  }
+
+  Future<void> _setBuildingInfo() async {
     try {
       await _firestoreServices.getBuildings(userId: user.uid).then(
         (value) {
@@ -65,9 +104,9 @@ class _BuildingInfoState extends State<BuildingInfo> {
         );
       }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      // setState(() {
+      //   _isLoading = false;
+      // });
     }
   }
 
@@ -98,8 +137,6 @@ class _BuildingInfoState extends State<BuildingInfo> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              //TODO: add actions for the user (e.g. add to favorites, list of resources, etc.)
-
               // ADD TO FAVORITES BUTTON
               Row(
                 children: [
@@ -170,71 +207,55 @@ class _BuildingInfoState extends State<BuildingInfo> {
                           padding: const EdgeInsets.only(right: 20.0),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // TODO: add resources for the building
-                              Text('Resource 1: Library'),
-                              Text('Resource 2: Cafeteria'),
-                              Text('Resource 3: Study Rooms'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                              Text('Resource 4: Gym'),
-                            ],
+                            children: _resources.isNotEmpty
+                                ? _resources.map((resource) {
+                                    return Card(
+                                      elevation: 8,
+                                      child: ListTile(
+                                        title: Text(resource['name']),
+                                        subtitle: Text(
+                                          'Room Number: ${resource['room']}',
+                                        ),
+                                        onTap: () async {
+                                          await showDialog(
+                                              context: context,
+                                              builder: (BuildContext context) {
+                                                return ResourceDetailsDialog(
+                                                  resource: resource,
+                                                  university: _university,
+                                                );
+                                              });
+                                        },
+                                        trailing: IconButton(
+                                            onPressed: () async {
+                                              await showDialog(
+                                                  context: context,
+                                                  builder:
+                                                      (BuildContext context) {
+                                                    return ResourceDetailsDialog(
+                                                        resource: resource,
+                                                        university: _university,
+                                                        onNavigateTapped: () {
+                                                          _navigateToBuilding();
+                                                        });
+                                                  });
+                                            },
+                                            icon: Icon(
+                                              Icons.info_outline,
+                                              color: Colors.blue[400],
+                                              size: 20,
+                                            )),
+                                      ),
+                                    );
+                                  }).toList()
+                                : [
+                                    Text(
+                                      'There are no resources available for this building.',
+                                    ),
+                                    SizedBox(height: 10),
+                                    Text(
+                                        'You can add resources by going to the resources page.')
+                                  ],
                           ),
                         ),
                       ),
