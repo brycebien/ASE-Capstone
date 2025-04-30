@@ -619,21 +619,20 @@ class _MapPageState extends State<MapPage> {
   }
 
   void _showNotificationsPopup() async {
-    final userId = FirebaseAuth.instance.currentUser!.uid;
-
     // Get notifications from Firestore
     final List<Map<String, dynamic>> notifications =
-        await FirestoreService().getNotifications(userId: userId);
+        await FirestoreService().getNotifications(userId: user.uid);
 
     // Mark all as read when opening the popup
-    await FirestoreService().markAllNotificationsAsRead(userId: userId);
+    await FirestoreService().markAllNotificationsAsRead(userId: user.uid);
 
     // Refresh the unread badge count
     _loadUnreadNotificationCount();
 
-    showDialog(
+    await showDialog(
+      // ignore: use_build_context_synchronously
       context: context,
-      builder: (context) {
+      builder: (BuildContext context) {
         return AlertDialog(
           title: Text('Notifications'),
           content: notifications.isEmpty
@@ -664,13 +663,15 @@ class _MapPageState extends State<MapPage> {
             if (notifications.isNotEmpty)
               TextButton(
                 onPressed: () async {
-                  await FirestoreService().clearNotifications(userId: userId);
-                  Navigator.of(context).pop();
+                  await FirestoreService().clearNotifications(userId: user.uid);
                   _loadUnreadNotificationCount(); // also reset the badge
-                  Utils.displayMessage(
-                    context: context,
-                    message: 'Notifications cleared.',
-                  );
+                  setState(() {
+                    Navigator.of(context).pop();
+                    Utils.displayMessage(
+                      context: context,
+                      message: 'Notifications cleared.',
+                    );
+                  });
                 },
                 child: Text('Clear All'),
               ),
