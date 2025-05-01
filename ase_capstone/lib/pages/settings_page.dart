@@ -33,9 +33,7 @@ class SettingsPageState extends State<SettingsPage> {
   @override
   void initState() {
     super.initState();
-    if (widget.isDarkMode != null) {
-      isDarkMode = widget.isDarkMode!;
-    }
+    isDarkMode = Provider.of<ThemeNotifier>(context, listen: false).isDarkMode;
     _loadNotificationSettings();
   }
 
