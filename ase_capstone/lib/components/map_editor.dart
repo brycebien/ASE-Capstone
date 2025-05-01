@@ -1139,7 +1139,7 @@ class _MapEditorState extends State<MapEditor> {
               title: const Text('Add Resources'),
             ),
             body: Padding(
-              padding: kIsWeb
+              padding: MediaQuery.of(context).size.width > 600
                   ? EdgeInsets.symmetric(
                       horizontal: MediaQuery.of(context).size.width * .3)
                   : const EdgeInsets.all(8.0),
@@ -1289,7 +1289,7 @@ class _MapEditorState extends State<MapEditor> {
               child: Stack(
                 children: [
                   Padding(
-                    padding: kIsWeb
+                    padding: MediaQuery.of(context).size.width > 600
                         ? const EdgeInsets.only(bottom: 200, top: 50)
                         : EdgeInsets.zero,
                     child: GoogleMap(

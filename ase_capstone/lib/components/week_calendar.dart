@@ -1,7 +1,6 @@
 import 'package:ase_capstone/components/course_card.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class WeekCalendar extends StatefulWidget {
@@ -106,7 +105,7 @@ class _WeekCalendarState extends State<WeekCalendar> {
     return Expanded(
       child: SingleChildScrollView(
         child: Padding(
-          padding: kIsWeb
+          padding: MediaQuery.of(context).size.width > 600
               ? EdgeInsets.symmetric(
                   horizontal: MediaQuery.of(context).size.width > 800
                       ? MediaQuery.of(context).size.width * .3

@@ -1,7 +1,6 @@
 import 'package:ase_capstone/components/textfield.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:ase_capstone/utils/utils.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
@@ -256,7 +255,7 @@ class _ProfilePageState extends State<ProfilePage> {
             : _isLoading
                 ? Center(child: CircularProgressIndicator())
                 : Padding(
-                    padding: kIsWeb
+                    padding: MediaQuery.of(context).size.width > 600
                         ? EdgeInsets.symmetric(
                             horizontal: MediaQuery.of(context).size.width > 500
                                 ? MediaQuery.of(context).size.width * .3

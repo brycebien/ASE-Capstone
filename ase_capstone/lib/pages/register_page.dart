@@ -2,7 +2,6 @@ import 'package:ase_capstone/components/my_button.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ase_capstone/components/textfield.dart';
 
@@ -114,7 +113,7 @@ class _RegisterPageState extends State<RegisterPage> {
           // allows scrolling if keyboard is open
           child: SingleChildScrollView(
             child: Padding(
-              padding: kIsWeb
+              padding: MediaQuery.of(context).size.width > 600
                   ? EdgeInsets.symmetric(
                       horizontal: MediaQuery.of(context).size.width * 0.3)
                   : EdgeInsets.symmetric(horizontal: 8.0),

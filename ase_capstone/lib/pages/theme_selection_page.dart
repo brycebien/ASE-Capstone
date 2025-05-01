@@ -4,7 +4,6 @@ import 'package:ase_capstone/models/theme_notifier.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:provider/provider.dart';
@@ -163,7 +162,7 @@ class _ThemeSelectionState extends State<ThemeSelection> {
             ),
             body: SingleChildScrollView(
               child: Padding(
-                padding: kIsWeb
+                padding: MediaQuery.of(context).size.width > 600
                     ? EdgeInsets.symmetric(
                         horizontal: MediaQuery.of(context).size.width > 800
                             ? MediaQuery.of(context).size.width * .3

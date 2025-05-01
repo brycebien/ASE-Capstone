@@ -66,7 +66,7 @@ class _DevelopmentPageState extends State<DevelopmentPage> {
             body: Column(
               children: [
                 Padding(
-                  padding: kIsWeb
+                  padding: MediaQuery.of(context).size.width > 600
                       ? EdgeInsets.symmetric(
                           horizontal: MediaQuery.of(context).size.width > 500
                               ? MediaQuery.of(context).size.width * .3
@@ -91,7 +91,7 @@ class _DevelopmentPageState extends State<DevelopmentPage> {
                       return Column(
                         children: [
                           Padding(
-                            padding: kIsWeb
+                            padding: MediaQuery.of(context).size.width > 600
                                 ? EdgeInsets.symmetric(
                                     horizontal: MediaQuery.of(context)
                                                 .size

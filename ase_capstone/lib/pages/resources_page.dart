@@ -2,7 +2,6 @@
 import 'package:ase_capstone/components/resource_details_dialog.dart';
 import 'package:ase_capstone/components/searchable_list.dart';
 import 'package:ase_capstone/utils/utils.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -134,7 +133,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
       body: isLoading
           ? Center(child: CircularProgressIndicator())
           : Padding(
-              padding: kIsWeb
+              padding: MediaQuery.of(context).size.width > 600
                   ? EdgeInsets.symmetric(
                       horizontal: MediaQuery.of(context).size.width * .3)
                   : const EdgeInsets.symmetric(horizontal: 8.0),
