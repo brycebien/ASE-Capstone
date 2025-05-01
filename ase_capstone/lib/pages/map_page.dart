@@ -988,7 +988,7 @@ class _MapPageState extends State<MapPage> {
                             isLoadingBuildingMarkers)
                         ? Center(child: CircularProgressIndicator())
                         : Padding(
-                            padding: MediaQuery.of(context).size.width > 600
+                            padding: kIsWeb
                                 ? EdgeInsets.only(right: 80)
                                 : EdgeInsets.zero,
                             child: GoogleMap(
