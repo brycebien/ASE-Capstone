@@ -177,11 +177,9 @@ class _ThemeSelectionState extends State<ThemeSelection> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            "Editing Theme: ",
+                          Text(
+                            "Editing Theme:\t\t\t$selectedTheme",
                           ),
-                          // CHOOSE THEME TO EDIT
-                          Text(selectedTheme),
                         ],
                       ),
                       Divider(
@@ -199,6 +197,8 @@ class _ThemeSelectionState extends State<ThemeSelection> {
                       // PRIMARY
                       ChooseColorInput(
                         instructionText: 'Primary',
+                        additionalText:
+                            'Color of buttons, horizontal lines, and confirmation text buttons',
                         showColorPicker: _showColorPicker,
                         initialColor: primaryColor,
                         onColorChanged: (newColor) {
@@ -212,6 +212,7 @@ class _ThemeSelectionState extends State<ThemeSelection> {
                       // SECONDARY
                       ChooseColorInput(
                         instructionText: 'Secondary',
+                        additionalText: 'Color of secondary buttons',
                         showColorPicker: _showColorPicker,
                         initialColor: secondaryColor,
                         onColorChanged: (newColor) {
@@ -225,6 +226,8 @@ class _ThemeSelectionState extends State<ThemeSelection> {
                       // TERTIARY
                       ChooseColorInput(
                         instructionText: 'Tertiary',
+                        additionalText:
+                            'Color of text on top of buttons and 2nd level headers',
                         showColorPicker: _showColorPicker,
                         initialColor: tertiaryColor,
                         onColorChanged: (newColor) {
