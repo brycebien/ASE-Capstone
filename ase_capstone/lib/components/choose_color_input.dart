@@ -29,6 +29,17 @@ class _ChooseColorInputState extends State<ChooseColorInput> {
   }
 
   @override
+  void didUpdateWidget(covariant ChooseColorInput oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Update the color if the parent widget changes `initialColor`
+    if (oldWidget.initialColor != widget.initialColor) {
+      setState(() {
+        initialColor = widget.initialColor;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Wrap(
       spacing: 10.0, // Adds spacing between the children

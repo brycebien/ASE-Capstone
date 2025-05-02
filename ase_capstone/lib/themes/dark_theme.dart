@@ -28,6 +28,6 @@ final ThemeData darkTheme = ThemeData(
     secondary: Colors.grey[600]!,
 
     // Things like button text (text on primary color)
-    tertiary: const Color.fromARGB(255, 54, 54, 54),
+    tertiary: const Color.fromARGB(255, 58, 20, 2),
   ),
 );

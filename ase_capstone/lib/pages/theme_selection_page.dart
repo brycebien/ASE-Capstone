@@ -69,7 +69,7 @@ class _ThemeSelectionState extends State<ThemeSelection> {
       setState(() {
         primaryColor = Color.fromARGB(255, 248, 120, 81);
         secondaryColor = Colors.grey[600]!;
-        tertiaryColor = Color.fromARGB(255, 54, 54, 54);
+        tertiaryColor = Color.fromARGB(255, 58, 20, 2);
         surfaceColor = Color.fromARGB(255, 54, 54, 54);
         appBarBackgroundColor = Color.fromARGB(255, 54, 54, 54);
         appBarForegroundColor = Color.fromARGB(255, 180, 180, 180);
@@ -144,6 +144,18 @@ class _ThemeSelectionState extends State<ThemeSelection> {
     }
   }
 
+  void _resetThemeToDefault() {
+    setState(() {
+      primaryColor = Color.fromARGB(255, 248, 120, 81);
+      secondaryColor = Colors.grey[600]!;
+      tertiaryColor = Color.fromARGB(255, 58, 20, 2);
+      surfaceColor = Color.fromARGB(255, 54, 54, 54);
+      appBarBackgroundColor = Color.fromARGB(255, 54, 54, 54);
+      appBarForegroundColor = Color.fromARGB(255, 180, 180, 180);
+      appBarTitleColor = Color.fromARGB(255, 180, 180, 180);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return _isLoading
@@ -151,15 +163,27 @@ class _ThemeSelectionState extends State<ThemeSelection> {
         : Scaffold(
             backgroundColor: surfaceColor,
             appBar: AppBar(
-              title: const Text('Edit Theme'),
-              backgroundColor: appBarBackgroundColor,
-              foregroundColor: appBarForegroundColor,
-              titleTextStyle: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-                color: appBarTitleColor,
-              ),
-            ),
+                title: const Text('Edit Theme'),
+                backgroundColor: appBarBackgroundColor,
+                foregroundColor: appBarForegroundColor,
+                titleTextStyle: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                  color: appBarTitleColor,
+                ),
+                actions: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: TextButton(
+                      onPressed: _resetThemeToDefault,
+                      style: TextButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        foregroundColor: tertiaryColor,
+                      ),
+                      child: Text('Reset to default color theme'),
+                    ),
+                  ),
+                ]),
             body: SingleChildScrollView(
               child: Padding(
                 padding: MediaQuery.of(context).size.width > 600
@@ -174,13 +198,12 @@ class _ThemeSelectionState extends State<ThemeSelection> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "Editing Theme:\t\t\t$selectedTheme",
-                          ),
-                        ],
+                      Text(
+                        "Editing Theme:\t\t\t$selectedTheme",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       Divider(
                         color: primaryColor,
@@ -340,11 +363,27 @@ class _ThemeSelectionState extends State<ThemeSelection> {
                             ),
                           ),
                           // SECOND LEVEL HEADERS
-                          Text(
-                            '2nd Level Headers',
-                            style: TextStyle(
-                                color: Theme.of(context).colorScheme.tertiary,
-                                fontSize: 24),
+                          Container(
+                            padding: const EdgeInsets.all(8.0),
+                            decoration: BoxDecoration(
+                              color: primaryColor,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '2nd Level Headers',
+                              style: TextStyle(
+                                  color: Theme.of(context).colorScheme.tertiary,
+                                  fontSize: 24),
+                            ),
+                          ),
+                          // ICON BUTTONS
+                          FloatingActionButton(
+                            onPressed: () {},
+                            child: Icon(
+                              Icons.check_circle,
+                              color: tertiaryColor,
+                              size: 30,
+                            ),
                           ),
                           // CARD
                           Card(
@@ -356,21 +395,28 @@ class _ThemeSelectionState extends State<ThemeSelection> {
                                 title: Text(
                                   'This is a card with text',
                                   style: TextStyle(
-                                    color: tertiaryColor,
                                     fontSize: 18,
                                   ),
                                 ),
                                 subtitle: Text(
                                   'This is a subtitle',
                                   style: TextStyle(
-                                    color: tertiaryColor,
                                     fontSize: 16,
                                   ),
                                 ),
-                                trailing: Icon(
-                                  Icons.check_circle,
-                                  color: primaryColor,
-                                  size: 30,
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  spacing: 15,
+                                  children: [
+                                    Icon(
+                                      Icons.directions_walk,
+                                      color: Colors.blue,
+                                    ),
+                                    Icon(
+                                      Icons.delete,
+                                      color: Colors.red,
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),

@@ -1068,7 +1068,10 @@ class _MapPageState extends State<MapPage> {
                                 }),
                               );
                             },
-                            child: Icon(Icons.business),
+                            child: Icon(
+                              Icons.business,
+                              color: Theme.of(context).colorScheme.tertiary,
+                            ),
                           ),
                           SizedBox(height: 12), // space between buttons
 
@@ -1079,7 +1082,10 @@ class _MapPageState extends State<MapPage> {
                               Navigator.pushNamed(context, '/resources');
                             },
                             tooltip: 'View Campus Resources',
-                            child: Icon(Icons.menu_book),
+                            child: Icon(
+                              Icons.menu_book,
+                              color: Theme.of(context).colorScheme.tertiary,
+                            ),
                           ),
                           SizedBox(height: 12), // space between buttons
 
@@ -1095,7 +1101,10 @@ class _MapPageState extends State<MapPage> {
                               }
                             },
                             tooltip: 'Report Event',
-                            child: Icon(Icons.add_location_alt),
+                            child: Icon(
+                              Icons.add_location_alt,
+                              color: Theme.of(context).colorScheme.tertiary,
+                            ),
                           ),
                         ],
                       ),

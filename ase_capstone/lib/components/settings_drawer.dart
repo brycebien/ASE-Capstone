@@ -151,7 +151,7 @@ class SettingsDrawerState extends State<SettingsDrawer> {
             },
           ),
           ListTile(
-            leading: Icon(Icons.admin_panel_settings),
+            leading: Icon(Icons.map),
             title: Text('Map Development Page'),
             onTap: () {
               Navigator.pushNamed(
