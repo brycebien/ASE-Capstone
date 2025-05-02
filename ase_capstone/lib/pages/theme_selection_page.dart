@@ -298,7 +298,88 @@ class _ThemeSelectionState extends State<ThemeSelection> {
                           });
                         },
                       ),
+
+                      Divider(
+                        color: primaryColor,
+                        thickness: 2,
+                        height: 40,
+                      ),
+                      // EXAMPLE BUTTONS
+                      const Text(
+                        'Example Buttons:',
+                        style: TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 40),
+                      Wrap(
+                        spacing: 20.0, // Adds spacing between the
+                        runSpacing:
+                            20.0, // Adds spacing between rows when wrapping
+                        children: [
+                          // FLOATING ACTION BUTTON
+                          SizedBox(
+                            width: 150,
+                            child: FloatingActionButton(
+                              onPressed: () {},
+                              backgroundColor: primaryColor,
+                              foregroundColor: tertiaryColor,
+                              child: Text('Button with text'),
+                            ),
+                          ),
+                          // ELEVATED BUTTON
+                          SizedBox(
+                            width: 150,
+                            child: ElevatedButton(
+                              onPressed: () {},
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: primaryColor,
+                                foregroundColor: tertiaryColor,
+                                elevation: 8,
+                              ),
+                              child: Text('Small button with text'),
+                            ),
+                          ),
+                          // SECOND LEVEL HEADERS
+                          Text(
+                            '2nd Level Headers',
+                            style: TextStyle(
+                                color: Theme.of(context).colorScheme.tertiary,
+                                fontSize: 24),
+                          ),
+                          // CARD
+                          Card(
+                            color: surfaceColor,
+                            elevation: 8,
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: ListTile(
+                                title: Text(
+                                  'This is a card with text',
+                                  style: TextStyle(
+                                    color: tertiaryColor,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  'This is a subtitle',
+                                  style: TextStyle(
+                                    color: tertiaryColor,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                trailing: Icon(
+                                  Icons.check_circle,
+                                  color: primaryColor,
+                                  size: 30,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
                       SizedBox(height: 80),
+                      // SAVE BUTTON
                       Center(
                         child: MyButton(
                           buttonText: 'Save',
@@ -306,7 +387,6 @@ class _ThemeSelectionState extends State<ThemeSelection> {
                           color: primaryColor,
                         ),
                       ),
-                      SizedBox(height: 80),
                     ],
                   ),
                 ),
