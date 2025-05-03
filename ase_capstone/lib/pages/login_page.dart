@@ -51,7 +51,7 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  Future<void> _downloadApp() async {
+  void _downloadApp() async {
     if (kIsWeb) {
       final String apkDownloadUrl =
           'https://drive.google.com/uc?export=download&id=1J09EtEoYwCpF4KBNZTFVbcG-71sqRDUz';
@@ -203,8 +203,11 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         SizedBox(width: 4),
                         GestureDetector(
-                          onTap: () async {
-                            await _downloadApp();
+                          onTap: () {
+                            Utils.displayMessage(
+                                context: context,
+                                message: 'Downloading the app...');
+                            _downloadApp();
                           },
                           child: Text(
                             'Download the app',
