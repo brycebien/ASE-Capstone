@@ -2,9 +2,11 @@ import 'package:ase_capstone/components/my_button.dart';
 import 'package:ase_capstone/models/theme_notifier.dart';
 import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ase_capstone/components/textfield.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class LoginPage extends StatefulWidget {
   final Function()? onTap;
@@ -46,6 +48,24 @@ class _LoginPageState extends State<LoginPage> {
     if (mounted) {
       Provider.of<ThemeNotifier>(context, listen: false).setTheme();
       Navigator.pushNamed(context, '/map');
+    }
+  }
+
+  Future<void> _downloadApp() async {
+    if (kIsWeb) {
+      final String apkDownloadUrl =
+          'https://drive.google.com/uc?export=download&id=1J09EtEoYwCpF4KBNZTFVbcG-71sqRDUz';
+      final Uri uri = Uri.parse(apkDownloadUrl);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+      } else {
+        if (mounted) {
+          Utils.displayMessage(
+            context: context,
+            message: 'Could not launch the download link.',
+          );
+        }
+      }
     }
   }
 
@@ -169,7 +189,34 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                     ],
-                  )
+                  ),
+                  SizedBox(height: 8),
+                  if (kIsWeb)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Using an Android device?',
+                          style: TextStyle(
+                              color: Theme.of(context).colorScheme.secondary,
+                              fontSize: 14),
+                        ),
+                        SizedBox(width: 4),
+                        GestureDetector(
+                          onTap: () async {
+                            await _downloadApp();
+                          },
+                          child: Text(
+                            'Download the app',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                 ],
               ),
             ),
