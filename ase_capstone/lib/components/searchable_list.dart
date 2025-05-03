@@ -104,9 +104,7 @@ class _SearchableListState extends State<SearchableList> {
       Padding(
         padding: MediaQuery.of(context).size.width > 600
             ? EdgeInsets.symmetric(
-                horizontal: MediaQuery.of(context).size.width > 800
-                    ? MediaQuery.of(context).size.width * .3
-                    : 20,
+                horizontal: MediaQuery.of(context).size.width * .3,
               )
             : EdgeInsets.all(8),
         child: TextField(
@@ -128,9 +126,7 @@ class _SearchableListState extends State<SearchableList> {
         Padding(
           padding: MediaQuery.of(context).size.width > 600
               ? EdgeInsets.symmetric(
-                  horizontal: MediaQuery.of(context).size.width > 800
-                      ? MediaQuery.of(context).size.width * .3
-                      : 20,
+                  horizontal: MediaQuery.of(context).size.width * .3,
                 )
               : EdgeInsets.all(8),
           child: ExpansionTile(
@@ -176,9 +172,7 @@ class _SearchableListState extends State<SearchableList> {
                 Padding(
                     padding: MediaQuery.of(context).size.width > 600
                         ? EdgeInsets.symmetric(
-                            horizontal: MediaQuery.of(context).size.width > 800
-                                ? MediaQuery.of(context).size.width * .3
-                                : 20,
+                            horizontal: MediaQuery.of(context).size.width * .3,
                           )
                         : EdgeInsets.all(8),
                     child: Card(

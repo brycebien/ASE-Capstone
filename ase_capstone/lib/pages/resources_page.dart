@@ -132,28 +132,22 @@ class _ResourcesPageState extends State<ResourcesPage> {
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: MediaQuery.of(context).size.width > 600
-                  ? EdgeInsets.symmetric(
-                      horizontal: MediaQuery.of(context).size.width * .3)
-                  : const EdgeInsets.symmetric(horizontal: 8.0),
-              child: SearchableList(
-                items: _resources,
-                searchBarHint:
-                    'Search by resource name, building, or room number',
-                keys: ['name', 'building', 'room'],
-                prependSubtitle: ['Building: ', 'Room: '],
-                onSelected: (resource) async {
-                  await showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return ResourceDetailsDialog(
-                          resource: resource,
-                          university: _university,
-                        );
-                      });
-                },
-              ),
+          : SearchableList(
+              items: _resources,
+              searchBarHint:
+                  'Search by resource name, building, or room number',
+              keys: ['name', 'building', 'room'],
+              prependSubtitle: ['Building: ', 'Room: '],
+              onSelected: (resource) async {
+                await showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return ResourceDetailsDialog(
+                        resource: resource,
+                        university: _university,
+                      );
+                    });
+              },
             ),
       // --- disabled because we don't want to allow users to add resources to db ---
       // floatingActionButton: FloatingActionButton(
