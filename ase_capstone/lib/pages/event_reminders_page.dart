@@ -30,6 +30,9 @@ class _EventRemindersPageState extends State<EventRemindersPage> {
   final TextEditingController _eventEndTimeController = TextEditingController();
   final TextEditingController _eventBuildingController =
       TextEditingController();
+  final TextEditingController _eventDescriptionController =
+      TextEditingController();
+
   Map<String, dynamic> _eventBuilding = {};
 
   @override
@@ -203,6 +206,13 @@ class _EventRemindersPageState extends State<EventRemindersPage> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 10),
+
+                MyTextField(
+                  controller: _eventDescriptionController,
+                  hintText: 'Add a Description (optional)',
+                  obscureText: false,
+                ),
               ],
             ),
             actions: [
@@ -230,6 +240,7 @@ class _EventRemindersPageState extends State<EventRemindersPage> {
                     'endTime': _eventEndTimeController.text,
                     'buildingName': _eventBuilding['name'],
                     'building': _eventBuilding,
+                    'description': _eventDescriptionController.text,
                   };
                   if (_eventNameController.text.isEmpty ||
                       _eventDateController.text.isEmpty ||
@@ -256,6 +267,7 @@ class _EventRemindersPageState extends State<EventRemindersPage> {
                       _eventStartTimeController.clear();
                       _eventEndTimeController.clear();
                       _eventBuildingController.clear();
+                      _eventDescriptionController.clear();
                       _eventBuilding = {};
                     });
                   }
