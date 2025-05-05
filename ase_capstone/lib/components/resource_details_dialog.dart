@@ -17,33 +17,35 @@ class ResourceDetailsDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(resource['name']),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Name: ${resource['name']}',
-            style: TextStyle(fontSize: 15),
-          ),
-          SizedBox(height: 5),
-          Text(
-            'Building: ${resource['building']}',
-            style: TextStyle(fontSize: 15),
-          ),
-          SizedBox(height: 5),
-          Text(
-            'Room: ${resource['room']}',
-            style: TextStyle(fontSize: 15),
-          ),
-          SizedBox(height: 10),
-          resource['description'] != null
-              ? Text(
-                  'Description:\n ${resource['description']}',
-                  style: TextStyle(fontSize: 15),
-                )
-              : SizedBox(),
-          SizedBox(height: 5),
-        ],
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Name: ${resource['name']}',
+              style: TextStyle(fontSize: 15),
+            ),
+            SizedBox(height: 5),
+            Text(
+              'Building: ${resource['building']}',
+              style: TextStyle(fontSize: 15),
+            ),
+            SizedBox(height: 5),
+            Text(
+              'Room: ${resource['room']}',
+              style: TextStyle(fontSize: 15),
+            ),
+            SizedBox(height: 10),
+            resource['description'] != null
+                ? Text(
+                    'Description:\n ${resource['description']}',
+                    style: TextStyle(fontSize: 15),
+                  )
+                : SizedBox(),
+            SizedBox(height: 5),
+          ],
+        ),
       ),
       actions: [
         IconButton(

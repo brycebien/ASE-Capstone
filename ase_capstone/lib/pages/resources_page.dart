@@ -61,69 +61,6 @@ class _ResourcesPageState extends State<ResourcesPage> {
     }
   }
 
-  // --- disabled because we don't want to allow users to add resources to db ---
-  // void _createResourceDialog() {
-  //   showDialog(
-  //     context: context,
-  //     builder: (BuildContext context) {
-  //       return AlertDialog(
-  //         title: const Text('Add New Resource'),
-  //         content: Column(
-  //           mainAxisSize: MainAxisSize.min,
-  //           children: [
-  //             MyTextField(
-  //               controller: _newTitleController,
-  //               hintText: 'Title (e.g. Library)',
-  //               obscureText: false,
-  //             ),
-  //             SizedBox(height: 10),
-  //             MyTextField(
-  //               controller: _newTypeController,
-  //               hintText: 'Type (e.g. Study, Food, Parking)',
-  //               obscureText: false,
-  //             ),
-  //           ],
-  //         ),
-  //         actions: [
-  //           TextButton(
-  //             onPressed: () {
-  //               _newTitleController.clear();
-  //               _newTypeController.clear();
-  //             },
-  //             child: Text('Clear'),
-  //           ),
-  //           TextButton(
-  //             onPressed: () {
-  //               Navigator.of(context).pop();
-  //             },
-  //             child: Text('Cancel'),
-  //           ),
-  //           TextButton(
-  //             onPressed: () async {
-  //               if (_universityId == null) return;
-
-  //               final newFieldValue = {
-  //                 'title': _newTitleController.text,
-  //                 'type': _newTypeController.text,
-  //                 'timestamp': DateTime.now(),
-  //               };
-
-  //               _firestoreService.addResource(
-  //                   resource: newFieldValue, uid: currentUser!.uid);
-
-  //               Navigator.of(context).pop();
-  //               _newTitleController.clear();
-  //               _newTypeController.clear();
-  //               _loadUniversityAndResources();
-  //             },
-  //             child: Text('Add'),
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -149,12 +86,6 @@ class _ResourcesPageState extends State<ResourcesPage> {
                     });
               },
             ),
-      // --- disabled because we don't want to allow users to add resources to db ---
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: _createResourceDialog,
-      //   tooltip: 'Add Resource',
-      //   child: Icon(Icons.add),
-      // ),
     );
   }
 }
