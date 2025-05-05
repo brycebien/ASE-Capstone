@@ -27,12 +27,6 @@ void main() async {
   );
   dotenv.load();
   runApp(MyApp());
-  // runApp(
-  //   ChangeNotifierProvider<ThemeNotifier>(
-  //     create: (_) => ThemeNotifier(lightTheme),
-  //     child: MyApp(),
-  //   ),
-  // );
 }
 
 class MyApp extends StatelessWidget {
@@ -40,46 +34,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // return FutureBuilder<void>(
-    //   future: _themeFuture,
-    //   builder: (context, snapshot) {
-    //     if (snapshot.connectionState == ConnectionState.waiting) {
-    //       return const Center(child: CircularProgressIndicator());
-    //     }
-    //     return Consumer<ThemeNotifier>(
-    //       builder: (context, themeNotifier, child) {
-    //         return MaterialApp(
-    //           debugShowCheckedModeBanner: false,
-    //           theme: themeNotifier.themeData,
-    //           darkTheme: darkTheme,
-    //           themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
-    //           title: 'Campus Compass',
-    //           home: const AuthPage(),
-    //           routes: {
-    //             '/forgot-password': (context) => ForgotPassword(),
-    //             '/auth': (context) => const AuthPage(),
-    //             '/profile': (context) => const ProfilePage(),
-    //             '/settings': (context) => SettingsPage(
-    //                   toggleTheme: (mode) {},
-    //                   isDarkMode: true,
-    //                 ),
-    //             '/map': (context) => const MapPage(),
-    //             '/schedule': (context) => SchedulePage(),
-    //             '/resources': (context) => ResourcesPage(),
-    //             '/inbox': (context) => InboxPage(),
-    //             '/events': (context) => const EventPage(),
-    //             '/development-page': (context) => const DevelopmentPage(),
-    //             '/edit-university': (context) => const EditUniversityPage(),
-    //             '/create-university': (context) => const CreateUniversityPage(),
-    //             '/reminders': (context) => const EventRemindersPage(),
-    //             '/theme-selection': (context) => ThemeSelection(),
-    //           },
-    //         );
-    //       },
-    //     );
-    //   },
-    // );
-
+    // Return ChangeNotifierProvider to provide ThemeNotifier to the app
     return ChangeNotifierProvider(
         create: (context) => ThemeNotifier(darkTheme),
         builder: (context, child) {
