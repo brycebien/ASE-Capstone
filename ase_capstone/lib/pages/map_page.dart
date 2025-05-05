@@ -707,10 +707,12 @@ class _MapPageState extends State<MapPage> {
     );
 
     if (hasVoted) {
-      Utils.displayMessage(
-        context: context,
-        message: 'You have already voted on this event.',
-      );
+      if (mounted) {
+        Utils.displayMessage(
+          context: context,
+          message: 'You have already voted on this event.',
+        );
+      }
       return;
     }
 
