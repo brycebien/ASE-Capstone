@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class SearchBuildings extends StatefulWidget {
@@ -44,7 +43,7 @@ class _SearchBuildingsState extends State<SearchBuildings> {
           children: [
             widget.isTutorial
                 ? Padding(
-                    padding: kIsWeb
+                    padding: MediaQuery.of(context).size.width > 600
                         ? EdgeInsets.symmetric(
                             horizontal: MediaQuery.of(context).size.width > 800
                                 ? MediaQuery.of(context).size.width * .3
@@ -63,7 +62,7 @@ class _SearchBuildingsState extends State<SearchBuildings> {
                   )
                 : SizedBox(height: 0),
             Padding(
-              padding: kIsWeb
+              padding: MediaQuery.of(context).size.width > 600
                   ? EdgeInsets.symmetric(
                       horizontal: MediaQuery.of(context).size.width > 800
                           ? MediaQuery.of(context).size.width * .3
@@ -86,7 +85,7 @@ class _SearchBuildingsState extends State<SearchBuildings> {
                 itemCount: foundBuildings.length,
                 itemBuilder: (context, index) {
                   return Padding(
-                    padding: kIsWeb
+                    padding: MediaQuery.of(context).size.width > 600
                         ? EdgeInsets.symmetric(
                             horizontal: MediaQuery.of(context).size.width > 800
                                 ? MediaQuery.of(context).size.width * .3

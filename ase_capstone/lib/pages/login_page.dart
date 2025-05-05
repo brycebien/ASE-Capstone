@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ase_capstone/components/textfield.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class LoginPage extends StatefulWidget {
   final Function()? onTap;
@@ -50,6 +51,24 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  void _downloadApp() async {
+    if (kIsWeb) {
+      final String apkDownloadUrl =
+          'https://drive.google.com/uc?export=download&id=1J09EtEoYwCpF4KBNZTFVbcG-71sqRDUz';
+      final Uri uri = Uri.parse(apkDownloadUrl);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+      } else {
+        if (mounted) {
+          Utils.displayMessage(
+            context: context,
+            message: 'Could not launch the download link.',
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -66,7 +85,7 @@ class _LoginPageState extends State<LoginPage> {
           // allows scrolling if keyboard is open
           child: SingleChildScrollView(
             child: Padding(
-              padding: kIsWeb
+              padding: MediaQuery.of(context).size.width > 600
                   ? EdgeInsets.symmetric(
                       horizontal: MediaQuery.of(context).size.width * 0.3)
                   : EdgeInsets.symmetric(horizontal: 8.0),
@@ -170,7 +189,37 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                     ],
-                  )
+                  ),
+                  SizedBox(height: 8),
+                  if (kIsWeb)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Using an Android device?',
+                          style: TextStyle(
+                              color: Theme.of(context).colorScheme.secondary,
+                              fontSize: 14),
+                        ),
+                        SizedBox(width: 4),
+                        GestureDetector(
+                          onTap: () {
+                            Utils.displayMessage(
+                                context: context,
+                                message: 'Downloading the app...');
+                            _downloadApp();
+                          },
+                          child: Text(
+                            'Download the app',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                 ],
               ),
             ),

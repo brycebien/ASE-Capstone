@@ -1139,110 +1139,119 @@ class _MapEditorState extends State<MapEditor> {
               title: const Text('Add Resources'),
             ),
             body: Padding(
-              padding: kIsWeb
-                  ? EdgeInsets.symmetric(
-                      horizontal: MediaQuery.of(context).size.width * .3)
-                  : const EdgeInsets.all(8.0),
-              child: Center(
-                child: Column(
-                  children: [
-                    // resource name
-                    MyTextField(
-                      controller: _resourceNameController,
-                      hintText: 'Resource Name',
-                      obscureText: false,
-                    ),
-                    SizedBox(height: 20),
+              padding: EdgeInsets.all(8.0),
+              child: Padding(
+                padding: MediaQuery.of(context).size.width > 600
+                    ? EdgeInsets.symmetric(
+                        horizontal: MediaQuery.of(context).size.width * .3)
+                    : const EdgeInsets.all(8.0),
+                child: Center(
+                  child: Column(
+                    children: [
+                      // resource name
+                      MyTextField(
+                        controller: _resourceNameController,
+                        hintText: 'Resource Name',
+                        obscureText: false,
+                      ),
+                      SizedBox(height: 20),
 
-                    // resource link (not required)
-                    // MyTextField(
-                    //   controller: _resourceLinkController,
-                    //   hintText: 'Resource Link (not required)',
-                    //   obscureText: false,
-                    // ),
-                    // SizedBox(height: 20),
+                      // resource link (not required)
+                      // MyTextField(
+                      //   controller: _resourceLinkController,
+                      //   hintText: 'Resource Link (not required)',
+                      //   obscureText: false,
+                      // ),
+                      // SizedBox(height: 20),
 
-                    // resource location (building)
-                    Autocomplete<Map<String, dynamic>>(
-                      optionsBuilder: (TextEditingValue textEditingValue) {
-                        if (textEditingValue.text.isEmpty) {
-                          return const Iterable<Map<String, dynamic>>.empty();
-                        }
-                        return _buildings.where((building) {
-                          return building['name']
-                              .toLowerCase()
-                              .contains(textEditingValue.text.toLowerCase());
-                        }).cast<Map<String, dynamic>>();
-                      },
-                      displayStringForOption: (Map<String, dynamic> building) =>
-                          building['name'],
-                      onSelected: (Map<String, dynamic> selectedBuilding) {
-                        setState(() {
-                          _selectedResourceBuilding = selectedBuilding['name'];
-                        });
-                      },
-                      fieldViewBuilder: (BuildContext context,
-                          TextEditingController textEditingController,
-                          FocusNode focusNode,
-                          VoidCallback onFieldSubmitted) {
-                        return TextFormField(
-                          controller: textEditingController,
-                          focusNode: focusNode,
-                          decoration: InputDecoration(
-                            labelText: 'Resource Building',
-                            border: OutlineInputBorder(),
-                          ),
-                        );
-                      },
-                    ),
-                    SizedBox(height: 20),
-
-                    // room number
-                    MyTextField(
-                      controller: _resourceRoomController,
-                      hintText: 'Room number',
-                      obscureText: false,
-                      isNumber: true,
-                    ),
-                    SizedBox(height: 20),
-
-                    // description (optional)
-                    MyTextField(
-                      controller: _resourceDescriptionController,
-                      hintText: 'Description (optional)',
-                      obscureText: false,
-                    ),
-                    SizedBox(height: 50),
-
-                    // submit button
-                    MyButton(
-                      buttonText: 'Save Resource',
-                      onTap: () {
-                        if (_resourceNameController.text.isEmpty ||
-                            _selectedResourceBuilding == null ||
-                            _resourceRoomController.text.isEmpty) {
-                          Utils.displayMessage(
-                            context: context,
-                            message: 'Please fill out all fields.',
-                          );
-                        } else {
-                          // add resource to resource map to university
-                          Map<String, dynamic> resource = {
-                            'name': _resourceNameController.text,
-                            'building': _selectedResourceBuilding!,
-                            'room': _resourceRoomController.text,
-                            'description': _resourceDescriptionController.text,
-                          };
-                          setState(() {
-                            _resources.add(resource);
-                          });
-                          if (mounted) {
-                            Navigator.of(context).pop();
+                      // resource location (building)
+                      Autocomplete<Map<String, dynamic>>(
+                        optionsBuilder: (TextEditingValue textEditingValue) {
+                          if (textEditingValue.text.isEmpty) {
+                            return const Iterable<Map<String, dynamic>>.empty();
                           }
-                        }
-                      },
-                    ),
-                  ],
+                          return _buildings.where((building) {
+                            return building['name']
+                                .toLowerCase()
+                                .contains(textEditingValue.text.toLowerCase());
+                          }).cast<Map<String, dynamic>>();
+                        },
+                        displayStringForOption:
+                            (Map<String, dynamic> building) => building['name'],
+                        onSelected: (Map<String, dynamic> selectedBuilding) {
+                          setState(() {
+                            _selectedResourceBuilding =
+                                selectedBuilding['name'];
+                          });
+                        },
+                        fieldViewBuilder: (BuildContext context,
+                            TextEditingController textEditingController,
+                            FocusNode focusNode,
+                            VoidCallback onFieldSubmitted) {
+                          return TextFormField(
+                            controller: textEditingController,
+                            focusNode: focusNode,
+                            decoration: InputDecoration(
+                              labelText: 'Resource Building',
+                              border: OutlineInputBorder(),
+                            ),
+                          );
+                        },
+                      ),
+                      SizedBox(height: 20),
+
+                      // room number
+                      MyTextField(
+                        controller: _resourceRoomController,
+                        hintText: 'Room number',
+                        obscureText: false,
+                        isNumber: true,
+                      ),
+                      SizedBox(height: 20),
+
+                      // description (optional)
+                      MyTextField(
+                        controller: _resourceDescriptionController,
+                        hintText: 'Description (optional)',
+                        obscureText: false,
+                      ),
+                      SizedBox(height: 50),
+
+                      // submit button
+                      MyButton(
+                        buttonText: 'Save Resource',
+                        onTap: () {
+                          if (_resourceNameController.text.isEmpty ||
+                              _selectedResourceBuilding == null ||
+                              _resourceRoomController.text.isEmpty) {
+                            Utils.displayMessage(
+                              context: context,
+                              message: 'Please fill out all fields.',
+                            );
+                          } else {
+                            // add resource to resource map to university
+                            Map<String, dynamic> resource = {
+                              'name': _resourceNameController.text,
+                              'building': _selectedResourceBuilding!,
+                              'room': _resourceRoomController.text,
+                              'description':
+                                  _resourceDescriptionController.text,
+                            };
+                            setState(() {
+                              _resources.add(resource);
+                              _resourceNameController.clear();
+                              _resourceRoomController.clear();
+                              _resourceDescriptionController.clear();
+                              _selectedResourceBuilding = null;
+                            });
+                            if (mounted) {
+                              Navigator.of(context).pop();
+                            }
+                          }
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -1289,7 +1298,7 @@ class _MapEditorState extends State<MapEditor> {
               child: Stack(
                 children: [
                   Padding(
-                    padding: kIsWeb
+                    padding: MediaQuery.of(context).size.width > 600
                         ? const EdgeInsets.only(bottom: 200, top: 50)
                         : EdgeInsets.zero,
                     child: GoogleMap(

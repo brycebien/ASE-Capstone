@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -90,7 +89,7 @@ class _InboxPageState extends State<InboxPage> {
         title: const Text('Notifications'),
       ),
       body: Padding(
-        padding: kIsWeb
+        padding: MediaQuery.of(context).size.width > 600
             ? EdgeInsets.symmetric(
                 horizontal: MediaQuery.of(context).size.width > 800
                     ? MediaQuery.of(context).size.width * .3

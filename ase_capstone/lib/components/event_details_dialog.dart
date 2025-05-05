@@ -16,33 +16,40 @@ class EventDetailsDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(event['name']),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Name: ${event['name']}',
-            style: TextStyle(fontSize: 15),
-          ),
-          SizedBox(height: 5),
-          Text(
-            'Date: ${event['date']}',
-            style: TextStyle(fontSize: 15),
-          ),
-          SizedBox(height: 5),
-          Text(
-            'Time: ${event['time']}',
-            style: TextStyle(fontSize: 15),
-          ),
-          SizedBox(height: 10),
-          event['description'] != null
-              ? Text(
-                  'Description:\n ${event['description']}',
-                  style: TextStyle(fontSize: 15),
-                )
-              : SizedBox(),
-          SizedBox(height: 5),
-        ],
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Name: ${event['name']}',
+              style: TextStyle(fontSize: 15),
+            ),
+            SizedBox(height: 5),
+            Text(
+              'Date: ${event['date']}',
+              style: TextStyle(fontSize: 15),
+            ),
+            SizedBox(height: 5),
+            Text(
+              'Time: ${event['startTime']} - ${event['endTime']}',
+              style: TextStyle(fontSize: 15),
+            ),
+            SizedBox(height: 5),
+            Text(
+              'Location: ${event['building']['name']} (${event['building']['code']})',
+              style: TextStyle(fontSize: 15),
+            ),
+            SizedBox(height: 10),
+            event['description'] != null
+                ? Text(
+                    'Description:\n ${event['description']}',
+                    style: TextStyle(fontSize: 15),
+                  )
+                : SizedBox(),
+            SizedBox(height: 5),
+          ],
+        ),
       ),
       actions: [
         IconButton(

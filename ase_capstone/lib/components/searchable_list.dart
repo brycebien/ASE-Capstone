@@ -1,6 +1,5 @@
 import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class SearchableList extends StatefulWidget {
@@ -102,11 +101,9 @@ class _SearchableListState extends State<SearchableList> {
   Widget build(BuildContext context) {
     return Column(children: [
       Padding(
-        padding: kIsWeb
+        padding: MediaQuery.of(context).size.width > 600
             ? EdgeInsets.symmetric(
-                horizontal: MediaQuery.of(context).size.width > 800
-                    ? MediaQuery.of(context).size.width * .3
-                    : 20,
+                horizontal: MediaQuery.of(context).size.width * .3,
               )
             : EdgeInsets.all(8),
         child: TextField(
@@ -126,11 +123,9 @@ class _SearchableListState extends State<SearchableList> {
         SizedBox(height: 10),
       if (widget.includePriorityBuildings && _favoriteItems.isNotEmpty)
         Padding(
-          padding: kIsWeb
+          padding: MediaQuery.of(context).size.width > 600
               ? EdgeInsets.symmetric(
-                  horizontal: MediaQuery.of(context).size.width > 800
-                      ? MediaQuery.of(context).size.width * .3
-                      : 20,
+                  horizontal: MediaQuery.of(context).size.width * .3,
                 )
               : EdgeInsets.all(8),
           child: ExpansionTile(
@@ -174,11 +169,9 @@ class _SearchableListState extends State<SearchableList> {
             return Column(
               children: [
                 Padding(
-                    padding: kIsWeb
+                    padding: MediaQuery.of(context).size.width > 600
                         ? EdgeInsets.symmetric(
-                            horizontal: MediaQuery.of(context).size.width > 800
-                                ? MediaQuery.of(context).size.width * .3
-                                : 20,
+                            horizontal: MediaQuery.of(context).size.width * .3,
                           )
                         : EdgeInsets.all(8),
                     child: Card(

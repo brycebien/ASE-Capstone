@@ -4,7 +4,6 @@ import 'package:ase_capstone/models/theme_notifier.dart';
 import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:ase_capstone/utils/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:provider/provider.dart';
@@ -70,7 +69,7 @@ class _ThemeSelectionState extends State<ThemeSelection> {
       setState(() {
         primaryColor = Color.fromARGB(255, 248, 120, 81);
         secondaryColor = Colors.grey[600]!;
-        tertiaryColor = Color.fromARGB(255, 54, 54, 54);
+        tertiaryColor = Color.fromARGB(255, 58, 20, 2);
         surfaceColor = Color.fromARGB(255, 54, 54, 54);
         appBarBackgroundColor = Color.fromARGB(255, 54, 54, 54);
         appBarForegroundColor = Color.fromARGB(255, 180, 180, 180);
@@ -145,6 +144,18 @@ class _ThemeSelectionState extends State<ThemeSelection> {
     }
   }
 
+  void _resetThemeToDefault() {
+    setState(() {
+      primaryColor = Color.fromARGB(255, 248, 120, 81);
+      secondaryColor = Colors.grey[600]!;
+      tertiaryColor = Color.fromARGB(255, 58, 20, 2);
+      surfaceColor = Color.fromARGB(255, 54, 54, 54);
+      appBarBackgroundColor = Color.fromARGB(255, 54, 54, 54);
+      appBarForegroundColor = Color.fromARGB(255, 180, 180, 180);
+      appBarTitleColor = Color.fromARGB(255, 180, 180, 180);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return _isLoading
@@ -152,18 +163,30 @@ class _ThemeSelectionState extends State<ThemeSelection> {
         : Scaffold(
             backgroundColor: surfaceColor,
             appBar: AppBar(
-              title: const Text('Edit Theme'),
-              backgroundColor: appBarBackgroundColor,
-              foregroundColor: appBarForegroundColor,
-              titleTextStyle: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-                color: appBarTitleColor,
-              ),
-            ),
+                title: const Text('Edit Theme'),
+                backgroundColor: appBarBackgroundColor,
+                foregroundColor: appBarForegroundColor,
+                titleTextStyle: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                  color: appBarTitleColor,
+                ),
+                actions: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: TextButton(
+                      onPressed: _resetThemeToDefault,
+                      style: TextButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        foregroundColor: tertiaryColor,
+                      ),
+                      child: Text('Reset to default color theme'),
+                    ),
+                  ),
+                ]),
             body: SingleChildScrollView(
               child: Padding(
-                padding: kIsWeb
+                padding: MediaQuery.of(context).size.width > 600
                     ? EdgeInsets.symmetric(
                         horizontal: MediaQuery.of(context).size.width > 800
                             ? MediaQuery.of(context).size.width * .3
@@ -175,15 +198,12 @@ class _ThemeSelectionState extends State<ThemeSelection> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            "Editing Theme: ",
-                          ),
-                          // CHOOSE THEME TO EDIT
-                          Text(selectedTheme),
-                        ],
+                      Text(
+                        "Editing Theme:\t\t\t$selectedTheme",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       Divider(
                         color: primaryColor,
@@ -200,6 +220,8 @@ class _ThemeSelectionState extends State<ThemeSelection> {
                       // PRIMARY
                       ChooseColorInput(
                         instructionText: 'Primary',
+                        additionalText:
+                            'Color of buttons, horizontal lines, and confirmation text buttons',
                         showColorPicker: _showColorPicker,
                         initialColor: primaryColor,
                         onColorChanged: (newColor) {
@@ -213,6 +235,7 @@ class _ThemeSelectionState extends State<ThemeSelection> {
                       // SECONDARY
                       ChooseColorInput(
                         instructionText: 'Secondary',
+                        additionalText: 'Color of secondary buttons',
                         showColorPicker: _showColorPicker,
                         initialColor: secondaryColor,
                         onColorChanged: (newColor) {
@@ -226,6 +249,8 @@ class _ThemeSelectionState extends State<ThemeSelection> {
                       // TERTIARY
                       ChooseColorInput(
                         instructionText: 'Tertiary',
+                        additionalText:
+                            'Color of text on top of buttons and 2nd level headers',
                         showColorPicker: _showColorPicker,
                         initialColor: tertiaryColor,
                         onColorChanged: (newColor) {
@@ -296,7 +321,111 @@ class _ThemeSelectionState extends State<ThemeSelection> {
                           });
                         },
                       ),
+
+                      Divider(
+                        color: primaryColor,
+                        thickness: 2,
+                        height: 40,
+                      ),
+                      // EXAMPLE BUTTONS
+                      const Text(
+                        'Example Buttons:',
+                        style: TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 40),
+                      Wrap(
+                        spacing: 20.0, // Adds spacing between the
+                        runSpacing:
+                            20.0, // Adds spacing between rows when wrapping
+                        children: [
+                          // FLOATING ACTION BUTTON
+                          SizedBox(
+                            width: 150,
+                            child: FloatingActionButton(
+                              onPressed: () {},
+                              backgroundColor: primaryColor,
+                              foregroundColor: tertiaryColor,
+                              child: Text('Button with text'),
+                            ),
+                          ),
+                          // ELEVATED BUTTON
+                          SizedBox(
+                            width: 150,
+                            child: ElevatedButton(
+                              onPressed: () {},
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: primaryColor,
+                                foregroundColor: tertiaryColor,
+                                elevation: 8,
+                              ),
+                              child: Text('Small button with text'),
+                            ),
+                          ),
+                          // SECOND LEVEL HEADERS
+                          Container(
+                            padding: const EdgeInsets.all(8.0),
+                            decoration: BoxDecoration(
+                              color: primaryColor,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '2nd Level Headers',
+                              style: TextStyle(
+                                  color: Theme.of(context).colorScheme.tertiary,
+                                  fontSize: 24),
+                            ),
+                          ),
+                          // ICON BUTTONS
+                          FloatingActionButton(
+                            onPressed: () {},
+                            child: Icon(
+                              Icons.check_circle,
+                              color: tertiaryColor,
+                              size: 30,
+                            ),
+                          ),
+                          // CARD
+                          Card(
+                            color: surfaceColor,
+                            elevation: 8,
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: ListTile(
+                                title: Text(
+                                  'This is a card with text',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  'This is a subtitle',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  spacing: 15,
+                                  children: [
+                                    Icon(
+                                      Icons.directions_walk,
+                                      color: Colors.blue,
+                                    ),
+                                    Icon(
+                                      Icons.delete,
+                                      color: Colors.red,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
                       SizedBox(height: 80),
+                      // SAVE BUTTON
                       Center(
                         child: MyButton(
                           buttonText: 'Save',
@@ -304,7 +433,6 @@ class _ThemeSelectionState extends State<ThemeSelection> {
                           color: primaryColor,
                         ),
                       ),
-                      SizedBox(height: 80),
                     ],
                   ),
                 ),

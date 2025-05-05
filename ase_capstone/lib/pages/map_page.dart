@@ -52,6 +52,7 @@ class _MapPageState extends State<MapPage> {
 
   // web only variable (for handling gestures on the map when showing a dialog)
   bool _showDialog = false;
+  bool _disableTapThrough = false;
 
   @override
   void initState() {
@@ -528,7 +529,7 @@ class _MapPageState extends State<MapPage> {
                     ),
                     icon: customIcon,
                     infoWindow: InfoWindow(
-                      title: data['title'],
+                      title: '${data['title']} (Tap to vote)',
                       snippet:
                           'Yes: ${data['yesVotes']} No: ${data['noVotes']}',
                       onTap: () => _showVoteDialog(
@@ -562,23 +563,23 @@ class _MapPageState extends State<MapPage> {
   Future<void> _preloadEventIcons() async {
     try {
       _eventIcons["Accident"] = await BitmapDescriptor.asset(
-        const ImageConfiguration(size: Size(24, 24)),
+        const ImageConfiguration(size: Size(30, 30)),
         'assets/images/accident.png',
       );
       _eventIcons["Construction"] = await BitmapDescriptor.asset(
-        const ImageConfiguration(size: Size(24, 24)),
+        const ImageConfiguration(size: Size(30, 30)),
         'assets/images/construction.png',
       );
       _eventIcons["Wildlife"] = await BitmapDescriptor.asset(
-        const ImageConfiguration(size: Size(24, 24)),
+        const ImageConfiguration(size: Size(30, 30)),
         'assets/images/wildlife.png',
       );
       _eventIcons["Special Event"] = await BitmapDescriptor.asset(
-        const ImageConfiguration(size: Size(24, 24)),
+        const ImageConfiguration(size: Size(30, 30)),
         'assets/images/special_event.png',
       );
       _eventIcons["Default"] = await BitmapDescriptor.asset(
-        const ImageConfiguration(size: Size(24, 24)),
+        const ImageConfiguration(size: Size(30, 30)),
         'assets/images/default_event.png',
       );
     } catch (e) {
@@ -796,6 +797,9 @@ class _MapPageState extends State<MapPage> {
   }
 
   void _showNotificationsPopup() async {
+    setState(() {
+      _disableTapThrough = true;
+    });
     // Get notifications from Firestore
     final List<Map<String, dynamic>> notifications =
         await FirestoreService().getNotifications(userId: user.uid);
@@ -1041,9 +1045,10 @@ class _MapPageState extends State<MapPage> {
                               onLongPress: (LatLng tappedPoint) {
                                 _getDirections(destination: tappedPoint);
                               },
-                              webGestureHandling: _showBuildingInfo
-                                  ? WebGestureHandling.none
-                                  : WebGestureHandling.auto,
+                              webGestureHandling:
+                                  _showBuildingInfo || _disableTapThrough
+                                      ? WebGestureHandling.none
+                                      : WebGestureHandling.auto,
                             ),
                           ),
                     // Resources and Event buttons
@@ -1083,7 +1088,10 @@ class _MapPageState extends State<MapPage> {
                                 }),
                               );
                             },
-                            child: Icon(Icons.business),
+                            child: Icon(
+                              Icons.business,
+                              color: Theme.of(context).colorScheme.tertiary,
+                            ),
                           ),
                           SizedBox(height: 12), // space between buttons
 
@@ -1094,7 +1102,10 @@ class _MapPageState extends State<MapPage> {
                               Navigator.pushNamed(context, '/resources');
                             },
                             tooltip: 'View Campus Resources',
-                            child: Icon(Icons.menu_book),
+                            child: Icon(
+                              Icons.menu_book,
+                              color: Theme.of(context).colorScheme.tertiary,
+                            ),
                           ),
                           SizedBox(height: 12), // space between buttons
 
@@ -1110,7 +1121,10 @@ class _MapPageState extends State<MapPage> {
                               }
                             },
                             tooltip: 'Report Event',
-                            child: Icon(Icons.add_location_alt),
+                            child: Icon(
+                              Icons.add_location_alt,
+                              color: Theme.of(context).colorScheme.tertiary,
+                            ),
                           ),
                         ],
                       ),

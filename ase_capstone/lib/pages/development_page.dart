@@ -1,6 +1,5 @@
 import 'package:ase_capstone/utils/firebase_operations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class DevelopmentPage extends StatefulWidget {
@@ -66,7 +65,7 @@ class _DevelopmentPageState extends State<DevelopmentPage> {
             body: Column(
               children: [
                 Padding(
-                  padding: kIsWeb
+                  padding: MediaQuery.of(context).size.width > 600
                       ? EdgeInsets.symmetric(
                           horizontal: MediaQuery.of(context).size.width > 500
                               ? MediaQuery.of(context).size.width * .3
@@ -91,7 +90,7 @@ class _DevelopmentPageState extends State<DevelopmentPage> {
                       return Column(
                         children: [
                           Padding(
-                            padding: kIsWeb
+                            padding: MediaQuery.of(context).size.width > 600
                                 ? EdgeInsets.symmetric(
                                     horizontal: MediaQuery.of(context)
                                                 .size
@@ -113,7 +112,9 @@ class _DevelopmentPageState extends State<DevelopmentPage> {
                                                 ['createdBy'] ==
                                             user.uid
                                     ? IconButton(
-                                        icon: Icon(Icons.edit),
+                                        icon: Icon(
+                                          Icons.edit,
+                                        ),
                                         onPressed: () {
                                           Navigator.pushNamed(
                                             context,

@@ -5,12 +5,15 @@ class ChooseColorInput extends StatefulWidget {
   final Function showColorPicker;
   final Color initialColor;
   final Function onColorChanged;
+  final String? additionalText;
+
   const ChooseColorInput({
     super.key,
     required this.instructionText,
     required this.showColorPicker,
     required this.initialColor,
     required this.onColorChanged,
+    this.additionalText,
   });
 
   @override
@@ -26,13 +29,26 @@ class _ChooseColorInputState extends State<ChooseColorInput> {
   }
 
   @override
+  void didUpdateWidget(covariant ChooseColorInput oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Update the color if the parent widget changes `initialColor`
+    if (oldWidget.initialColor != widget.initialColor) {
+      setState(() {
+        initialColor = widget.initialColor;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Wrap(
       spacing: 10.0, // Adds spacing between the children
-      runSpacing: 10.0, // Adds spacing between rows when wrapping
-      // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      runSpacing: 20.0, // Adds spacing between rows when wrapping
       children: [
-        Text('${widget.instructionText} Color: '),
+        Text(
+          '${widget.instructionText} Color \n${widget.additionalText ?? ''}',
+          textAlign: TextAlign.center,
+        ),
         TextButton(
           onPressed: () async {
             final Color? selectedColor =
@@ -45,6 +61,7 @@ class _ChooseColorInputState extends State<ChooseColorInput> {
             }
           },
           style: TextButton.styleFrom(
+            alignment: Alignment.center,
             backgroundColor: initialColor,
             foregroundColor:
                 ThemeData.estimateBrightnessForColor(initialColor) ==
@@ -63,7 +80,7 @@ class _ChooseColorInputState extends State<ChooseColorInput> {
               width: 2, // You can customize the border width
             ),
           ),
-          child: Text('Choose a ${widget.instructionText.toLowerCase()} color'),
+          child: Text('${widget.instructionText.toLowerCase()} color'),
         ),
       ],
     );
