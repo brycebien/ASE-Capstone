@@ -47,7 +47,6 @@ class _MapPageState extends State<MapPage> {
   bool _showBuildingInfo = false;
   int _unreadCount = 0;
   final Map<String, BitmapDescriptor> _eventIcons = {};
-  final Set<String> _votedPins = {};
   LatLng? destination;
   Directions? _info;
 
