@@ -69,6 +69,30 @@ class FirestoreService {
     });
   }
 
+  // Check if the user has already voted on a pin
+  Future<bool> hasUserVotedOnPin({
+    required String userId,
+    required String pinId,
+  }) async {
+    final userDoc = await _usersCollection.doc(userId).get();
+    if (!userDoc.exists) {
+      throw Exception('User not found');
+    }
+
+    final List<dynamic> votedPins = (userDoc.data() as Map<String, dynamic>?)?['votedPins'] ?? [];
+    return votedPins.contains(pinId);
+  }
+
+  // Add a pin to the user's votedPins field
+  Future<void> addPinToUserVotes({
+    required String userId,
+    required String pinId,
+  }) async {
+    await _usersCollection.doc(userId).update({
+      'votedPins': FieldValue.arrayUnion([pinId]),
+    });
+  }
+
   // create university
   Future<void> createUniversity(
       {required Map<String, dynamic> university}) async {

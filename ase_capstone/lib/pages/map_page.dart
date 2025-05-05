@@ -701,7 +701,13 @@ class _MapPageState extends State<MapPage> {
   }
 
   void _showVoteDialog(String markerId, int yesVotes, int noVotes) async {
-    if (_votedPins.contains(markerId)) {
+    // Check if the user has already voted on this pin
+    final hasVoted = await FirestoreService().hasUserVotedOnPin(
+      userId: user.uid,
+      pinId: markerId,
+    );
+
+    if (hasVoted) {
       Utils.displayMessage(
         context: context,
         message: 'You have already voted on this event.',
@@ -712,6 +718,7 @@ class _MapPageState extends State<MapPage> {
     setState(() {
       _showDialog = true;
     });
+
     await showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -721,11 +728,14 @@ class _MapPageState extends State<MapPage> {
           actions: [
             TextButton(
               onPressed: () async {
-                await _firestoreServices.updatePins(
+                await FirestoreService().updatePins(
                   markerId: markerId,
                   isYesVote: true,
                 );
-                _votedPins.add(markerId);
+                await FirestoreService().addPinToUserVotes(
+                  userId: user.uid,
+                  pinId: markerId,
+                );
                 setState(() {
                   Navigator.pop(context);
                 });
@@ -734,11 +744,14 @@ class _MapPageState extends State<MapPage> {
             ),
             TextButton(
               onPressed: () async {
-                await _firestoreServices.updatePins(
+                await FirestoreService().updatePins(
                   markerId: markerId,
                   isYesVote: false,
                 );
-                _votedPins.add(markerId);
+                await FirestoreService().addPinToUserVotes(
+                  userId: user.uid,
+                  pinId: markerId,
+                );
                 setState(() {
                   Navigator.pop(context);
                 });
@@ -749,6 +762,7 @@ class _MapPageState extends State<MapPage> {
         );
       },
     );
+
     setState(() {
       _showDialog = false;
     });
