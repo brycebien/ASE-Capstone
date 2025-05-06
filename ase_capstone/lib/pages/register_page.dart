@@ -27,7 +27,7 @@ class _RegisterPageState extends State<RegisterPage> {
   String _errorMessage = '';
   late UserCredential user;
 
-  Future<void> signUserUp() async {
+  Future<bool> signUserUp() async {
     // create the user
     try {
       setState(() {
@@ -45,7 +45,7 @@ class _RegisterPageState extends State<RegisterPage> {
           _errorMessage = 'Please fill out all of the fields to continue';
           Utils.displayMessage(context: context, message: _errorMessage);
         });
-        return;
+        return false;
       }
 
       // check to ensure password and confirm password match
@@ -54,7 +54,10 @@ class _RegisterPageState extends State<RegisterPage> {
           context: context,
           message: 'Passwords do not match',
         );
-        return;
+        setState(() {
+          _isLoading = false;
+        });
+        return false;
       } else if (await firestoreService.checkUsernameExists(
           username: usernameController.text)) {
         // check to make sure there isnt a user with the same username
@@ -65,7 +68,7 @@ class _RegisterPageState extends State<RegisterPage> {
           );
           _isLoading = false;
         });
-        return;
+        return false;
       } else {
         // create the user
         user = await FirebaseAuth.instance
@@ -73,6 +76,7 @@ class _RegisterPageState extends State<RegisterPage> {
           email: emailController.text,
           password: passwordController.text,
         )
+            // add user to database
             .then((userCredential) {
           firestoreService.addUserToDatabase(
             uid: userCredential.user!.uid,
@@ -81,7 +85,7 @@ class _RegisterPageState extends State<RegisterPage> {
           );
           return userCredential;
         });
-        // add user to database
+        return true;
       }
     } on FirebaseAuthException catch (e) {
       setState(() {
@@ -89,11 +93,10 @@ class _RegisterPageState extends State<RegisterPage> {
         _isLoading = false;
         Utils.displayMessage(context: context, message: _errorMessage);
       });
-      return;
-    }
-    if (mounted) {
-      // Navigate to the map page when the button is pressed
-      Navigator.pushNamed(context, '/map');
+      setState(() {
+        _isLoading = false;
+      });
+      return false;
     }
   }
 
@@ -187,7 +190,17 @@ class _RegisterPageState extends State<RegisterPage> {
                   SizedBox(height: 20),
                   MyButton(
                     buttonText: 'Sign Up',
-                    onTap: () => signUserUp(),
+                    onTap: () async {
+                      final success = await signUserUp();
+                      if (success) {
+                        if (mounted) {
+                          // Navigate to the map page when the button is pressed
+                          setState(() {
+                            Navigator.pushNamed(context, '/map');
+                          });
+                        }
+                      }
+                    },
                   ),
 
                   SizedBox(height: 20),

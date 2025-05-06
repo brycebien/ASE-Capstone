@@ -50,6 +50,8 @@ class _MapPageState extends State<MapPage> {
   LatLng? destination;
   Directions? _info;
 
+  bool _isMapCreated = false;
+
   // web only variable (for handling gestures on the map when showing a dialog)
   bool _showDialog = false;
   bool _disableTapThrough = false;
@@ -57,27 +59,26 @@ class _MapPageState extends State<MapPage> {
   @override
   void initState() {
     super.initState();
-    _preloadEventIcons().then((_) {
-      debugPrint("Event icons preloaded successfully.");
-    }).catchError((e) {
-      debugPrint("Failed to preload event icons: $e");
-    });
+    _preloadEventIcons().then((_) {});
     Provider.of<ThemeNotifier>(context, listen: false)
         .setTheme(); // set the theme based on the user's preference
 
-    _getCurrentLocation().then((_) {
-      _initializeUser();
+    _getCurrentLocation().then((_) async {
+      await _initializeUser();
     }); // get the user's location
   }
 
-  void _initializeUser() {
-    _loadMapStyle(); // load the map's color theme (light or dark mode)
+  Future<void> _initializeUser() async {
+    await _loadMapStyle(); // load the map's color theme (light or dark mode)
     _listenToPins(); // check for pins in the database
-    _checkExpiredPins(); // check that no pins are expired (older than 24 hrs)
-    _loadUnreadNotificationCount();
-    _checkUserUniversity(); // check that he user has a university chosen
-    _checkForDirections(); // check if the user has a destination set
-    _checkUserAdmin(); // check if the user is an admin
+    await _checkExpiredPins(); // check that no pins are expired (older than 24 hrs)
+    await _loadUnreadNotificationCount();
+    await _checkUserUniversity(); // check that he user has a university chosen
+    await _checkForDirections(); // check if the user has a destination set
+    await _checkUserAdmin(); // check if the user is an admin
+    setState(() {
+      _isLoadingUser = false;
+    });
   }
 
   @override
@@ -89,9 +90,9 @@ class _MapPageState extends State<MapPage> {
     }
 
     // detect changes to user university
-    if (_hasUniversity == true) {
-      _checkUserUniversity();
-    }
+    // if (_hasUniversity == true) {
+    //   _checkUserUniversity();
+    // }
 
     // get args passed to map page via Navigator.pushNamed
     final args =
@@ -119,7 +120,7 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
-  void _setInitialCameraPosition() async {
+  Future<void> _setInitialCameraPosition() async {
     // get the user's university location
     final String universityName =
         await _firestoreServices.getUserUniversity(userId: user.uid);
@@ -152,19 +153,20 @@ class _MapPageState extends State<MapPage> {
         );
       });
 
-      if (_controller != null) {
-        Utils.zoomToLocation(
-          location: LatLng(
-            value['location']['latitude'],
-            value['location']['longitude'],
+      if (_controller != null && _isMapCreated) {
+        _controller!.animateCamera(CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: LatLng(
+              value['location']['latitude'],
+              value['location']['longitude'],
+            ),
           ),
-          controller: _controller!,
-        );
+        ));
       }
     });
   }
 
-  void _checkUserUniversity() async {
+  Future<void> _checkUserUniversity() async {
     String universityName =
         await _firestoreServices.getUserUniversity(userId: user.uid);
 
@@ -176,10 +178,9 @@ class _MapPageState extends State<MapPage> {
           _hasUniversity = true;
           _userUniversity = universityName;
         }
-        _isLoadingUser = false;
       });
-      _setInitialCameraPosition(); // set the camera position to the new university
-      _setBuildingMarkers(
+      await _setInitialCameraPosition(); // set the camera position to the new university
+      await _setBuildingMarkers(
         university: universityName,
       ); // generate building markers for the new university
     } else {
@@ -187,7 +188,7 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
-  void _setBuildingMarkers({required String university}) async {
+  Future<void> _setBuildingMarkers({required String university}) async {
     setState(() {
       isLoadingBuildingMarkers = true;
     });
@@ -248,7 +249,7 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  void _checkForDirections() async {
+  Future<void> _checkForDirections() async {
     if (destination != null) {
       final directions = await DirectionsHandler().getDirections(
         origin: LatLng(
@@ -428,28 +429,36 @@ class _MapPageState extends State<MapPage> {
       try {
         // set current location to the user's location when the app starts
         var userLocation = await location.getLocation();
-        setState(() {
-          _currentLocation = userLocation;
-        });
+        if (mounted) {
+          setState(() {
+            _currentLocation = userLocation;
+          });
+        }
 
         // update the current location when the user moves
-        location.onLocationChanged.listen((loc.LocationData newLocation) {
-          setState(() {
-            _currentLocation = newLocation;
-            _checkForDirections();
-          });
+        location.onLocationChanged.listen((loc.LocationData newLocation) async {
+          if (mounted) {
+            setState(() {
+              _currentLocation = newLocation;
+            });
+          }
+          await _checkForDirections();
 
           // animate the camera to the user's location when the user moves/app is started
-          _controller?.animateCamera(CameraUpdate.newCameraPosition(
-            CameraPosition(
-              zoom: 20.0,
-              tilt: 50.0,
-              target: LatLng(
-                _currentLocation!.latitude!,
-                _currentLocation!.longitude!,
+          if (_controller != null && _isMapCreated && mounted) {
+            await _controller?.animateCamera(
+              CameraUpdate.newCameraPosition(
+                CameraPosition(
+                  zoom: 20.0,
+                  tilt: 50.0,
+                  target: LatLng(
+                    _currentLocation!.latitude!,
+                    _currentLocation!.longitude!,
+                  ),
+                ),
               ),
-            ),
-          ));
+            );
+          }
         });
       } catch (e) {
         setState(() {
@@ -462,7 +471,7 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
-  void _loadUnreadNotificationCount() async {
+  Future<void> _loadUnreadNotificationCount() async {
     final count =
         await FirestoreService().getUnreadNotificationCount(userId: user.uid);
     setState(() {
@@ -479,6 +488,10 @@ class _MapPageState extends State<MapPage> {
   void _onMapCreated(GoogleMapController controller) {
     _controller = controller;
     _updateMapStyle(controller);
+    setState(() {
+      _isMapCreated = true;
+    });
+    // await _getCurrentLocation();
   }
 
   // update the map style when the theme changes
@@ -696,7 +709,6 @@ class _MapPageState extends State<MapPage> {
 
   BitmapDescriptor _customEvent(String eventType) {
     final icon = _eventIcons[eventType] ?? _eventIcons["Default"]!;
-    debugPrint("Custom event icon for $eventType: $icon");
     return icon;
   }
 
@@ -721,56 +733,58 @@ class _MapPageState extends State<MapPage> {
       _showDialog = true;
     });
 
-    await showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Is this event still here?"),
-          content: Text("Yes: $yesVotes No: $noVotes"),
-          actions: [
-            TextButton(
-              onPressed: () async {
-                await FirestoreService().updatePins(
-                  markerId: markerId,
-                  isYesVote: true,
-                );
-                await FirestoreService().addPinToUserVotes(
-                  userId: user.uid,
-                  pinId: markerId,
-                );
-                setState(() {
-                  Navigator.pop(context);
-                });
-              },
-              child: Text("Yes"),
-            ),
-            TextButton(
-              onPressed: () async {
-                await FirestoreService().updatePins(
-                  markerId: markerId,
-                  isYesVote: false,
-                );
-                await FirestoreService().addPinToUserVotes(
-                  userId: user.uid,
-                  pinId: markerId,
-                );
-                setState(() {
-                  Navigator.pop(context);
-                });
-              },
-              child: Text("No"),
-            ),
-          ],
-        );
-      },
-    );
+    if (mounted) {
+      await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("Is this event still here?"),
+            content: Text("Yes: $yesVotes No: $noVotes"),
+            actions: [
+              TextButton(
+                onPressed: () async {
+                  await FirestoreService().updatePins(
+                    markerId: markerId,
+                    isYesVote: true,
+                  );
+                  await FirestoreService().addPinToUserVotes(
+                    userId: user.uid,
+                    pinId: markerId,
+                  );
+                  setState(() {
+                    Navigator.pop(context);
+                  });
+                },
+                child: Text("Yes"),
+              ),
+              TextButton(
+                onPressed: () async {
+                  await FirestoreService().updatePins(
+                    markerId: markerId,
+                    isYesVote: false,
+                  );
+                  await FirestoreService().addPinToUserVotes(
+                    userId: user.uid,
+                    pinId: markerId,
+                  );
+                  setState(() {
+                    Navigator.pop(context);
+                  });
+                },
+                child: Text("No"),
+              ),
+            ],
+          );
+        },
+      );
+    }
 
     setState(() {
       _showDialog = false;
     });
   }
 
-  void _checkExpiredPins() async {
+  Future<void> _checkExpiredPins() async {
     final now = DateTime.now();
     final expirationTime = now.subtract(Duration(hours: 24));
 
@@ -808,7 +822,7 @@ class _MapPageState extends State<MapPage> {
     await FirestoreService().markAllNotificationsAsRead(userId: user.uid);
 
     // Refresh the unread badge count
-    _loadUnreadNotificationCount();
+    await _loadUnreadNotificationCount();
 
     await showDialog(
       // ignore: use_build_context_synchronously
@@ -845,7 +859,7 @@ class _MapPageState extends State<MapPage> {
               TextButton(
                 onPressed: () async {
                   await FirestoreService().clearNotifications(userId: user.uid);
-                  _loadUnreadNotificationCount(); // also reset the badge
+                  await _loadUnreadNotificationCount(); // also reset the badge
                   setState(() {
                     Navigator.of(context).pop();
                     Utils.displayMessage(
@@ -939,7 +953,7 @@ class _MapPageState extends State<MapPage> {
         _hasUniversity = true;
         _userUniversity = result;
       });
-      _checkUserUniversity(); // check that the user has a university and update the map based on the new university
+      await _checkUserUniversity(); // check that the user has a university and update the map based on the new university
     }
   }
 
@@ -986,7 +1000,7 @@ class _MapPageState extends State<MapPage> {
           ? Center(
               child: CircularProgressIndicator(),
             )
-          : !_hasUniversity
+          : !_hasUniversity || _userUniversity == ""
               ? AlertDialog(
                   title: Text('No University Selected'),
                   content: Text('Please select a university to use the map.'),
