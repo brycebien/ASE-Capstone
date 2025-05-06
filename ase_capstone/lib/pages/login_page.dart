@@ -24,7 +24,7 @@ class _LoginPageState extends State<LoginPage> {
   bool _isLoading = false;
   String _errorMessage = '';
 
-  Future<void> signUserIn() async {
+  Future<bool> signUserIn() async {
     setState(() {
       _isLoading = true;
       _errorMessage = '';
@@ -41,14 +41,15 @@ class _LoginPageState extends State<LoginPage> {
         _isLoading = false;
         Utils.displayMessage(context: context, message: _errorMessage);
       });
-      return;
+      return false;
     }
 
-    // send user to map page upon successful login
     if (mounted) {
-      Provider.of<ThemeNotifier>(context, listen: false).setTheme();
-      Navigator.pushNamed(context, '/map');
+      setState(() {
+        _isLoading = false;
+      });
     }
+    return true;
   }
 
   void _downloadApp() async {
@@ -158,7 +159,19 @@ class _LoginPageState extends State<LoginPage> {
                   SizedBox(height: 20),
                   MyButton(
                     buttonText: 'Sign In',
-                    onTap: () => signUserIn(),
+                    onTap: () async {
+                      final success = await signUserIn();
+                      if (success) {
+                        // send user to map page upon successful login
+                        if (mounted) {
+                          setState(() {
+                            Provider.of<ThemeNotifier>(context, listen: false)
+                                .setTheme();
+                            Navigator.pushNamed(context, '/map');
+                          });
+                        }
+                      }
+                    },
                   ),
 
                   SizedBox(height: 20),

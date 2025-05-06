@@ -23,9 +23,11 @@ class SettingsDrawerState extends State<SettingsDrawer> {
 
   Future<void> _checkUserAdmin() async {
     bool isAdmin = await _firestoreService.isAdmin(userId: widget.user!.uid);
-    setState(() {
-      _isAdmin = isAdmin;
-    });
+    if (mounted) {
+      setState(() {
+        _isAdmin = isAdmin;
+      });
+    }
   }
 
   void _showUniversitySelectionDialog() async {
