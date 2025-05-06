@@ -103,8 +103,8 @@ To change your password select *Change Password*
 
 ###### Notifications
 
-* notifications display on timed intervals with event reporting and class times
-* a notification drawer is viewable on the main map page to view missed notifications
+* notifications display on timed intervals with event reporting and class times, they will alert you when needed
+* a notification drawer is viewable on the main map page to view missed notifications, tap the bell icon to see those notifications
 * you are able to see all notifications, either inside or outside of the app
 
 ##### Class Schedule Page
